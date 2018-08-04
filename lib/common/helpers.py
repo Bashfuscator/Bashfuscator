@@ -89,7 +89,7 @@ def obfuscateInt(num, smallExpr):
     when evaluated mathematically, is equal to the int entered.
     @capnspacehook 
     """
-    randGen = random.SystemRandom()
+    randGen = RandomGen()
     exprStr, baseExprPieces = gen_simple_expr(num, smallExpr)
     if smallExpr:
         portExpr = exprStr % (baseExprPieces[0], baseExprPieces[1], baseExprPieces[2])
@@ -107,7 +107,7 @@ def obfuscateInt(num, smallExpr):
         match = list(match.span())
         match[0] += beginingExprLen
         match[1] += beginingExprLen
-        choice = randGen.randint(0, 1)
+        choice = randGen.randChoice(2)
         if choice:
             portExpr = portExpr[:match[0]] + "-(-" + portExpr[match[0] + 1:match[1]] + ")" + portExpr[match[1]:]
         beginingExprLen = len(portExpr[:match[1]])
@@ -137,24 +137,25 @@ def gen_simple_expr(n, smallExpr):
     terms in the generated expression.
     @capnspacehook
     """
-    randGen = random.SystemRandom()
+    randGen = RandomGen()
+
     if type(n) == str:
         n = int(eval(n))
     if n == 0:
         N = 0
         while N == 0:
-            N = randGen.randint(-99999, 99999)
+            N = randGen.randGenNum(-99999, 99999)
     else:
         N = n
-    choice = randGen.randint(0, 2)
+    choice = randGen.randGenNum(0, 2)
     left = 0
     if choice == 0:
         if N < 0:
-            left = randGen.randint(N * 2, -N + 1)
-            right = randGen.randint(N - 1, -N * 2)
+            left = randGen.randGenNum(N * 2, -N + 1)
+            right = randGen.randGenNum(N - 1, -N * 2)
         else:
-            left = randGen.randint(-N * 2, N - 1)
-            right = randGen.randint(-N + 1, N * 2)
+            left = randGen.randGenNum(-N * 2, N - 1)
+            right = randGen.randGenNum(-N + 1, N * 2)
         if left + right < n:
             offset = n - (left + right)
             expr = "((%s+%s)+%s)"
@@ -163,11 +164,11 @@ def gen_simple_expr(n, smallExpr):
             expr = "(-(-(%s+%s)+%s))"
     elif choice == 1:
         if N < 0:
-            left = randGen.randint(N - 1, -N * 2)
-            right = randGen.randint(N * 2, N - 1)
+            left = randGen.randGenNum(N - 1, -N * 2)
+            right = randGen.randGenNum(N * 2, N - 1)
         else:
-            left = randGen.randint(-N + 1, N * 2)
-            right = randGen.randint(-N * 2, N + 1)
+            left = randGen.randGenNum(-N + 1, N * 2)
+            right = randGen.randGenNum(-N * 2, N + 1)
         if left - right < n:
             offset = n - (left - right)
             expr = "((%s-%s)+%s)"
@@ -176,11 +177,11 @@ def gen_simple_expr(n, smallExpr):
             expr = "(-(-(%s-%s)+%s))"
     elif choice == 2:
         if N < 0:
-            left = randGen.randint(int(N / 2), -int(N / 2) - 2)
-            right = randGen.randint(int(N / 3), -int(N / 3))
+            left = randGen.randGenNum(int(N / 2), -int(N / 2) - 2)
+            right = randGen.randGenNum(int(N / 3), -int(N / 3))
         else:
-            left = randGen.randint(-int(n / 2), int(n / 2) + 2)
-            right = randGen.randint(-int(n / 3), int(n / 3))
+            left = randGen.randGenNum(-int(n / 2), int(n / 2) + 2)
+            right = randGen.randGenNum(-int(n / 3), int(n / 3))
         if left * right < n:
             offset = n - (left * right)
             expr = "((%s*%s)+%s)"
