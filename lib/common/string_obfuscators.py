@@ -38,13 +38,14 @@ class AnsiCString(StringObfuscator):
 
         if self.sizePref == 1:
             maxChoice = 2
-        elif self.sizePref == 2:
-            maxChoice = 3
         else:
             maxChoice = 4
 
         for char in self.userCmd:
             choice = self.randGen.randChoice(maxChoice)
+
+            if self.sizePref == 3 and len(obCmd) > 3 and self.randGen.probibility(33):
+                obCmd = obCmd[:-1] + "'" + "".join("''" for x in range(self.randGen.randGenNum(0, 5))) + "$'\\"
 
             if choice == 0:
                 obCmd += oct(ord(char))[2:] + "\\"

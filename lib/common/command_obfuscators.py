@@ -1,4 +1,7 @@
+from helpers import RandomGen
 from obfuscator import Obfuscator
+
+import re
 
 
 class DeobfuscateStub(object):
@@ -8,14 +11,25 @@ class DeobfuscateStub(object):
         self.speedRating = speedRating
         self.escapeQuotes = escapeQuotes
         self.stub = stub
+        self.randGen = RandomGen()
 
 
-    def genStub(self, userCmd):
-        
+    def genStub(self, sizePref, userCmd):
         if self.escapeQuotes:
-            userCmd = userCmd.replace("\"", '\\"')
+            userCmd = userCmd.replace('"', '\\"')
 
-        return self.stub.replace("CMD", userCmd)
+        if sizePref == 1:
+            minVarLen = 2
+            maxVarLen = 3
+        else:
+            minVarLen = 6
+            maxVarLen = 12
+        
+        genStub = self.stub
+        for var in re.findall("VAR\d+", self.stub):
+            genStub = self.stub.replace(var, self.randGen.randGenVar(minVarLen, maxVarLen))
+
+        return genStub.replace("CMD", userCmd)
 
 
 class CommandObfuscator(Obfuscator):
@@ -29,11 +43,20 @@ class CommandObfuscator(Obfuscator):
         self.sizePref = sizePref
         self.speedPref = speedPref 
         self.userCmd = userCmd
+        self.stubs = []
         self.deobStub = None
         self.payload = ""
 
 
-class CommandReverser(CommandObfuscator):
+    def chooseStub(self):
+        maxSize = self.sizePref + 2
+        maxSpeed = self.speedPref + 2
+
+        selectedStubs = [stub for stub in self.stubs if stub.sizeRating <= maxSize and stub.speedRating <= maxSpeed]
+        self.deobStub = self.randGen.randSelection(selectedStubs)
+
+
+class Reverse(CommandObfuscator):
     def __init__(self, sizePref, speedPref, userCmd):
         super().__init__(
             name="Command Reverser",
@@ -49,8 +72,8 @@ class CommandReverser(CommandObfuscator):
                 name="rev",
                 sizeRating=1,
                 speedRating=1,
-                escapeQuotes=False,
-                stub="echo CMD|rev"
+                escapeQuotes=True,
+                stub="""printf "CMD"|rev"""
             ),
             DeobfuscateStub(
                 name="perl scalar reverse",
@@ -68,10 +91,41 @@ class CommandReverser(CommandObfuscator):
             )
         ]
 
-        self.deobStub = self.randGen.randSelection(self.stubs)
+        self.chooseStub()
 
     def obfuscate(self):
         obCmd = self.userCmd[::-1]
-        self.payload = self.deobStub.genStub(obCmd)
+        self.payload = self.deobStub.genStub(self.sizePref, obCmd)
         
+        return self.payload
+
+
+class CaseSwap(CommandObfuscator):
+    def __init__(self, sizePref, speedPref, userCmd):
+        super().__init__(
+            name="Case Swapper",
+            description="Flips the case of all alpha chars",
+            sizeRating=2,
+            speedRating=1,
+            sizePref=sizePref,
+            speedPref=speedPref,
+            userCmd=userCmd
+        )
+
+        self.stubs = [
+            DeobfuscateStub(
+                name="bash case swap expansion",
+                sizeRating=2,
+                speedRating=1,
+                escapeQuotes=True,
+                stub="""VAR1="CMD";${VAR1~~}"""
+            )
+        ]
+
+        self.chooseStub()
+    
+    def obfuscate(self):
+        obCmd = self.userCmd.swapcase()
+        self.payload = self.deobStub.genStub(self.sizePref, obCmd)
+
         return self.payload

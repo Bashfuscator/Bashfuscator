@@ -18,11 +18,7 @@ class RandomGen(object):
     @capnspacehook
     """
     randGen = random.SystemRandom()
-    
-    
-    def __init__(self):
-        self.generatedVars = []
-        self.underscoreVarLens = []
+    generatedVars = []
     
 
     def randGenNum(self, min, max):
@@ -72,12 +68,13 @@ class RandomGen(object):
 
         while True:
             randVarLen = RandomGen.randGen.randint(minVarLen, maxVarLen)
-            randomVar = "".join(RandomGen.randGen.choice(charList) for x in range(randVarLen))
+            randomVar = RandomGen.randGen.choice(string.ascii_letters)
+            randomVar += "".join(RandomGen.randGen.choice(charList) for x in range(randVarLen - 1))
 
-            if randomVar not in self.generatedVars:
+            if randomVar not in RandomGen.generatedVars:
                 break
 
-        self.generatedVars.append(randomVar)
+        RandomGen.generatedVars.append(randomVar)
 
         return randomVar
 
@@ -90,18 +87,18 @@ def obfuscateInt(num, smallExpr):
     @capnspacehook 
     """
     randGen = RandomGen()
-    exprStr, baseExprPieces = gen_simple_expr(num, smallExpr)
+    exprStr, baseExprPieces = genSimpleExpr(num, smallExpr)
     if smallExpr:
-        portExpr = exprStr % (baseExprPieces[0], baseExprPieces[1], baseExprPieces[2])
+        numExpr = exprStr % (baseExprPieces[0], baseExprPieces[1], baseExprPieces[2])
     else:
         subExprs = []
         for piece in baseExprPieces:
-            expr, pieces = gen_simple_expr(piece, smallExpr)
+            expr, pieces = genSimpleExpr(piece, smallExpr)
             subExprs.append(expr % (pieces[0], pieces[1], pieces[2]))
-        portExpr = exprStr % (subExprs[0], subExprs[1], subExprs[2])
+        numExpr = exprStr % (subExprs[0], subExprs[1], subExprs[2])
         
     # Randomly replace '+' with '--'. Same thing, more confusing
-    match = re.search("\+\d+", portExpr)
+    match = re.search("\+\d+", numExpr)
     beginingExprLen = 0
     while match is not None:   
         match = list(match.span())
@@ -109,27 +106,27 @@ def obfuscateInt(num, smallExpr):
         match[1] += beginingExprLen
         choice = randGen.randChoice(2)
         if choice:
-            portExpr = portExpr[:match[0]] + "-(-" + portExpr[match[0] + 1:match[1]] + ")" + portExpr[match[1]:]
-        beginingExprLen = len(portExpr[:match[1]])
-        match = re.search("\+\d+", portExpr[match[1]:])
+            numExpr = numExpr[:match[0]] + "-(-" + numExpr[match[0] + 1:match[1]] + ")" + numExpr[match[1]:]
+        beginingExprLen = len(numExpr[:match[1]])
+        match = re.search("\+\d+", numExpr[match[1]:])
     
     # Properly separate any double '-' signs. Some langs complain
-    match = re.search("--\d+", portExpr)
+    match = re.search("--\d+", numExpr)
     beginingExprLen = 0
     while match is not None:   
         match = list(match.span())
         match[0] += beginingExprLen
         match[1] += beginingExprLen
-        portExpr = portExpr[:match[0]] + "-(" + portExpr[match[0] + 1:match[1]] + ")" + portExpr[match[1]:]
-        beginingExprLen = len(portExpr[:match[1]])
-        match = re.search("--\d+", portExpr[match[1]:])
+        numExpr = numExpr[:match[0]] + "-(" + numExpr[match[0] + 1:match[1]] + ")" + numExpr[match[1]:]
+        beginingExprLen = len(numExpr[:match[1]])
+        match = re.search("--\d+", numExpr[match[1]:])
     
     # Bash requires mathematical expressions to be in $((expression)) syntax
-    portExpr = "$((" + portExpr + "))"
-    return portExpr
+    numExpr = "$((" + numExpr + "))"
+    return numExpr
 
 
-def gen_simple_expr(n, smallExpr):
+def genSimpleExpr(n, smallExpr):
     """
     Generates a simple mathematical expression of 3 terms
     that equal the number passed. Returns a template
@@ -192,12 +189,12 @@ def gen_simple_expr(n, smallExpr):
     # Replace all zeros with an expression. Zeros make arithmetic easy
     if not smallExpr:
         if left == 0:
-            zeroExpr, terms = gen_simple_expr(0, smallExpr)
+            zeroExpr, terms = genSimpleExpr(0, smallExpr)
             left = zeroExpr % (terms[0], terms[1], terms[2])
         if right == 0:
-            zeroExpr, terms = gen_simple_expr(0, smallExpr)
+            zeroExpr, terms = genSimpleExpr(0, smallExpr)
             right = zeroExpr % (terms[0], terms[1], terms[2])
         if offset == 0:
-            zeroExpr, terms = gen_simple_expr(0, smallExpr)
+            zeroExpr, terms = genSimpleExpr(0, smallExpr)
             offset = zeroExpr % (terms[0], terms[1], terms[2])
     return (expr, (left, right, offset))
