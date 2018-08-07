@@ -5,6 +5,11 @@ import re
 
 
 class DeobfuscateStub(object):
+    """
+    This class is in charge of generating a valid deobfuscation stub,
+    taking care of properly escaping quotes in the user's input, 
+    generating random variable names, and so on. 
+    """
     def __init__(self, name, sizeRating, speedRating, escapeQuotes, stub):
         self.name = name
         self.sizeRating = sizeRating
@@ -12,7 +17,6 @@ class DeobfuscateStub(object):
         self.escapeQuotes = escapeQuotes
         self.stub = stub
         self.randGen = RandomGen()
-
 
     def genStub(self, sizePref, userCmd):
         if self.escapeQuotes:
@@ -33,6 +37,15 @@ class DeobfuscateStub(object):
 
 
 class CommandObfuscator(Obfuscator):
+    """
+    Base class for all command obfuscators. If an obfuscator requires
+    a deobfuscation stub to execute, then it is a command obfuscator.
+    Those stubs are stored in the self.stubs attribute. Every command 
+    obfuscator should have multiple stubs, as many as possible. The
+    stubs should be numerous and diverse, consisting of a range of
+    size ratings and time ratings. If at all possible, at least one
+    perl and python stub should be included per command obfuscator.
+    """
     def __init__(self, name, description, sizeRating, speedRating, sizePref, speedPref, userCmd):
         super().__init__()
         
@@ -46,7 +59,6 @@ class CommandObfuscator(Obfuscator):
         self.stubs = []
         self.deobStub = None
         self.payload = ""
-
 
     def chooseStub(self):
         maxSize = self.sizePref + 2
@@ -91,9 +103,9 @@ class Reverse(CommandObfuscator):
             )
         ]
 
+    def obfuscate(self):
         self.chooseStub()
 
-    def obfuscate(self):
         obCmd = self.userCmd[::-1]
         self.payload = self.deobStub.genStub(self.sizePref, obCmd)
         
@@ -115,16 +127,23 @@ class CaseSwap(CommandObfuscator):
         self.stubs = [
             DeobfuscateStub(
                 name="bash case swap expansion",
-                sizeRating=2,
+                sizeRating=1,
                 speedRating=1,
                 escapeQuotes=True,
                 stub="""VAR1="CMD";${VAR1~~}"""
+            ),
+            DeobfuscateStub(
+                name="python swapcase",
+                sizeRating=2,
+                speedRating=1,
+                escapeQuotes=True,
+                stub="""python -c 'print("CMD".swapcase())'"""
             )
         ]
 
-        self.chooseStub()
-    
     def obfuscate(self):
+        self.chooseStub()
+
         obCmd = self.userCmd.swapcase()
         self.payload = self.deobStub.genStub(self.sizePref, obCmd)
 

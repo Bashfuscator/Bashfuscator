@@ -5,12 +5,11 @@ from binascii import hexlify
 import string
 
 
-class StringObfuscator(Obfuscator):
+class TokenObfuscator(Obfuscator):
     """
-    Base class for all string obfuscators. Every
-    string obfuscator should have an obfuscate()
-    method that takes no params and returns an obfuscated
-    version of self.userCmd
+    Base class for all token obfuscators. If the obfuscator is able to
+    be deobfuscated and executed by bash at runtime, without a stub, 
+    then it is a token obfuscator.
     """
     def __init__(self, name, description, sizeRating, sizePref, userCmd):
         super().__init__()
@@ -23,7 +22,7 @@ class StringObfuscator(Obfuscator):
         self.payload = ""
 
 
-class AnsiCString(StringObfuscator):
+class AnsiCString(TokenObfuscator):
     def __init__(self, sizePref, userCmd):
         super().__init__(
             name="ANSI-C String",
@@ -31,7 +30,6 @@ class AnsiCString(StringObfuscator):
             sizeRating=3,
             sizePref=sizePref,
             userCmd=userCmd)
-
     
     def obfuscate(self):
         obCmd = "$'\\"
@@ -44,6 +42,8 @@ class AnsiCString(StringObfuscator):
         for char in self.userCmd:
             choice = self.randGen.randChoice(maxChoice)
 
+            # If sizePref is 3, randomly ANSI-C quote substrings of the original 
+            # userCmd and randomly add empty strings
             if self.sizePref == 3 and len(obCmd) > 3 and self.randGen.probibility(33):
                 obCmd = obCmd[:-1] + "'" + "".join("''" for x in range(self.randGen.randGenNum(0, 5))) + "$'\\"
 
@@ -59,3 +59,4 @@ class AnsiCString(StringObfuscator):
         self.payload = obCmd[:-1] + "'"
 
         return self.payload
+        
