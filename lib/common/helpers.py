@@ -48,13 +48,18 @@ class RandomGen(object):
 
         return randNum <= percent
 
-
-    def randSelection(self, seq):
+    @classmethod
+    def randSelect(cls, seq):
         """
         Returns a random element from the sequence
         seq
         """
-        return RandomGen.randGen.choice(seq)
+        if len(seq):
+            selection = RandomGen.randGen.choice(seq)
+        else:
+            selection = None
+        
+        return selection
 
 
     def randGenVar(self, minVarLen, maxVarLen):
@@ -79,6 +84,125 @@ class RandomGen(object):
         return randomVar
 
 
+def choosePrefObfuscator(seq, sizePref, timePref=None, binaryPref=None, userStub=None):
+    """
+    Returns an obfuscator from seq which is of the desired sizeRating, 
+    timeRating, with a stub that uses desired binaries
+    """
+    prefObfuscators = getPrefItems(seq, sizePref, timePref)
+
+    validStub = False
+    while not validStub:
+        selObfuscator = RandomGen.randSelect(prefObfuscators)
+        
+        if timePref is not None:
+            selStub = choosePrefStub(selObfuscator.stubs, sizePref, timePref, binaryPref, userStub)
+
+            if selStub is not None:
+                selObfuscator.deobStub = selStub
+                validStub = True
+
+        # we are selecting a TokenObfuscator, they don't have stubs
+        else:
+            validStub = True
+
+    return selObfuscator
+
+
+def choosePrefStub(stubs, sizePref, timePref, binaryPref, userStub=None):
+    """
+    Returns a stub which is of the desired sizeRating, timeRating, and 
+    use desired binaries, or None if no stubs use desired binaries 
+    unless the user has elected to manually select a stub. In that
+    case, that specific stub is searched for and is checked to make 
+    sure it aligns with the users preferences for used binaries
+    """
+    if binaryPref is not None:
+        binList = binaryPref[0]
+        includeBinary = binaryPref[1]
+    
+    # attempt to find the specific stub the user wants
+    if userStub is not None:
+        for stub in stubs:
+            if stub.long_name == userStub:
+                if binaryPref is not None:
+                    for binary in stub.binariesUsed:
+                        if (binary in binList) != includeBinary:
+                            raise RuntimeError("{0} stub contains an unwanted binary".format(userStub))
+                
+                return stub
+
+        raise KeyError("{0} stub not found".format(userStub))
+
+    prefStubs = []
+    if binaryPref is not None:
+        for stub in stubs:
+            for binary in stub.binariesUsed:
+                if (binary in binList) == includeBinary:
+                    prefStubs.append(stub)
+    
+    else:
+        prefStubs = stubs
+
+
+    if len(prefStubs):
+        prefStubs = getPrefItems(prefStubs, sizePref, timePref)
+
+    selStub = RandomGen.randSelect(prefStubs)
+
+    return selStub
+
+
+def getPrefItems(seq, sizePref, timePref):
+    """
+    Returns items from seq which are of the desired sizeRating and
+    timeRating
+    """
+    minSize, maxSize = getPrefRange(sizePref)
+    
+    if timePref is not None:
+        minTime, maxTime = getPrefRange(timePref)
+
+    foundItem = False
+    prefItems = []
+
+    while not foundItem:
+        for item in seq:
+            if minSize <= item.sizeRating <= maxSize:
+                if timePref is None or (minTime <= item.timeRating <= maxTime):
+                    prefItems.append(item)
+                    foundItem = True
+        
+        if not foundItem:
+            if minSize > 1:
+                minSize -= 1
+            elif maxSize < 5:
+                maxSize += 1
+
+    return prefItems
+
+
+def getPrefRange(pref):
+    """
+    Returns the minimum and maximum sizeRatings or timeRatings that 
+    should be used to select obfuscator and stubs
+
+    :param pref: sizePref or timePref
+    """
+    if pref == 0:
+        min = max = 1
+    elif pref == 1:
+        min = 1
+        max = 2
+    elif pref < 4:
+        min = 1
+        max = pref + 2
+    else:
+        min = max = 5
+
+    return (min, max)
+
+
 def obfuscateInt(num, smallExpr):
     """
     Obfuscate an integer by replacing the int
@@ -98,7 +222,7 @@ def obfuscateInt(num, smallExpr):
         numExpr = exprStr % (subExprs[0], subExprs[1], subExprs[2])
         
     # Randomly replace '+' with '--'. Same thing, more confusing
-    match = re.search("\+\d+", numExpr)
+    match = re.search(r"\+\d+", numExpr)
     beginingExprLen = 0
     while match is not None:   
         match = list(match.span())
@@ -108,10 +232,10 @@ def obfuscateInt(num, smallExpr):
         if choice:
             numExpr = numExpr[:match[0]] + "-(-" + numExpr[match[0] + 1:match[1]] + ")" + numExpr[match[1]:]
         beginingExprLen = len(numExpr[:match[1]])
-        match = re.search("\+\d+", numExpr[match[1]:])
+        match = re.search(r"\+\d+", numExpr[match[1]:])
     
     # Properly separate any double '-' signs. Some langs complain
-    match = re.search("--\d+", numExpr)
+    match = re.search(r"--\d+", numExpr)
     beginingExprLen = 0
     while match is not None:   
         match = list(match.span())
@@ -119,7 +243,7 @@ def obfuscateInt(num, smallExpr):
         match[1] += beginingExprLen
         numExpr = numExpr[:match[0]] + "-(" + numExpr[match[0] + 1:match[1]] + ")" + numExpr[match[1]:]
         beginingExprLen = len(numExpr[:match[1]])
-        match = re.search("--\d+", numExpr[match[1]:])
+        match = re.search(r"--\d+", numExpr[match[1]:])
     
     # Bash requires mathematical expressions to be in $((expression)) syntax
     numExpr = "$((" + numExpr + "))"

@@ -1,6 +1,6 @@
 import re
 
-from helpers import RandomGen, choosePrefItem
+from helpers import RandomGen
 from obfuscator import Obfuscator
 
 
@@ -64,18 +64,6 @@ class CommandObfuscator(Obfuscator):
         self.originalCmd = ""
         self.payload = ""
 
-    def chooseStub(self, sizePref, timePref, binaryPref, usrStub):
-        if usrStub is not None:
-            for stub in self.stubs:
-                if stub.long_name == usrStub:
-                    self.deobStub = stub
-                    return
-        
-        self.deobStub = choosePrefItem(self.stubs, sizePref, timePref, binaryPref)
-
-    def addEval(self, obCmd):
-        return 
-
 
 class Reverse(CommandObfuscator):
     def __init__(self):
@@ -89,7 +77,7 @@ class Reverse(CommandObfuscator):
         self.stubs = [
             Stub(
                 name="bash rev",
-                binariesUsed="rev",
+                binariesUsed=["rev"],
                 sizeRating=1,
                 timeRating=1,
                 escapeQuotes=True,
@@ -97,7 +85,7 @@ class Reverse(CommandObfuscator):
             ),
             Stub(
                 name="perl scalar reverse",
-                binariesUsed="perl",
+                binariesUsed=["perl"],
                 sizeRating=3,
                 timeRating=1,
                 escapeQuotes=True,
@@ -105,7 +93,7 @@ class Reverse(CommandObfuscator):
             ),
             Stub(
                 name="python list reverse",
-                binariesUsed="python",
+                binariesUsed=["python"],
                 sizeRating=2,
                 timeRating=1,
                 escapeQuotes=True,
@@ -113,9 +101,8 @@ class Reverse(CommandObfuscator):
             )
         ]
 
-    def obfuscate(self, sizePref, timePref, userCmd, binaryPref=None, usrStub=None):
+    def obfuscate(self, sizePref, timePref, binaryPref, userCmd, usrStub=None):
         self.originalCmd = userCmd
-        self.chooseStub(sizePref, timePref, binaryPref, usrStub)
         
         obCmd = self.originalCmd[::-1]
         self.payload = self.deobStub.genStub(sizePref, obCmd)
@@ -135,7 +122,7 @@ class CaseSwap(CommandObfuscator):
         self.stubs = [
             Stub(
                 name="bash case swap expansion",
-                binariesUsed="bash",
+                binariesUsed=["bash"],
                 sizeRating=1,
                 timeRating=1,
                 escapeQuotes=True,
@@ -143,7 +130,7 @@ class CaseSwap(CommandObfuscator):
             ),
             Stub(
                 name="python swapcase",
-                binariesUsed="python",
+                binariesUsed=["python"],
                 sizeRating=2,
                 timeRating=1,
                 escapeQuotes=True,
@@ -151,9 +138,8 @@ class CaseSwap(CommandObfuscator):
             )
         ]
 
-    def obfuscate(self, sizePref, timePref, userCmd, binaryPref=None, usrStub=None):
+    def obfuscate(self, sizePref, timePref, binaryPref, userCmd, usrStub=None):
         self.originalCmd = userCmd
-        self.chooseStub(sizePref, timePref, binaryPref, usrStub)
 
         obCmd = self.originalCmd.swapcase()
         self.payload = self.deobStub.genStub(sizePref, obCmd)
