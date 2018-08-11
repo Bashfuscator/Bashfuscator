@@ -50,27 +50,31 @@ class Stub(object):
         return "eval $({0})".format(genStub)
 
 
-def choosePrefObfuscator(seq, sizePref, timePref=None, binaryPref=None, userStub=None):
+def choosePrefObfuscator(obfuscators, sizePref, timePref=None, binaryPref=None, prevOb=None, userStub=None):
     """
-    Returns an obfuscator from seq which is of the desired sizeRating, 
-    timeRating, with a stub that uses desired binaries
+    Returns an obfuscator from a list of obfuscators which is of the 
+    desired sizeRating, timeRating, with a stub that uses desired binaries
     """
-    prefObfuscators = getPrefItems(seq, sizePref, timePref)
+    prefObfuscators = getPrefItems(obfuscators, sizePref, timePref)
 
-    validStub = False
-    while not validStub:
+    validChoice = False
+    while not validChoice:
         selObfuscator = RandomGen.randSelect(prefObfuscators)
+
+        # make sure we don't choose the same obfuscator twice if it's reversable
+        if prevOb is not None and prevOb.reversible and prevOb.name == selObfuscator.name:
+            continue
         
         if timePref is not None:
             selStub = choosePrefStub(selObfuscator.stubs, sizePref, timePref, binaryPref, userStub)
 
             if selStub is not None:
                 selObfuscator.deobStub = selStub
-                validStub = True
+                validChoice = True
 
         # we are selecting a TokenObfuscator, they don't have stubs
         else:
-            validStub = True
+            validChoice = True
 
     return selObfuscator
 

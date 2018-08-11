@@ -12,8 +12,10 @@ class CommandObfuscator(Obfuscator):
     increases the size of the overall payload
     :param timeRating: rating from 1 to 5 of how much the CommandObfuscator 
     increases the execution time of the overall payload
+    :param reversable: True if the obfuscator cancels itself out when run
+    twice in a row on a command/script
     """
-    def __init__(self, name, description, sizeRating, timeRating):
+    def __init__(self, name, description, sizeRating, timeRating, reversible):
         super().__init__(name)
         
         self.name = name
@@ -21,6 +23,7 @@ class CommandObfuscator(Obfuscator):
         self.description = description
         self.sizeRating = sizeRating
         self.timeRating = timeRating
+        self.reversible = reversible
         self.stubs = []
         self.deobStub = None
         self.originalCmd = ""
@@ -33,7 +36,8 @@ class Reverse(CommandObfuscator):
             name="Reverse",
             description="Reverses a command",
             sizeRating=1,
-            timeRating=1
+            timeRating=1,
+            reversible=True
         )
 
         self.stubs = [
@@ -78,7 +82,8 @@ class CaseSwap(CommandObfuscator):
             name="Case Swapper",
             description="Flips the case of all alpha chars",
             sizeRating=2,
-            timeRating=1
+            timeRating=1,
+            reversible=True
         )
 
         self.stubs = [

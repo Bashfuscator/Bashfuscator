@@ -22,9 +22,10 @@ class ObfuscationHandler(object):
     def generatePayload(self):
         payload = self.originalCmd
 
+        tokObfuscator = cmdObfuscator = None
         for i in range(self.layers):
             tokObfuscator = choosePrefObfuscator(self.tokObfuscators, self.sizePref)
-            cmdObfuscator = choosePrefObfuscator(self.cmdObfuscators, self.sizePref, self.timePref, self.binaryPref)
+            cmdObfuscator = choosePrefObfuscator(self.cmdObfuscators, self.sizePref, self.timePref, self.binaryPref, cmdObfuscator)
 
             payload = cmdObfuscator.obfuscate(self.sizePref, self.timePref, self.binaryPref, payload)
             #obCmd = tokObfuscator.obfuscate(self.sizePref, obCmd)
