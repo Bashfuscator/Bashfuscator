@@ -1,8 +1,7 @@
 from binascii import hexlify
 import string
 
-from helpers import RandomGen
-from obfuscator import Obfuscator
+from bashfuscator.common.obfuscator import Obfuscator
 
 
 class TokenObfuscator(Obfuscator):
@@ -20,6 +19,7 @@ class TokenObfuscator(Obfuscator):
         super().__init__(name)
 
         self.name = name
+        self.longName = "token/" + self.longName
         self.description = description
         self.sizeRating = sizeRating
         self.originalCmd = ""

@@ -3,12 +3,11 @@
 from argparse import ArgumentTypeError, ArgumentParser, FileType
 
 import argcomplete
-import bashlex
 import pyperclip
 
-from core.obfuscation_manager import ObfuscationHandler
-from lib.common.token_obfuscators import *
-from lib.common.command_obfuscators import *
+from bashfuscator.core.obfuscation_manager import ObfuscationHandler
+from bashfuscator.lib.token_obfuscators import *
+from bashfuscator.lib.command_obfuscators import *
 
 tokenObfuscators = [
     AnsiCQuote()
@@ -48,8 +47,8 @@ if __name__ == "__main__":
     timeOps.add_argument("-tM", "--max-execution-time", action="store_true", help="Generate the slowest payload possible")
     obOps.add_argument("--layers", default=2, type=check_positive, help="Layers of obfuscation to apply")
     binOps = obOps.add_mutually_exclusive_group()
-    binOps.add_argument("--exclude-binaries", default="", type=str, help="Binaries you don't want to used in the generated payload")
-    binOps.add_argument("--include-binaries", default="", type=str, help="Binaries you exclusively want used in the generated payload")
+    binOps.add_argument("--exclude-binaries", default="", type=str, metavar="BINARIES", help="Binaries you don't want to used in the generated payload")
+    binOps.add_argument("--include-binaries", default="", type=str, metavar="BINARIES", help="Binaries you exclusively want used in the generated payload")
     obOps.add_argument("--no-minify", action="store_true", help="Don't minify script or command entered before obfuscation")
 
     misc = parser.add_argument_group("Misc Options")

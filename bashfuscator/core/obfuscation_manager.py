@@ -1,6 +1,4 @@
-from lib.common.token_obfuscators import *
-from lib.common.command_obfuscators import *
-from lib.common.helpers import RandomGen, choosePrefObfuscator
+from bashfuscator.common.obfuscator import choosePrefObfuscator
 
 
 class ObfuscationHandler(object):

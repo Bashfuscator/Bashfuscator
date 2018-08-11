@@ -1,43 +1,4 @@
-import re
-
-from helpers import RandomGen
-from obfuscator import Obfuscator
-
-
-class Stub(object):
-    """
-    This class is in charge of generating a valid deobfuscation stub,
-    taking care of properly escaping quotes in the user's input, 
-    generating random variable names, and so on. 
-    """
-    def __init__(self, name, binariesUsed, sizeRating, timeRating, escapeQuotes, stub):
-        self.name = name
-        self.longName = self.name.replace(" ", "_").lower()
-        self.binariesUsed = binariesUsed
-        self.sizeRating = sizeRating
-        self.timeRating = timeRating
-        self.escapeQuotes = escapeQuotes
-        self.stub = stub
-        self.randGen = RandomGen()
-
-    def genStub(self, sizePref, userCmd):
-        if self.escapeQuotes:
-            userCmd = userCmd.replace('"', '\\"')
-
-        if sizePref == 1:
-            minVarLen = 2
-            maxVarLen = 3
-        else:
-            minVarLen = 6
-            maxVarLen = 12
-        
-        genStub = self.stub
-        for var in re.findall(r"VAR\d+", self.stub):
-            genStub = self.stub.replace(var, self.randGen.randGenVar(minVarLen, maxVarLen))
-
-        genStub = genStub.replace("CMD", userCmd)
-
-        return "eval $({0})".format(genStub) 
+from bashfuscator.common.obfuscator import Obfuscator, Stub
 
 
 class CommandObfuscator(Obfuscator):
@@ -56,6 +17,7 @@ class CommandObfuscator(Obfuscator):
         super().__init__(name)
         
         self.name = name
+        self.longName = "command/" + self.longName
         self.description = description
         self.sizeRating = sizeRating
         self.timeRating = timeRating
@@ -68,7 +30,7 @@ class CommandObfuscator(Obfuscator):
 class Reverse(CommandObfuscator):
     def __init__(self):
         super().__init__(
-            name="Command Reverser",
+            name="Reverse",
             description="Reverses a command",
             sizeRating=1,
             timeRating=1
