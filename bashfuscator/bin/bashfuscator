@@ -14,8 +14,9 @@ tokenObfuscators = [
 ]
 
 commandObfuscators = [
-    Reverse(),
-    CaseSwap()
+    CaseSwap(),
+    ForCode(),
+    Reverse()
 ]
 
 

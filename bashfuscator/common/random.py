@@ -13,7 +13,6 @@ class RandomGen(object):
     """
     randGen = random.SystemRandom()
     generatedVars = []
-    
 
     def randGenNum(self, min, max):
         """
@@ -22,14 +21,12 @@ class RandomGen(object):
         """
         return RandomGen.randGen.randint(min, max)
 
-    
     def randChoice(self, max):
         """
         Returns a random number from 0 to max - 1.
         Useful when a random choice is needed
         """
         return self.randGenNum(0, max - 1)
-
 
     def probibility(self, percent):
         """
@@ -55,6 +52,11 @@ class RandomGen(object):
         
         return selection
 
+    def randShuffle(self, seq):
+        """
+        Randomly shuffles a list in-place
+        """
+        RandomGen.randGen.shuffle(seq)
 
     def randGenVar(self, minVarLen, maxVarLen):
         """

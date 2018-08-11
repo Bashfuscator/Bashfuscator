@@ -4,14 +4,14 @@ from bashfuscator.common.messages import printError
 from bashfuscator.common.random import RandomGen
 
 
-class Obfuscator(object):
+class Mutator(object):
     """
-    Base class that StringObfuscator
-    and CommandObfuscator inherit from
+    Base class that all mutators inherit from
     """
-    def __init__(self, name):
+    def __init__(self, name, mutatorType, credits):
         self.name = name
-        self.longName = self.name.replace(" ", "_").lower()
+        self.longName = mutatorType + "/" + self.name.replace(" ", "_").lower()
+        self.credits = credits
         self.randGen = RandomGen()
 
 
@@ -20,6 +20,17 @@ class Stub(object):
     This class is in charge of generating a valid deobfuscation stub,
     taking care of properly escaping quotes in the user's input, 
     generating random variable names, and so on. 
+
+    :param name: name of the Stub
+    :param binariesUsed: list of strings containing all the binaries
+    used in the stub
+    :param sizeRating: rating from 1 to 5 of how much the Stub 
+    increases the size of the overall payload
+    :param timeRating: rating from 1 to 5 of how much the Stub 
+    increases the execution time of the overall payload
+    :param escapeQuotes: True if the stub requires any quotes in the 
+    original command to be escaped, False otherwise
+    :param stub: string containing the actual stub
     """
     def __init__(self, name, binariesUsed, sizeRating, timeRating, escapeQuotes, stub):
         self.name = name
@@ -32,8 +43,14 @@ class Stub(object):
         self.randGen = RandomGen()
 
     def genStub(self, sizePref, userCmd):
+        cmplxCmd = type(userCmd) == list
+
         if self.escapeQuotes:
-            userCmd = userCmd.replace('"', '\\"')
+            if cmplxCmd:
+                for cmd in userCmd:
+                    cmd = cmd.replace('"', '\\"')
+            else:
+                userCmd = userCmd.replace('"', '\\"')
 
         if sizePref == 1:
             minVarLen = 2
@@ -43,10 +60,14 @@ class Stub(object):
             maxVarLen = 12
         
         genStub = self.stub
-        for var in re.findall(r"VAR\d+", self.stub):
-            genStub = self.stub.replace(var, self.randGen.randGenVar(minVarLen, maxVarLen))
+        for var in re.findall(r"VAR\d+", genStub):
+            genStub = genStub.replace(var, self.randGen.randGenVar(minVarLen, maxVarLen))
 
-        genStub = genStub.replace("CMD", userCmd)
+        if cmplxCmd:
+            for idx, cmd in enumerate(re.findall(r"CMD\d+", genStub)):
+                genStub = genStub.replace(cmd, userCmd[idx])
+        else:
+            genStub = genStub.replace("CMD", userCmd)
 
         return "eval $({0})".format(genStub)
 

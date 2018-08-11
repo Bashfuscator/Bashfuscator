@@ -1,10 +1,10 @@
 from binascii import hexlify
 import string
 
-from bashfuscator.common.obfuscator import Obfuscator
+from bashfuscator.common.obfuscator import Mutator
 
 
-class TokenObfuscator(Obfuscator):
+class TokenObfuscator(Mutator):
     """
     Base class for all token obfuscators. If the obfuscator is able to
     be deobfuscated and executed by bash at runtime, without a stub, 
@@ -14,12 +14,13 @@ class TokenObfuscator(Obfuscator):
     :param description: short description of what the TokenObfuscator does
     :param sizeRating: rating from 1 to 5 of how much the TokenObfuscator 
     increases the size of the overall payload
+    :param credits: whom or where inpiration for or the complete obfuscator 
+    method was found at
     """
-    def __init__(self, name, description, sizeRating):
-        super().__init__(name)
+    def __init__(self, name, description, sizeRating, credits=None):
+        super().__init__(name, "token", credits)
 
         self.name = name
-        self.longName = "token/" + self.longName
         self.description = description
         self.sizeRating = sizeRating
         self.originalCmd = ""
