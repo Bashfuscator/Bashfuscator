@@ -56,13 +56,16 @@ def choosePrefObfuscator(obfuscators, sizePref, timePref=None, binaryPref=None, 
     Returns an obfuscator from a list of obfuscators which is of the 
     desired sizeRating, timeRating, with a stub that uses desired binaries
     """
+    selObfuscator = None
+
     if userOb is not None:
         for ob in obfuscators:
             if ob.longName == userOb:
                 selObfuscator = ob
                 break
         
-        error("Selected obfuscator {0} not found".format(userOb))
+        if selObfuscator is None:
+            error("Selected obfuscator '{0}' not found".format(userOb))
     
     else:
         prefObfuscators = getPrefItems(obfuscators, sizePref, timePref)

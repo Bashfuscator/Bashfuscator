@@ -44,17 +44,17 @@ if __name__ == "__main__":
 
     obOpts = parser.add_argument_group("Obfuscation Options")
     sizeOpts = obOpts.add_mutually_exclusive_group()
-    sizeOpts.add_argument("-s", "--payload-size", default=2, type=int, choices=range(1, 4), help="Desired size of the payload")
+    sizeOpts.add_argument("-s", "--payload-size", default=2, type=int, choices=range(1, 4), help="Desired size of the payload. Default: 2")
     sizeOpts.add_argument("-sm", "--min-payload-size", action="store_true", help="Generate the smallest payload possible")
     sizeOpts.add_argument("-sM", "--max-payload-size", action="store_true", help="Generate the largest payload possible")
     timeOpts = obOpts.add_mutually_exclusive_group()
-    timeOpts.add_argument("-t", "--execution-time", default=2, type=int, choices=range(1, 4), help="Desired speed of the payload")
+    timeOpts.add_argument("-t", "--execution-time", default=2, type=int, choices=range(1, 4), help="Desired speed of the payload. Default: 2")
     timeOpts.add_argument("-tm", "--min-execution-time", action="store_true", help="Generate the fastest payload possible")
     timeOpts.add_argument("-tM", "--max-execution-time", action="store_true", help="Generate the slowest payload possible")
 
     advancedOpts = parser.add_argument_group("Advanced Options")
-    advancedOpts.add_argument("--order", nargs="+", metavar="MUTATOR", help="Manually choose what mutators are used in what order").completer = getMutators
-    advancedOpts.add_argument("--layers", type=check_positive, help="Layers of obfuscation to apply")
+    advancedOpts.add_argument("--mutator-order", nargs="+", metavar="MUTATOR", help="Manually choose what mutators are used in what order").completer = getMutators
+    advancedOpts.add_argument("--layers", type=check_positive, help="Number of layers of obfuscation to apply. Default: 2")
     binOpts = advancedOpts.add_mutually_exclusive_group()
     binOpts.add_argument("--include-binaries", type=str, metavar="BINARIES", help="Binaries you exclusively want used in the generated payload")
     binOpts.add_argument("--exclude-binaries", type=str, metavar="BINARIES", help="Binaries you don't want to used in the generated payload")
@@ -84,7 +84,7 @@ if __name__ == "__main__":
         args.binaryPref = None
 
     if args.layers is None:
-        if args.manual_layer_ordering is not None:
+        if args.mutator_order is not None:
             args.layers = 1
         else:
             args.layers = 2
