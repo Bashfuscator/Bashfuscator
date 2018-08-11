@@ -2,7 +2,7 @@
 
 from argparse import ArgumentTypeError, ArgumentParser, FileType
 
-import argcomplete
+from argcomplete import autocomplete
 import pyperclip
 
 from bashfuscator.core.obfuscation_manager import ObfuscationHandler
@@ -26,13 +26,19 @@ def check_positive(value):
     return ivalue
 
 
+def getMutators(prefix, parsed_args, **kwargs):
+    allMutators = tokenObfuscators + commandObfuscators
+    
+    return [ob.longName for ob in allMutators]
+
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     progOpts = parser.add_argument_group("Program Options")
     inptOpts = progOpts.add_mutually_exclusive_group(required=True)
     inptOpts.add_argument("-c", "--command", type=str, help="Command to obfuscate")
     inptOpts.add_argument("-f", "--file", type=FileType(mode="r"), help="Name of the script to obfuscate")
-    inptOpts.add_argument("--stdin", action="store_true", help="Recieve command to obfuscate from stdin")
+    inptOpts.add_argument("--stdin", action="store_true", help="Receive command to obfuscate from stdin")
     progOpts.add_argument("-o", "--outfile", type=FileType(mode="w"), help="File to write payload to")
     progOpts.add_argument("-q", "--quiet", action="store_true", help="Print only the payload")
 
@@ -47,16 +53,17 @@ if __name__ == "__main__":
     timeOpts.add_argument("-tM", "--max-execution-time", action="store_true", help="Generate the slowest payload possible")
 
     advancedOpts = parser.add_argument_group("Advanced Options")
-    advancedOpts.add_argument("--layers", default=2, type=check_positive, help="Layers of obfuscation to apply")
+    advancedOpts.add_argument("--order", nargs="+", metavar="MUTATOR", help="Manually choose what mutators are used in what order").completer = getMutators
+    advancedOpts.add_argument("--layers", type=check_positive, help="Layers of obfuscation to apply")
     binOpts = advancedOpts.add_mutually_exclusive_group()
-    binOpts.add_argument("--include-binaries", default="", type=str, metavar="BINARIES", help="Binaries you exclusively want used in the generated payload")
-    binOpts.add_argument("--exclude-binaries", default="", type=str, metavar="BINARIES", help="Binaries you don't want to used in the generated payload")
+    binOpts.add_argument("--include-binaries", type=str, metavar="BINARIES", help="Binaries you exclusively want used in the generated payload")
+    binOpts.add_argument("--exclude-binaries", type=str, metavar="BINARIES", help="Binaries you don't want to used in the generated payload")
     advancedOpts.add_argument("--no-minify", action="store_true", help="Don't minify script or command entered before obfuscation")
 
     misc = parser.add_argument_group("Misc Options")
     misc.add_argument("--clip", action="store_true", help="Copy the payload to clipboard")
 
-    argcomplete.autocomplete(parser)
+    autocomplete(parser)
     args = parser.parse_args()
 
     if args.min_payload_size:
@@ -69,13 +76,18 @@ if __name__ == "__main__":
     elif args.max_execution_time:
         args.execution_time = 4
 
-    if args.include_binaries is not "":
+    if args.include_binaries is not None:
         args.binaryPref = (args.include_binaries.split(","), True)
-    elif args.exclude_binaries is not "":
+    elif args.exclude_binaries is not None:
         args.binaryPref = (args.exclude_binaries.split(","), False)
     else:
         args.binaryPref = None
 
+    if args.layers is None:
+        if args.manual_layer_ordering is not None:
+            args.layers = 1
+        else:
+            args.layers = 2
 
     obHandler = ObfuscationHandler(tokenObfuscators, commandObfuscators, args)
     payload = obHandler.generatePayload()

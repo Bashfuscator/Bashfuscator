@@ -1,5 +1,6 @@
 import re
 
+from bashfuscator.common.messages import error
 from bashfuscator.common.random import RandomGen
 
 
@@ -50,16 +51,26 @@ class Stub(object):
         return "eval $({0})".format(genStub)
 
 
-def choosePrefObfuscator(obfuscators, sizePref, timePref=None, binaryPref=None, prevOb=None, userStub=None):
+def choosePrefObfuscator(obfuscators, sizePref, timePref=None, binaryPref=None, prevOb=None, userOb=None, userStub=None):
     """
     Returns an obfuscator from a list of obfuscators which is of the 
     desired sizeRating, timeRating, with a stub that uses desired binaries
     """
-    prefObfuscators = getPrefItems(obfuscators, sizePref, timePref)
+    if userOb is not None:
+        for ob in obfuscators:
+            if ob.longName == userOb:
+                selObfuscator = ob
+                break
+        
+        error("Selected obfuscator {0} not found".format(userOb))
+    
+    else:
+        prefObfuscators = getPrefItems(obfuscators, sizePref, timePref)
 
     validChoice = False
     while not validChoice:
-        selObfuscator = RandomGen.randSelect(prefObfuscators)
+        if userOb is None:
+            selObfuscator = RandomGen.randSelect(prefObfuscators)
 
         # make sure we don't choose the same obfuscator twice if it's reversable
         if prevOb is not None and prevOb.reversible and prevOb.name == selObfuscator.name:
