@@ -1,6 +1,6 @@
 import re
 
-from bashfuscator.common.messages import error
+from bashfuscator.common.messages import printError
 from bashfuscator.common.random import RandomGen
 
 
@@ -65,7 +65,7 @@ def choosePrefObfuscator(obfuscators, sizePref, timePref=None, binaryPref=None, 
                 break
         
         if selObfuscator is None:
-            error("Selected obfuscator '{0}' not found".format(userOb))
+            printError("Selected obfuscator '{0}' not found".format(userOb))
     
     else:
         prefObfuscators = getPrefItems(obfuscators, sizePref, timePref)
