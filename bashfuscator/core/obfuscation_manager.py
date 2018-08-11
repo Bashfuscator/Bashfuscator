@@ -9,7 +9,7 @@ class ObfuscationHandler(object):
     def __init__(self, tokObfuscators, cmdObfuscators, args):
         self.tokObfuscators = tokObfuscators
         self.cmdObfuscators = cmdObfuscators
-        self.userLayers = args.mutator_order
+        self.userLayers = args.choose_mutators
         self.layers = args.layers
         self.sizePref = args.payload_size
         self.timePref = args.execution_time

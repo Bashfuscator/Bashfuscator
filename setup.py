@@ -23,7 +23,7 @@ def activateTabComplete():
 
 
 def autoComplete():
-    proc = Popen("register-python-argcomplete3 bashfuscator", stdout=PIPE, stderr=PIPE, shell=True)
+    proc = Popen("register-python-argcomplete3 bashfuscator", stdout=PIPE, stderr=PIPE, shell=True, universal_newlines=True)
     stdout, __ = proc.communicate()
     return stdout
 

@@ -54,7 +54,7 @@ if __name__ == "__main__":
     timeOpts.add_argument("-tM", "--max-execution-time", action="store_true", help="Generate the slowest payload possible")
 
     advancedOpts = parser.add_argument_group("Advanced Options")
-    advancedOpts.add_argument("--mutator-order", nargs="+", metavar="MUTATOR", help="Manually choose what mutators are used in what order").completer = getMutators
+    advancedOpts.add_argument("--choose-mutators", nargs="+", metavar="MUTATOR", help="Manually choose what mutators are used in what order").completer = getMutators
     advancedOpts.add_argument("--layers", type=check_positive, help="Number of layers of obfuscation to apply. Default: 2")
     binOpts = advancedOpts.add_mutually_exclusive_group()
     binOpts.add_argument("--include-binaries", type=str, metavar="BINARIES", help="Binaries you exclusively want used in the generated payload")
@@ -85,7 +85,7 @@ if __name__ == "__main__":
         args.binaryPref = None
 
     if args.layers is None:
-        if args.mutator_order is not None:
+        if args.choose_mutators is not None:
             args.layers = 1
         else:
             args.layers = 2
