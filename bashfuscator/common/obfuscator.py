@@ -52,16 +52,11 @@ class Stub(object):
             else:
                 userCmd = userCmd.replace('"', '\\"')
 
-        if sizePref == 1:
-            minVarLen = 2
-            maxVarLen = 3
-        else:
-            minVarLen = 6
-            maxVarLen = 12
+        
         
         genStub = self.stub
         for var in re.findall(r"VAR\d+", genStub):
-            genStub = genStub.replace(var, self.randGen.randGenVar(minVarLen, maxVarLen))
+            genStub = genStub.replace(var, self.randGen.randGenVar(sizePref))
 
         if cmplxCmd:
             for idx, cmd in enumerate(re.findall(r"CMD\d+", genStub)):

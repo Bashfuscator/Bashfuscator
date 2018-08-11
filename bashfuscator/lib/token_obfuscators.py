@@ -42,7 +42,7 @@ class AnsiCQuote(TokenObfuscator):
         
         obCmd = "$'\\"
 
-        if sizePref == 1:
+        if sizePref <= 1:
             maxChoice = 2
         else:
             maxChoice = 4

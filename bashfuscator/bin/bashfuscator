@@ -5,6 +5,7 @@ from argparse import ArgumentTypeError, ArgumentParser, FileType
 from argcomplete import autocomplete
 import pyperclip
 
+from bashfuscator.common.messages import activateQuietMode, printInfo
 from bashfuscator.core.obfuscation_manager import ObfuscationHandler
 from bashfuscator.lib.token_obfuscators import *
 from bashfuscator.lib.command_obfuscators import *
@@ -67,6 +68,9 @@ if __name__ == "__main__":
     autocomplete(parser)
     args = parser.parse_args()
 
+    if args.quiet:
+        activateQuietMode()
+
     if args.min_payload_size:
         args.payload_size = 0
     elif args.max_payload_size:
@@ -94,6 +98,11 @@ if __name__ == "__main__":
     payload = obHandler.generatePayload()
 
     if args.clip:
+        printInfo("Payload copied to clipboard\n")
         pyperclip.copy(payload)
 
     print(payload)
+    if not args.quiet:
+        print("")
+
+    printInfo("Payload size: {0} characters".format(len(payload)))

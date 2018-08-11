@@ -2,12 +2,21 @@ from sys import exit
 
 from bashfuscator.common.colors import blue, yellow, red, bold
 
+
+quietOutput = False
+def activateQuietMode():
+    global quietOutput
+    quietOutput = True
+
+
 def printInfo(msg):
-    print("[{0}] {1}".format(blue("+"), msg))
+    if not quietOutput:
+        print("[{0}] {1}".format(blue("+"), msg))
 
 
 def printWarning(msg):
-    print(yellow("[!] {0}".format(msg)))
+    if not quietOutput:
+        print(yellow("[!] {0}".format(msg)))
 
 
 def printError(msg):

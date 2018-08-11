@@ -58,19 +58,33 @@ class RandomGen(object):
         """
         RandomGen.randGen.shuffle(seq)
 
-    def randGenVar(self, minVarLen, maxVarLen):
+    def randGenVar(self, sizePref):
         """
         Returns a unique randomly named variable, with length 
         randomly chosen from minVarLen to maxVarLen.
         Variable name can consist of uppercase and 
         lowercase letters, as well as digits
         """
+        if sizePref == 0:
+            minVarLen = 1
+        elif sizePref == 1:
+            minVarLen = 2
+        elif sizePref == 2:
+            minVarLen == 4
+        else:
+            minVarLen == 8
+
+        maxVarLen = minVarLen * 2
+
         charList = string.ascii_letters + string.digits
 
         while True:
             randVarLen = RandomGen.randGen.randint(minVarLen, maxVarLen)
             randomVar = RandomGen.randGen.choice(string.ascii_letters)
             randomVar += "".join(RandomGen.randGen.choice(charList) for x in range(randVarLen - 1))
+
+            if randVarLen == 1 and randomVar.isdigit():
+                continue
 
             if randomVar not in RandomGen.generatedVars:
                 break
