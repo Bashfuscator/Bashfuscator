@@ -11,22 +11,23 @@ from tabulate import tabulate
 from bashfuscator.common.colors import bold
 from bashfuscator.common.messages import activateQuietMode, printInfo
 from bashfuscator.core.obfuscation_manager import ObfuscationHandler
-from bashfuscator.lib.token_obfuscators import *
-from bashfuscator.lib.string_obfuscators import *
 from bashfuscator.lib.command_obfuscators import *
+from bashfuscator.lib.string_obfuscators import *
+from bashfuscator.lib.token_obfuscators import *
 
-tokenObfuscators = [
-    AnsiCQuote()
-]
-
-stringObfuscators = [
-    Globfuscator()
-]
 
 commandObfuscators = [
     CaseSwap(),
     ForCode(),
     Reverse()
+]
+
+stringObfuscators = [
+    FileGlob()
+]
+
+tokenObfuscators = [
+    AnsiCQuote()
 ]
 
 
@@ -38,7 +39,7 @@ def check_positive(value):
 
 
 def getMutators(prefix, parsed_args, **kwargs):
-    allMutators = tokenObfuscators + commandObfuscators
+    allMutators = commandObfuscators + stringObfuscators + tokenObfuscators
     
     return [ob.longName for ob in allMutators]
 
@@ -86,7 +87,6 @@ if __name__ == "__main__":
     inptOpts.add_argument("-l", "--list", action="store_true", help="List all the availible obufscators, compressors, encoders, and encryptors")
     inptOpts.add_argument("-c", "--command", type=str, help="Command to obfuscate")
     inptOpts.add_argument("-f", "--file", type=FileType(mode="r"), help="Name of the script to obfuscate")
-    inptOpts.add_argument("--stdin", action="store_true", help="Receive command to obfuscate from stdin")
     progOpts.add_argument("-o", "--outfile", type=FileType(mode="w"), help="File to write payload to")
     progOpts.add_argument("-q", "--quiet", action="store_true", help="Print only the payload")
 
@@ -144,7 +144,7 @@ if __name__ == "__main__":
         else:
             args.layers = 2
 
-    obHandler = ObfuscationHandler(tokenObfuscators, commandObfuscators, args)
+    obHandler = ObfuscationHandler(commandObfuscators, stringObfuscators, tokenObfuscators, args)
     payload = obHandler.generatePayload()
 
     if args.clip:

@@ -31,11 +31,14 @@ class StringObfuscator(Mutator):
 		self.originalCmd = ""
 		self.payload = ""
 
+	def evalWrap(self):
+		self.payload = '''eval "$({0})"'''.format(self.payload)
 
-class Globfuscator(StringObfuscator):
+
+class FileGlob(StringObfuscator):
 	def __init__(self):
 		super().__init__(
-			name="globfuscator",
+			name="File Glob",
 			description="Uses files and glob sorting to reassemble a string",
 			sizeRating=5,
 			timeRating=5,
@@ -46,35 +49,38 @@ class Globfuscator(StringObfuscator):
 		self.originalCmd = userCmd
 		self.workingDir=writeableDir.replace("'","'\"'\"'")
 		
-		if   sizePref == 4:
-			self.blockSize = 1
+		if sizePref == 4:
+			blockSize = 1
 		elif sizePref == 3:
-			self.blockSize = 3
+			blockSize = 3
 		elif sizePref == 2:
-			self.blockSize = int(len(self.originalCmd)/100+1)
+			blockSize = int(len(self.originalCmd)/100+1)
 		elif sizePref == 1:
-			self.blockSize = int(len(self.originalCmd)/10+1)
+			blockSize = int(len(self.originalCmd)/10+1)
 		elif sizePref == 0:
-			self.blockSize = int(len(self.originalCmd)/3+1)
+			blockSize = int(len(self.originalCmd)/3+1)
 		
-		self.cmdChars = [self.originalCmd[i:i+self.blockSize] for i in range(0, len(self.originalCmd),self.blockSize)]
-		self.cmdLen = len(self.cmdChars)
-		self.cmdLogLen = int(math.ceil(math.log(self.cmdLen,2)))
+		cmdChars = [self.originalCmd[i:i+blockSize] for i in range(0, len(self.originalCmd),blockSize)]
+		cmdLen = len(cmdChars)
+		cmdLogLen = int(math.ceil(math.log(cmdLen,2)))
 		
-		self.parts=[]
-		for i in range(self.cmdLen):
-			ch=self.cmdChars[i]
-			ch=ch.replace("'","'\"'\"'")
-			self.parts.append(
+		parts = []
+		for i in range(cmdLen):
+			ch = cmdChars[i]
+			ch = ch.replace("'","'\"'\"'")
+			parts.append(
 				"echo -n '" + ch + "' > '" + self.workingDir + "/" + 
-				format(i, '0' + str(self.cmdLogLen) + 'b').replace("0","?").replace("1", "\n") + "';"
+				format(i, '0' + str(cmdLogLen) + 'b').replace("0","?").replace("1", "\n") + "';"
 			)
-		self.randGen.randShuffle(self.parts)
+		self.randGen.randShuffle(parts)
 		
-		self.payload=""
-		self.payload+="mkdir -p '" + self.workingDir + "';"
-		self.payload+="".join(self.parts)
-		self.payload+="cat '" + self.workingDir + "'/" + "?"*self.cmdLogLen + ";"
-		self.payload+="rm '"  + self.workingDir + "'/" + "?"*self.cmdLogLen + ";"
+		self.payload = ""
+		self.payload += "mkdir -p '" + self.workingDir + "';"
+		self.payload += "".join(parts)
+		self.payload += "cat '" + self.workingDir + "'/" + "?" * cmdLogLen + ";"
+		self.payload += "rm '"  + self.workingDir + "'/" + "?" * cmdLogLen + ";"
+
+		self.evalWrap()
+
 		return self.payload
 

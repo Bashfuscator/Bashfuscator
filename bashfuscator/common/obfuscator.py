@@ -65,7 +65,7 @@ class Stub(object):
         else:
             genStub = genStub.replace("CMD", userCmd)
 
-        return "eval $({0})".format(genStub)
+        return '''eval "$({0})"'''.format(genStub)
 
 
 def choosePrefObfuscator(obfuscators, sizePref, timePref=None, binaryPref=None, prevOb=None, userOb=None, userStub=None):
