@@ -79,11 +79,9 @@ class RandomGen(object):
         charList = string.ascii_letters + string.digits
 
         while True:
-            randVarLen = RandomGen.randGen.randint(minVarLen, maxVarLen)
-            randomVar = RandomGen.randGen.choice(string.ascii_letters)
-            randomVar += "".join(RandomGen.randGen.choice(charList) for x in range(randVarLen - 1))
+            randomVar = self.randGenStr(minVarLen, maxVarLen, charList)
 
-            if randVarLen == 1 and randomVar.isdigit():
+            if len(randomVar) == 1 and randomVar.isdigit():
                 continue
 
             if randomVar not in RandomGen.generatedVars:
@@ -92,3 +90,14 @@ class RandomGen(object):
         RandomGen.generatedVars.append(randomVar)
 
         return randomVar
+
+    def randGenStr(self, minStrLen, maxStrLen, charList):
+        """
+        Returns a random string, ranging in size from minStrLen to
+        maxStrLen, using characters form charList.
+        """ 
+        randVarLen = RandomGen.randGen.randint(minStrLen, maxStrLen)
+        randStr = RandomGen.randGen.choice(string.ascii_letters)
+        randStr += "".join(RandomGen.randGen.choice(charList) for x in range(randVarLen - 1))
+
+        return randStr
