@@ -51,8 +51,6 @@ class Stub(object):
                     cmd = cmd.replace('"', '\\"')
             else:
                 userCmd = userCmd.replace('"', '\\"')
-
-        
         
         genStub = self.stub
         for var in re.findall(r"VAR\d+", genStub):
@@ -84,7 +82,7 @@ def choosePrefObfuscator(obfuscators, sizePref, timePref=None, binaryPref=None, 
             printError("Selected obfuscator '{0}' not found".format(userOb))
     
     else:
-        prefObfuscators = getPrefItems(obfuscators, sizePref, timePref)
+        prefObfuscators = getPrefItems(obfuscators, sizePref, timePref, prevOb)
 
     validChoice = False
     while not validChoice:
@@ -153,7 +151,7 @@ def choosePrefStub(stubs, sizePref, timePref, binaryPref, userStub=None):
     return selStub
 
 
-def getPrefItems(seq, sizePref, timePref):
+def getPrefItems(seq, sizePref, timePref, prevOb=None):
     """
     Returns items from seq which are of the desired sizeRating and
     timeRating
@@ -170,8 +168,11 @@ def getPrefItems(seq, sizePref, timePref):
         for item in seq:
             if minSize <= item.sizeRating <= maxSize:
                 if timePref is None or (minTime <= item.timeRating <= maxTime):
-                    prefItems.append(item)
-                    foundItem = True
+                    if prevOb is not None and prevOb.reversible and prevOb == item:
+                        continue
+                    else:
+                        prefItems.append(item)
+                        foundItem = True
         
         if not foundItem:
             if minSize > 1:
