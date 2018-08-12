@@ -12,10 +12,15 @@ from bashfuscator.common.colors import bold
 from bashfuscator.common.messages import activateQuietMode, printInfo
 from bashfuscator.core.obfuscation_manager import ObfuscationHandler
 from bashfuscator.lib.token_obfuscators import *
+from bashfuscator.lib.string_obfuscators import *
 from bashfuscator.lib.command_obfuscators import *
 
 tokenObfuscators = [
     AnsiCQuote()
+]
+
+stringObfuscators = [
+    Globfuscator()
 ]
 
 commandObfuscators = [
