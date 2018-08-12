@@ -10,7 +10,8 @@ class Mutator(object):
     """
     def __init__(self, name, mutatorType, credits):
         self.name = name
-        self.longName = mutatorType + "/" + self.name.replace(" ", "_").lower()
+        self.mutatorType = mutatorType
+        self.longName = self.mutatorType + "/" + self.name.replace(" ", "_").lower()
         self.credits = credits
         self.randGen = RandomGen()
 
@@ -47,9 +48,11 @@ class Stub(object):
 
         if self.escapeQuotes:
             if cmplxCmd:
-                for cmd in userCmd:
-                    cmd = cmd.replace('"', '\\"')
+                for idx, cmd in enumerate(userCmd):
+                    userCmd[idx] = cmd.replace("'", "\\'")
+                    userCmd[idx] = cmd.replace('"', '\\"')
             else:
+                userCmd = userCmd.replace("'", "\\'")
                 userCmd = userCmd.replace('"', '\\"')
         
         genStub = self.stub

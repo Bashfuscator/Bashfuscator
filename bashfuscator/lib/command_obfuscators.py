@@ -60,7 +60,7 @@ class CaseSwap(CommandObfuscator):
             )
         ]
 
-    def obfuscate(self, sizePref, timePref, binaryPref, userCmd, usrStub=None):
+    def obfuscate(self, sizePref, timePref, binaryPref, userCmd):
         self.originalCmd = userCmd
 
         obCmd = self.originalCmd.swapcase()
@@ -91,7 +91,7 @@ class ForCode(CommandObfuscator):
             )
         ]
 
-    def obfuscate(self, sizePref, timePref, binaryPref, userCmd, usrStub=None):
+    def obfuscate(self, sizePref, timePref, binaryPref, userCmd):
         self.originalCmd = userCmd
 
         shuffledCmd = list(set(userCmd))
@@ -146,7 +146,7 @@ class Reverse(CommandObfuscator):
             )
         ]
 
-    def obfuscate(self, sizePref, timePref, binaryPref, userCmd, usrStub=None):
+    def obfuscate(self, sizePref, timePref, binaryPref, userCmd):
         self.originalCmd = userCmd
         
         obCmd = self.originalCmd[::-1]
