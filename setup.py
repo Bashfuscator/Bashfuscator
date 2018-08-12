@@ -61,7 +61,8 @@ setup(
     scripts=["bashfuscator/bin/bashfuscator"],
     install_requires=[
         "argcomplete",
-        "pyperclip"
+        "pyperclip",
+        "tabulate"
     ],
     cmdclass={"install":CustomInstall}
 )
