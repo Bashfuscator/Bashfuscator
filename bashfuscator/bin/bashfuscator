@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 
 from argparse import ArgumentTypeError, ArgumentParser, FileType
+from collections import OrderedDict
+from sys import exit
 
 from argcomplete import autocomplete
 import pyperclip
+from tabulate import tabulate
 
+from bashfuscator.common.colors import bold
 from bashfuscator.common.messages import activateQuietMode, printInfo
 from bashfuscator.core.obfuscation_manager import ObfuscationHandler
 from bashfuscator.lib.token_obfuscators import *
@@ -34,10 +38,47 @@ def getMutators(prefix, parsed_args, **kwargs):
     return [ob.longName for ob in allMutators]
 
 
+def listMutators():
+    tokNames = []
+    tokDecriptions = []
+    tokSize = []
+    tokCredits = []
+    for tokOb in tokenObfuscators:
+        tokNames.append(tokOb.name)
+        tokDecriptions.append(tokOb.description)
+        tokSize.append(tokOb.sizeRating)
+        tokCredits.append(tokOb.credits)
+
+    cmdNames = []
+    cmdDecriptions = []
+    cmdSize = []
+    cmdTime = []
+    cmdCredits = []
+    for cmdOb in commandObfuscators:
+        cmdNames.append(cmdOb.name)
+        cmdDecriptions.append(cmdOb.description)
+        cmdSize.append(cmdOb.sizeRating)
+        cmdTime.append(cmdOb.timeRating)
+        cmdCredits.append(cmdOb.credits)
+
+    tokHeaders = ["Name", "Description", "Size Rating", "Credits"]
+    tokValues = [tokNames, tokDecriptions, tokSize, tokCredits]
+
+    cmdHeaders = ["Name", "Description", "Size Rating", "Time Rating", "Credits"]
+    cmdValues = [cmdNames, cmdDecriptions, cmdSize, cmdTime, cmdCredits]
+
+    print(bold("Token Obfuscators:\n"))
+    print(tabulate(OrderedDict(zip(tokHeaders, tokValues)), headers="keys"))
+
+    print(bold("\nCommand Obfuscators:\n"))
+    print(tabulate(OrderedDict(zip(cmdHeaders, cmdValues)), headers="keys"))
+
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     progOpts = parser.add_argument_group("Program Options")
     inptOpts = progOpts.add_mutually_exclusive_group(required=True)
+    inptOpts.add_argument("-l", "--list", action="store_true", help="List all the availible obufscators, compressors, encoders, and encryptors")
     inptOpts.add_argument("-c", "--command", type=str, help="Command to obfuscate")
     inptOpts.add_argument("-f", "--file", type=FileType(mode="r"), help="Name of the script to obfuscate")
     inptOpts.add_argument("--stdin", action="store_true", help="Receive command to obfuscate from stdin")
@@ -67,6 +108,10 @@ if __name__ == "__main__":
 
     autocomplete(parser)
     args = parser.parse_args()
+
+    if args.list:
+        listMutators()
+        exit(0)
 
     if args.quiet:
         activateQuietMode()

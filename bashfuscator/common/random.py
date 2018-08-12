@@ -70,9 +70,9 @@ class RandomGen(object):
         elif sizePref == 1:
             minVarLen = 2
         elif sizePref == 2:
-            minVarLen == 4
+            minVarLen = 4
         else:
-            minVarLen == 8
+            minVarLen = 8
 
         maxVarLen = minVarLen * 2
 
