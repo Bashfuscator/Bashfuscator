@@ -40,31 +40,25 @@ class GlobObfuscator(StringObfuscator):
 			credits=credits
 		)
 
+		self.writeableDir = ""
+		self.workingDir = ""
+		self.minDirLen = None
+		self.maxDirLen = None
+		self.sectionSize = None
 		# TODO: Maybe in the future, or make command line option:
 		#self.charList = "".join(chr(i) for i in range(1, 127) if i != 37 and i != 47)
 		self.charList = "0123456789abcdef"
 		
 	def generate(self, sizePref, userCmd, writeableDir=None):
-		
+		# TODO: create a tempDir option where the user can pick the dir to write to
 		if writeableDir is None or writeableDir == "":
-			self.writeableDir = ("/tmp/" + self.randGen.randGenStr(32, 32, self.charList))
+			self.writeableDir = ("/tmp/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen, self.charList))
 		
 		self.workingDir = self.writeableDir.replace("'","'\"'\"'")
 		
-		if sizePref == 4:
-			blockSize = 1
-		elif sizePref == 3:
-			blockSize = 3
-		elif sizePref == 2:
-			blockSize = int(len(userCmd)/100+1)
-		elif sizePref == 1:
-			blockSize = int(len(userCmd)/10+1)
-		elif sizePref == 0:
-			blockSize = int(len(userCmd)/3+1)
-		
-		cmdChars = [userCmd[i:i+blockSize] for i in range(0, len(userCmd),blockSize)]
+		cmdChars = [userCmd[i:i + self.sectionSize] for i in range(0, len(userCmd), self.sectionSize)]
 		cmdLen = len(cmdChars)
-		cmdLogLen = int(math.ceil(math.log(cmdLen,2)))
+		cmdLogLen = int(math.ceil(math.log(cmdLen, 2)))
 		if cmdLogLen <= 0:
 			cmdLogLen = 1
 		
@@ -74,7 +68,7 @@ class GlobObfuscator(StringObfuscator):
 			ch = ch.replace("'","'\"'\"'")
 			parts.append(
 				"printf -- '" + ch + "' > '" + self.workingDir + "/" + 
-				format(i, '0' + str(cmdLogLen) + 'b').replace("0","?").replace("1", "\n") + "';"
+				format(i, '0' + str(cmdLogLen) + "b").replace("0", "?").replace("1", "\n") + "';"
 			)
 		self.randGen.randShuffle(parts)
 		
@@ -84,12 +78,25 @@ class GlobObfuscator(StringObfuscator):
 		self.payload += "cat '" + self.workingDir + "'/" + "?" * cmdLogLen + ";"
 		self.payload += "rm '"  + self.workingDir + "'/" + "?" * cmdLogLen + ";"
 	
-	def obfuscate(self, sizePref, userCmd, writeableDir=None, evalWrappingCall=False):
-		
-		self.generate(sizePref, userCmd, writeableDir)
-
-		return self.payload
-
+	def setSizes(self, sizePref, userCmd):
+		if sizePref == 0:
+			self.minDirLen = self.maxDirLen = 1
+			self.sectionSize = int(len(userCmd) / 3 + 1)
+		elif sizePref == 1:
+			self.minDirLen = 1
+			self.maxDirLen = 3
+			self.sectionSize = int(len(userCmd) / 10 + 1)
+		elif sizePref == 2:
+			self.minDirLen = 6
+			self.maxDirLen = 12
+			self.sectionSize = int(len(userCmd) / 100 + 1)
+		elif sizePref == 3:
+			self.minDirLen = 12
+			self.maxDirLen = 24
+			self.sectionSize = 3
+		elif sizePref == 4:
+			self.minDirLen = self.maxDirLen = 32
+			self.sectionSize = 1
 
 class FileGlob(GlobObfuscator):
 	def __init__(self):
@@ -104,6 +111,7 @@ class FileGlob(GlobObfuscator):
 	def obfuscate(self, sizePref, userCmd):
 		self.originalCmd = userCmd
 
+		self.setSizes(sizePref, userCmd)
 		self.generate(sizePref, userCmd)
 
 		return self.payload
@@ -120,31 +128,23 @@ class FolderGlob(GlobObfuscator):
 		)
 
 	def obfuscate(self, sizePref, userCmd):
+		self.originalCmd = userCmd
 		
-		self.writeableDir = ("/tmp/" + self.randGen.randGenStr(32, 32, self.charList))
-		self.workingDir= self.writeableDir.replace("'","'\"'\"'")
+		self.setSizes(sizePref, userCmd)
+		self.writeableDir = ("/tmp/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen, self.charList))
+		self.workingDir= self.writeableDir.replace("'", "'\"'\"'")
 		
-		if sizePref == 4:
-			folderSize = 1
-		elif sizePref == 3:
-			folderSize = 3
-		elif sizePref == 2:
-			folderSize = int(len(userCmd)/100+1)
-		elif sizePref == 1:
-			folderSize = int(len(userCmd)/10+1)
-		elif sizePref == 0:
-			folderSize = int(len(userCmd)/3+1)
-		
-		cmdChunks = [userCmd[i:i+folderSize] for i in range(0, len(userCmd),folderSize)]
+		cmdChunks = [userCmd[i:i + self.sectionSize] for i in range(0, len(userCmd), self.sectionSize)]
 		parts=[]
 		for chunk in cmdChunks:
-			self.generate(sizePref, chunk, self.writeableDir + "/" + self.randGen.randGenStr(32, 32, self.charList))
+			self.generate(sizePref, chunk, self.writeableDir + "/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen, self.charList))
 			parts.append(self.payload)
 			
 		self.payload = "".join(parts)
 		
 		return self.payload
 		
+
 class HexHash(StringObfuscator):
 	def __init__(self):
 		super().__init__(
@@ -160,15 +160,15 @@ class HexHash(StringObfuscator):
 		
 		self.payload=""
 		for ch in list(userCmd):
-			
-			hexchar = str(bytes(ch, 'utf-8').hex())
-			randomhash=""
+			hexchar = str(bytes(ch, "utf-8").hex())
+			randomhash = ""
+
 			while not hexchar in randomhash:
 				m = hashlib.md5()
-				randomString = self.randGen.randGenStr(5,7,string.ascii_letters + string.digits)
-				m.update(bytes(randomString, 'utf-8'))
+				randomString = self.randGen.randUniqueStr(1, 3)
+				m.update(bytes(randomString, "utf-8"))
 				randomhash=m.digest().hex()
 			index = randomhash.find(hexchar)
-			self.payload += 'printf -- "\\x$(printf \'' + randomString + '\' | md5sum | cut -b' + str(index+1) + '-' + str(index+2) + ')";\n'
+			self.payload += 'printf -- "\\x$(printf \'' + randomString + "\'|md5sum|cut -" + str(index + 1) + "-" + str(index + 2) + ')";\n'
 		
 		return self.payload

@@ -12,7 +12,8 @@ class RandomGen(object):
     @capnspacehook
     """
     randGen = random.SystemRandom()
-    generatedVars = []
+    generatedVars = set()
+    uniqueRandStrs = set()
 
     def randGenNum(self, min, max):
         """
@@ -88,9 +89,33 @@ class RandomGen(object):
             if randomVar not in RandomGen.generatedVars:
                 break
 
-        RandomGen.generatedVars.append(randomVar)
+        RandomGen.generatedVars.add(randomVar)
 
         return randomVar
+
+    def randUniqueStr(self, minStrLen, maxStrLen, charList=(string.ascii_letters + string.digits)):
+        """
+        Returns a random string that is guaranteed to be unique
+        """
+        minLen = minStrLen
+        maxLen = maxStrLen
+        commonStrNum = 0 
+
+        while True:
+            randStr = self.randGenStr(minLen, maxLen, charList)
+
+            if randStr not in RandomGen.uniqueRandStrs:
+                break 
+            else:
+                commonStrNum += 1
+                if commonStrNum == 10:
+                    minLen = maxLen
+                    maxLen += 1
+                    commonStrNum = 0 
+
+        RandomGen.uniqueRandStrs.add(randStr)
+
+        return randStr
 
     def randGenStr(self, minStrLen, maxStrLen, charList=(string.ascii_letters + string.digits)):
         """
