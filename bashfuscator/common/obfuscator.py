@@ -49,11 +49,9 @@ class Stub(object):
         if self.escapeQuotes:
             if cmplxCmd:
                 for idx, cmd in enumerate(userCmd):
-                    userCmd[idx] = cmd.replace("'", "\\'")
-                    userCmd[idx] = cmd.replace('"', '\\"')
+                    userCmd[idx] = cmd.replace("'","'\"'\"'")
             else:
-                userCmd = userCmd.replace("'", "\\'")
-                userCmd = userCmd.replace('"', '\\"')
+                userCmd = userCmd.replace("'","'\"'\"'")
         
         genStub = self.stub
         for var in re.findall(r"VAR\d+", genStub):
@@ -65,7 +63,7 @@ class Stub(object):
         else:
             genStub = genStub.replace("CMD", userCmd)
 
-        return '''eval "$({0})"'''.format(genStub)
+        return genStub
 
 
 def choosePrefObfuscator(obfuscators, sizePref, timePref=None, binaryPref=None, prevOb=None, userOb=None, userStub=None):
@@ -93,7 +91,7 @@ def choosePrefObfuscator(obfuscators, sizePref, timePref=None, binaryPref=None, 
             selObfuscator = RandomGen.randSelect(prefObfuscators)
 
         # make sure we don't choose the same obfuscator twice if it's reversable
-        if prevOb is not None and prevOb.reversible and prevOb.name == selObfuscator.name:
+        if userOb is None and prevOb is not None and prevOb.reversible and prevOb.name == selObfuscator.name:
             continue
         
         if timePref is not None:

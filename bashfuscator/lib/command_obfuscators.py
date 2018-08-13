@@ -134,7 +134,7 @@ class Reverse(CommandObfuscator):
                 sizeRating=3,
                 timeRating=1,
                 escapeQuotes=True,
-                stub="""perl -lne 'print scalar reverse "CMD"'"""
+                stub="""perl -e 'print scalar reverse "CMD"'"""
             ),
             Stub(
                 name="python list reverse",
