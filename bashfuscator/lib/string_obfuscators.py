@@ -1,4 +1,5 @@
 import math
+import string
 import hashlib
 
 from bashfuscator.common.obfuscator import Mutator
@@ -39,7 +40,8 @@ class GlobObfuscator(StringObfuscator):
 			credits=credits
 		)
 
-		self.charList = "".join(chr(i) for i in range(1, 127) if i != 37 and i != 47)
+		# TODO: Maybe in the future, or make command line option:
+		#self.charList = "".join(chr(i) for i in range(1, 127) if i != 37 and i != 47)
 		self.charList = "0123456789abcdef"
 		
 	def generate(self, sizePref, userCmd, writeableDir=None):
@@ -163,36 +165,10 @@ class HexHash(StringObfuscator):
 			randomhash=""
 			while not hexchar in randomhash:
 				m = hashlib.md5()
-				randomString = self.randGen.randGenStr(1,3,"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
+				randomString = self.randGen.randGenStr(5,7,string.ascii_letters + string.digits)
 				m.update(bytes(randomString, 'utf-8'))
 				randomhash=m.digest().hex()
 			index = randomhash.find(hexchar)
 			self.payload += 'printf -- "\\x$(printf \'' + randomString + '\' | md5sum | cut -b' + str(index+1) + '-' + str(index+2) + ')";\n'
 		
 		return self.payload
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-
-
-
-
-
