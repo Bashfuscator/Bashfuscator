@@ -91,10 +91,10 @@ class RandomGen(object):
 
         return randomVar
 
-    def randGenStr(self, minStrLen, maxStrLen, charList):
+    def randGenStr(self, minStrLen, maxStrLen, charList=(string.ascii_letters + string.digits)):
         """
         Returns a random string, ranging in size from minStrLen to
-        maxStrLen, using characters form charList.
+        maxStrLen, using characters from charList.
         """ 
         randVarLen = RandomGen.randGen.randint(minStrLen, maxStrLen)
         randStr = RandomGen.randGen.choice(string.ascii_letters)
