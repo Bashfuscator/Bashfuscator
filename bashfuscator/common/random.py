@@ -79,7 +79,8 @@ class RandomGen(object):
         charList = string.ascii_letters + string.digits
 
         while True:
-            randomVar = self.randGenStr(minVarLen, maxVarLen, charList)
+            randomVar = self.randSelect(string.ascii_letters)
+            randomVar += self.randGenStr(minVarLen, maxVarLen - 1, charList)
 
             if len(randomVar) == 1 and randomVar.isdigit():
                 continue
@@ -97,7 +98,6 @@ class RandomGen(object):
         maxStrLen, using characters form charList.
         """ 
         randVarLen = RandomGen.randGen.randint(minStrLen, maxStrLen)
-        randStr = RandomGen.randGen.choice(string.ascii_letters)
-        randStr += "".join(RandomGen.randGen.choice(charList) for x in range(randVarLen - 1))
+        randStr = "".join(self.randSelect(charList) for x in range(randVarLen))
 
         return randStr
