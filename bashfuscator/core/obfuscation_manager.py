@@ -51,6 +51,8 @@ class ObfuscationHandler(object):
                 tokObfuscator = choosePrefObfuscator(self.tokObfuscators, self.sizePref, userOb=userOb)
                 payload = tokObfuscator.obfuscate(self.sizePref, payload)
 
+            payload = self.evalWrap(payload)
+
         else:
             cmdObfuscator = choosePrefObfuscator(self.cmdObfuscators, self.sizePref, self.timePref, 
                     self.binaryPref, self.prevCmdOb, userOb)
@@ -59,7 +61,12 @@ class ObfuscationHandler(object):
             tokObfuscator = choosePrefObfuscator(self.tokObfuscators, self.sizePref, userOb=userOb)
            
             payload = cmdObfuscator.obfuscate(self.sizePref, self.timePref, self.binaryPref, payload)
+            payload = self.evalWrap(payload)
             payload = strObfuscator.obfuscate(self.sizePref, payload)
+            payload = self.evalWrap(payload)
             #payload = tokObfuscator.obfuscate(self.sizePref, payload)
 
         return payload
+
+    def evalWrap(self, payload):
+        return '''eval "$({0})"'''.format(payload)
