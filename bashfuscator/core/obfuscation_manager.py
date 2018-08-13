@@ -42,7 +42,7 @@ class ObfuscationHandler(object):
                 cmdObfuscator = choosePrefObfuscator(self.cmdObfuscators, self.sizePref, self.timePref, 
                     self.binaryPref, self.prevCmdOb, userOb)
                 self.prevCmdOb = cmdObfuscator
-                payload = cmdObfuscator.obfuscate(self.sizePref, self.timePref, self.binaryPref, payload)
+                payload = cmdObfuscator.obfuscate(self.sizePref, self.timePref, payload)
             elif userOb.split("/")[0] == "token":
                 tokObfuscator = choosePrefObfuscator(self.tokObfuscators, self.sizePref, userOb=userOb)
                 payload = tokObfuscator.obfuscate(self.sizePref, payload)
@@ -53,7 +53,7 @@ class ObfuscationHandler(object):
             self.prevCmdOb = cmdObfuscator
             tokObfuscator = choosePrefObfuscator(self.tokObfuscators, self.sizePref, userOb=userOb)
            
-            payload = cmdObfuscator.obfuscate(self.sizePref, self.timePref, self.binaryPref, payload)
+            payload = cmdObfuscator.obfuscate(self.sizePref, self.timePref, payload)
             #payload = tokObfuscator.obfuscate(self.sizePref, payload)
 
         return payload
