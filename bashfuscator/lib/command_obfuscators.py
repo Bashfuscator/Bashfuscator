@@ -12,7 +12,7 @@ class CommandObfuscator(Mutator):
     increases the size of the overall payload
     :param timeRating: rating from 1 to 5 of how much the CommandObfuscator 
     increases the execution time of the overall payload
-    :param reversable: True if the obfuscator cancels itself out when run
+    :param reversible: True if the obfuscator cancels itself out when run
     twice in a row on a command/script, False otherwise
     :param credits: whom or where inpiration for or the complete obfuscator 
     method was found at
@@ -48,7 +48,7 @@ class CaseSwap(CommandObfuscator):
                 sizeRating=1,
                 timeRating=1,
                 escapeQuotes=True,
-                stub="""VAR1="CMD";${VAR1~~}"""
+                stub='''VAR1='CMD';printf -- "${VAR1~~}"'''
             ),
             Stub(
                 name="python swapcase",
@@ -56,7 +56,7 @@ class CaseSwap(CommandObfuscator):
                 sizeRating=2,
                 timeRating=1,
                 escapeQuotes=True,
-                stub="""python -c 'print("CMD".swapcase())'"""
+                stub="""python -c 'print('"'''"'CMD'"'''"'.swapcase())'"""
             )
         ]
 
@@ -134,7 +134,7 @@ class Reverse(CommandObfuscator):
                 sizeRating=3,
                 timeRating=1,
                 escapeQuotes=True,
-                stub="""perl -lne 'print scalar reverse "CMD"'"""
+                stub="""perl -e 'print scalar reverse "CMD"'"""
             ),
             Stub(
                 name="python list reverse",

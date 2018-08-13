@@ -12,7 +12,8 @@ class RandomGen(object):
     @capnspacehook
     """
     randGen = random.SystemRandom()
-    generatedVars = []
+    generatedVars = set()
+    uniqueRandStrs = set()
 
     def randGenNum(self, min, max):
         """
@@ -79,16 +80,49 @@ class RandomGen(object):
         charList = string.ascii_letters + string.digits
 
         while True:
-            randVarLen = RandomGen.randGen.randint(minVarLen, maxVarLen)
-            randomVar = RandomGen.randGen.choice(string.ascii_letters)
-            randomVar += "".join(RandomGen.randGen.choice(charList) for x in range(randVarLen - 1))
+            randomVar = self.randSelect(string.ascii_letters)
+            randomVar += self.randGenStr(minVarLen, maxVarLen - 1, charList)
 
-            if randVarLen == 1 and randomVar.isdigit():
+            if len(randomVar) == 1 and randomVar.isdigit():
                 continue
 
             if randomVar not in RandomGen.generatedVars:
                 break
 
-        RandomGen.generatedVars.append(randomVar)
+        RandomGen.generatedVars.add(randomVar)
 
         return randomVar
+
+    def randUniqueStr(self, minStrLen, maxStrLen, charList=(string.ascii_letters + string.digits)):
+        """
+        Returns a random string that is guaranteed to be unique
+        """
+        minLen = minStrLen
+        maxLen = maxStrLen
+        commonStrNum = 0 
+
+        while True:
+            randStr = self.randGenStr(minLen, maxLen, charList)
+
+            if randStr not in RandomGen.uniqueRandStrs:
+                break 
+            else:
+                commonStrNum += 1
+                if commonStrNum == 10:
+                    minLen = maxLen
+                    maxLen += 1
+                    commonStrNum = 0 
+
+        RandomGen.uniqueRandStrs.add(randStr)
+
+        return randStr
+
+    def randGenStr(self, minStrLen, maxStrLen, charList=(string.ascii_letters + string.digits)):
+        """
+        Returns a random string, ranging in size from minStrLen to
+        maxStrLen, using characters from charList.
+        """ 
+        randVarLen = RandomGen.randGen.randint(minStrLen, maxStrLen)
+        randStr = "".join(self.randSelect(charList) for x in range(randVarLen))
+
+        return randStr

@@ -11,17 +11,25 @@ from tabulate import tabulate
 from bashfuscator.common.colors import bold
 from bashfuscator.common.messages import activateQuietMode, printInfo
 from bashfuscator.core.obfuscation_manager import ObfuscationHandler
-from bashfuscator.lib.token_obfuscators import *
 from bashfuscator.lib.command_obfuscators import *
+from bashfuscator.lib.string_obfuscators import *
+from bashfuscator.lib.token_obfuscators import *
 
-tokenObfuscators = [
-    AnsiCQuote()
-]
 
 commandObfuscators = [
     CaseSwap(),
     ForCode(),
     Reverse()
+]
+
+stringObfuscators = [
+    FolderGlob(),
+    FileGlob(),
+    HexHash()
+]
+
+tokenObfuscators = [
+    AnsiCQuote()
 ]
 
 
@@ -33,22 +41,12 @@ def check_positive(value):
 
 
 def getMutators(prefix, parsed_args, **kwargs):
-    allMutators = tokenObfuscators + commandObfuscators
+    allMutators = commandObfuscators + stringObfuscators + tokenObfuscators
     
     return [ob.longName for ob in allMutators]
 
 
 def listMutators():
-    tokNames = []
-    tokDecriptions = []
-    tokSize = []
-    tokCredits = []
-    for tokOb in tokenObfuscators:
-        tokNames.append(tokOb.name)
-        tokDecriptions.append(tokOb.description)
-        tokSize.append(tokOb.sizeRating)
-        tokCredits.append(tokOb.credits)
-
     cmdNames = []
     cmdDecriptions = []
     cmdSize = []
@@ -61,17 +59,45 @@ def listMutators():
         cmdTime.append(cmdOb.timeRating)
         cmdCredits.append(cmdOb.credits)
 
-    tokHeaders = ["Name", "Description", "Size Rating", "Credits"]
-    tokValues = [tokNames, tokDecriptions, tokSize, tokCredits]
+    strNames = []
+    strDecriptions = []
+    strSize = []
+    strTime = []
+    strCredits = []
+    for strOb in stringObfuscators:
+        strNames.append(strOb.name)
+        strDecriptions.append(strOb.description)
+        strSize.append(strOb.sizeRating)
+        strTime.append(strOb.timeRating)
+        strCredits.append(strOb.credits)
+
+    tokNames = []
+    tokDecriptions = []
+    tokSize = []
+    tokCredits = []
+    for tokOb in tokenObfuscators:
+        tokNames.append(tokOb.name)
+        tokDecriptions.append(tokOb.description)
+        tokSize.append(tokOb.sizeRating)
+        tokCredits.append(tokOb.credits)
 
     cmdHeaders = ["Name", "Description", "Size Rating", "Time Rating", "Credits"]
     cmdValues = [cmdNames, cmdDecriptions, cmdSize, cmdTime, cmdCredits]
 
-    print(bold("Token Obfuscators:\n"))
-    print(tabulate(OrderedDict(zip(tokHeaders, tokValues)), headers="keys"))
+    strHeaders = cmdHeaders
+    strValues = [strNames, strDecriptions, strSize, strTime, strCredits]
 
-    print(bold("\nCommand Obfuscators:\n"))
+    tokHeaders = ["Name", "Description", "Size Rating", "Credits"]
+    tokValues = [tokNames, tokDecriptions, tokSize, tokCredits]
+
+    print(bold("Command Obfuscators:\n"))
     print(tabulate(OrderedDict(zip(cmdHeaders, cmdValues)), headers="keys"))
+
+    print(bold("\nString Obfuscators:\n"))
+    print(tabulate(OrderedDict(zip(strHeaders, strValues)), headers="keys"))
+
+    print(bold("\nToken Obfuscators:\n"))
+    print(tabulate(OrderedDict(zip(tokHeaders, tokValues)), headers="keys"))
 
 
 if __name__ == "__main__":
@@ -81,7 +107,6 @@ if __name__ == "__main__":
     inptOpts.add_argument("-l", "--list", action="store_true", help="List all the availible obufscators, compressors, encoders, and encryptors")
     inptOpts.add_argument("-c", "--command", type=str, help="Command to obfuscate")
     inptOpts.add_argument("-f", "--file", type=FileType(mode="r"), help="Name of the script to obfuscate")
-    inptOpts.add_argument("--stdin", action="store_true", help="Receive command to obfuscate from stdin")
     progOpts.add_argument("-o", "--outfile", type=FileType(mode="w"), help="File to write payload to")
     progOpts.add_argument("-q", "--quiet", action="store_true", help="Print only the payload")
 
@@ -139,7 +164,7 @@ if __name__ == "__main__":
         else:
             args.layers = 2
 
-    obHandler = ObfuscationHandler(tokenObfuscators, commandObfuscators, args)
+    obHandler = ObfuscationHandler(commandObfuscators, stringObfuscators, tokenObfuscators, args)
     payload = obHandler.generatePayload()
 
     if args.clip:

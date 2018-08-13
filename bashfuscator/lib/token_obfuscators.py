@@ -40,7 +40,7 @@ class AnsiCQuote(TokenObfuscator):
     def obfuscate(self, sizePref, userCmd):
         self.originalCmd = userCmd
         
-        obCmd = "$'\\"
+        obCmd = "printf -- $'\\"
 
         if sizePref <= 1:
             maxChoice = 2
