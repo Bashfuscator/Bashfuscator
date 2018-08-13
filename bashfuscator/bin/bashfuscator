@@ -176,10 +176,6 @@ if __name__ == "__main__":
         else:
             args.layers = 2
 
-    if args.file:
-        with open(args.file, "rb") as infile:
-            payload = infile.read()
-
     obHandler = ObfuscationHandler(commandObfuscators, stringObfuscators, tokenObfuscators, args)
     payload = obHandler.generatePayload()
 

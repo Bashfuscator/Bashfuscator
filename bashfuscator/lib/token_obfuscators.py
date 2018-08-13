@@ -1,7 +1,7 @@
 from binascii import hexlify
 import string
 
-from bashfuscator.common.obfuscator import Mutator
+from bashfuscator.common.objects import Mutator
 
 
 class TokenObfuscator(Mutator):

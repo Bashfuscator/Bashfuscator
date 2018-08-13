@@ -1,4 +1,4 @@
-from bashfuscator.common.obfuscator import Mutator, Stub
+from bashfuscator.common.objects import Mutator, Stub
 
 
 class CommandObfuscator(Mutator):

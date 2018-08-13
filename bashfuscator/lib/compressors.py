@@ -1,6 +1,6 @@
 import gzip
 
-from bashfuscator.common.obfuscator import Mutator
+from bashfuscator.common.objects import Mutator
 
 
 class Compressor(Mutator):

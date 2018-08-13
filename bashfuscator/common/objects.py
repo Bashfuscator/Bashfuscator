@@ -1,3 +1,8 @@
+"""
+
+This file contains base classes that other classes inherit from thoughout the framework
+
+"""
 import re
 
 from bashfuscator.common.messages import printError

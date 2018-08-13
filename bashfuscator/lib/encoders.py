@@ -1,4 +1,4 @@
-from bashfuscator.common.obfuscator import Mutator
+from bashfuscator.common.objects import Mutator
 
 
 class Encoder(Mutator):

@@ -2,7 +2,7 @@ import math
 import string
 import hashlib
 
-from bashfuscator.common.obfuscator import Mutator
+from bashfuscator.common.objects import Mutator
 
 class StringObfuscator(Mutator):
 	"""
