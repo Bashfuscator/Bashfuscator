@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import math
+import hashlib
 
 from bashfuscator.common.obfuscator import Mutator
 
@@ -136,3 +137,56 @@ class FolderGlob(FileGlob):
 			self.evalWrap()
 		
 		return self.payload
+		
+class HexHash(StringObfuscator):
+	def __init__(self):
+		super().__init__(
+			name="Hex Hash",
+			description="Uses the output of md5 to encode strings",
+			sizeRating=5,
+			timeRating=5,
+			credits="elijah-barker"
+		)
+		
+	def obfuscate(self, sizePref, userCmd, evalWrappingCall=False):
+		self.originalCmd = userCmd
+		
+		
+		m = hashlib.md5()
+		randomString = self.randGen.randGenStr(32,32,"0123456789abcdef")
+		m.update(bytes(randomString, 'utf-8'))
+		randomhash=m.digest().hex()
+		
+		self.payload=randomhash
+		
+		return self.payload
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+
+
+
+
+
+
+
