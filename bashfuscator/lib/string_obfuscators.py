@@ -32,7 +32,7 @@ class StringObfuscator(Mutator):
 		self.payload = ""
 
 	def evalWrap(self):
-		self.payload = '''eval "$({0})"'''.format(self.payload)
+		self.payload = '''"$({1})" "$({0})"'''.format(self.payload, self.obfuscate(4, "eval", evalWrappingCall=True))
 
 
 class FileGlob(StringObfuscator):
@@ -78,7 +78,7 @@ class FileGlob(StringObfuscator):
 			ch = cmdChars[i]
 			ch = ch.replace("'","'\"'\"'")
 			parts.append(
-				"echo -n '" + ch + "' > '" + self.workingDir + "/" + 
+				"printf -- '" + ch + "' > '" + self.workingDir + "/" + 
 				format(i, '0' + str(cmdLogLen) + 'b').replace("0","?").replace("1", "\n") + "';"
 			)
 		self.randGen.randShuffle(parts)
@@ -89,11 +89,11 @@ class FileGlob(StringObfuscator):
 		self.payload += "cat '" + self.workingDir + "'/" + "?" * cmdLogLen + ";"
 		self.payload += "rm '"  + self.workingDir + "'/" + "?" * cmdLogLen + ";"
 	
-	def obfuscate(self, sizePref, userCmd, writeableDir=None):
+	def obfuscate(self, sizePref, userCmd, writeableDir=None, evalWrappingCall=False):
 		
 		self.generate(sizePref, userCmd, writeableDir)
-		self.evalWrap()
-		
+		if not evalWrappingCall:
+			self.evalWrap()
 		return self.payload
 
 
@@ -107,7 +107,7 @@ class FolderGlob(FileGlob):
 			credits="elijah-barker"
 		)
 
-	def obfuscate(self, sizePref, userCmd, writeableDir=None):
+	def obfuscate(self, sizePref, userCmd, writeableDir=None, evalWrappingCall=False):
 		
 		if writeableDir == None or writeableDir == "":
 			writeableDir = ("/tmp/"+self.randGen.randGenStr(32,32,"0123456789abcdef"))
@@ -131,29 +131,8 @@ class FolderGlob(FileGlob):
 			parts.append(self.payload)
 			
 		self.payload = "".join(parts)
-		self.evalWrap()
+		
+		if not evalWrappingCall:
+			self.evalWrap()
 		
 		return self.payload
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
