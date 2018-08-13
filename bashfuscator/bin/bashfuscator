@@ -23,6 +23,7 @@ commandObfuscators = [
 ]
 
 stringObfuscators = [
+    FolderGlob(),
     FileGlob()
 ]
 

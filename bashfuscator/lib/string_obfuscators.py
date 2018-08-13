@@ -36,17 +36,24 @@ class StringObfuscator(Mutator):
 
 
 class FileGlob(StringObfuscator):
-	def __init__(self):
-		super().__init__(
+	def __init__(self,
 			name="File Glob",
 			description="Uses files and glob sorting to reassemble a string",
 			sizeRating=5,
 			timeRating=5,
-			credits="elijah-barker"
+			credits="elijah-barker"):
+		super().__init__(
+			name=name,
+			description=description,
+			sizeRating=sizeRating,
+			timeRating=timeRating,
+			credits=credits
 		)
 		
-	def obfuscate(self, sizePref, userCmd, writeableDir="/tmp/bashfuscator"):
-		self.originalCmd = userCmd
+	def generate(self, sizePref, userCmd, writeableDir):
+		
+		if writeableDir == None or writeableDir == "":
+			writeableDir = ("/tmp/" + self.randGen.randGenStr(32,32,"0123456789abcdef"))
 		self.workingDir=writeableDir.replace("'","'\"'\"'")
 		
 		if sizePref == 4:
@@ -54,15 +61,17 @@ class FileGlob(StringObfuscator):
 		elif sizePref == 3:
 			blockSize = 3
 		elif sizePref == 2:
-			blockSize = int(len(self.originalCmd)/100+1)
+			blockSize = int(len(userCmd)/100+1)
 		elif sizePref == 1:
-			blockSize = int(len(self.originalCmd)/10+1)
+			blockSize = int(len(userCmd)/10+1)
 		elif sizePref == 0:
-			blockSize = int(len(self.originalCmd)/3+1)
+			blockSize = int(len(userCmd)/3+1)
 		
-		cmdChars = [self.originalCmd[i:i+blockSize] for i in range(0, len(self.originalCmd),blockSize)]
+		cmdChars = [userCmd[i:i+blockSize] for i in range(0, len(userCmd),blockSize)]
 		cmdLen = len(cmdChars)
 		cmdLogLen = int(math.ceil(math.log(cmdLen,2)))
+		if cmdLogLen <= 0:
+			cmdLogLen = 1
 		
 		parts = []
 		for i in range(cmdLen):
@@ -74,12 +83,77 @@ class FileGlob(StringObfuscator):
 			)
 		self.randGen.randShuffle(parts)
 		
+		self.payload = ""
 		self.payload += "mkdir -p '" + self.workingDir + "';"
 		self.payload += "".join(parts)
 		self.payload += "cat '" + self.workingDir + "'/" + "?" * cmdLogLen + ";"
 		self.payload += "rm '"  + self.workingDir + "'/" + "?" * cmdLogLen + ";"
-
+	
+	def obfuscate(self, sizePref, userCmd, writeableDir=None):
+		
+		self.generate(sizePref, userCmd, writeableDir)
 		self.evalWrap()
-
+		
 		return self.payload
+
+
+class FolderGlob(FileGlob):
+	def __init__(self):
+		super().__init__(
+			name="Folder Glob",
+			description="Same as file glob, but better",
+			sizeRating=5,
+			timeRating=5,
+			credits="elijah-barker"
+		)
+
+	def obfuscate(self, sizePref, userCmd, writeableDir=None):
+		
+		if writeableDir == None or writeableDir == "":
+			writeableDir = ("/tmp/"+self.randGen.randGenStr(32,32,"0123456789abcdef"))
+		self.workingDir=writeableDir.replace("'","'\"'\"'")
+		
+		if sizePref == 4:
+			folderSize = 1
+		elif sizePref == 3:
+			folderSize = 3
+		elif sizePref == 2:
+			folderSize = int(len(userCmd)/100+1)
+		elif sizePref == 1:
+			folderSize = int(len(userCmd)/10+1)
+		elif sizePref == 0:
+			folderSize = int(len(userCmd)/3+1)
+		
+		cmdChunks = [userCmd[i:i+folderSize] for i in range(0, len(userCmd),folderSize)]
+		parts=[]
+		for chunk in cmdChunks:
+			self.generate(sizePref, chunk, writeableDir + "/" + self.randGen.randGenStr(32,32,"0123456789abcdef"))
+			parts.append(self.payload)
+			
+		self.payload = "".join(parts)
+		self.evalWrap()
+		
+		return self.payload
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
