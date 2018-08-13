@@ -38,7 +38,8 @@ class CaseSwap(CommandObfuscator):
             description="Flips the case of all alpha chars",
             sizeRating=2,
             timeRating=1,
-            reversible=True
+            reversible=True,
+            credits="capnspacehook"
         )
 
         self.stubs = [
@@ -60,7 +61,7 @@ class CaseSwap(CommandObfuscator):
             )
         ]
 
-    def obfuscate(self, sizePref, timePref, binaryPref, userCmd):
+    def obfuscate(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
         obCmd = self.originalCmd.swapcase()
@@ -77,7 +78,7 @@ class ForCode(CommandObfuscator):
             sizeRating=3,
             timeRating=2,
             reversible=False,
-            credits="@danielbohannon, https://github.com/danielbohannon/Invoke-DOSfuscation"
+            credits="danielbohannon, https://github.com/danielbohannon/Invoke-DOSfuscation"
         )
 
         self.stubs = [
@@ -91,7 +92,7 @@ class ForCode(CommandObfuscator):
             )
         ]
 
-    def obfuscate(self, sizePref, timePref, binaryPref, userCmd):
+    def obfuscate(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
         shuffledCmd = list(set(userCmd))
@@ -116,7 +117,8 @@ class Reverse(CommandObfuscator):
             description="Reverses a command",
             sizeRating=1,
             timeRating=1,
-            reversible=True
+            reversible=True,
+            credits="capnspacehook"
         )
 
         self.stubs = [
@@ -146,7 +148,7 @@ class Reverse(CommandObfuscator):
             )
         ]
 
-    def obfuscate(self, sizePref, timePref, binaryPref, userCmd):
+    def obfuscate(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
         
         obCmd = self.originalCmd[::-1]

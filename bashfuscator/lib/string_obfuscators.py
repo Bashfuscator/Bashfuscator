@@ -167,8 +167,9 @@ class HexHash(StringObfuscator):
 				m = hashlib.md5()
 				randomString = self.randGen.randUniqueStr(1, 3)
 				m.update(bytes(randomString, "utf-8"))
-				randomhash=m.digest().hex()
+				randomhash = m.digest().hex()
+
 			index = randomhash.find(hexchar)
-			self.payload += 'printf -- "\\x$(printf \'' + randomString + "\'|md5sum|cut -" + str(index + 1) + "-" + str(index + 2) + ')";\n'
+			self.payload += 'printf -- "\\x$(printf \'' + randomString + "\'|md5sum|cut -b" + str(index + 1) + "-" + str(index + 2) + ')";\n'
 		
 		return self.payload
