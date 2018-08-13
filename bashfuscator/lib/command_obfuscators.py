@@ -48,7 +48,7 @@ class CaseSwap(CommandObfuscator):
                 sizeRating=1,
                 timeRating=1,
                 escapeQuotes=True,
-                stub='''VAR1='CMD';eval "${VAR1~~}"'''
+                stub='''VAR1='CMD';printf "${VAR1~~}"'''
             ),
             Stub(
                 name="python swapcase",
