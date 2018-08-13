@@ -48,7 +48,7 @@ class CaseSwap(CommandObfuscator):
                 sizeRating=1,
                 timeRating=1,
                 escapeQuotes=True,
-                stub="""VAR1="CMD";${VAR1~~}"""
+                stub='''VAR1='CMD';eval "${VAR1~~}"'''
             ),
             Stub(
                 name="python swapcase",
@@ -56,7 +56,7 @@ class CaseSwap(CommandObfuscator):
                 sizeRating=2,
                 timeRating=1,
                 escapeQuotes=True,
-                stub="""python -c 'print("CMD".swapcase())'"""
+                stub="""python -c 'print('"'''"'CMD'"'''"'.swapcase())'"""
             )
         ]
 
