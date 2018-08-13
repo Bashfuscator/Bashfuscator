@@ -40,6 +40,7 @@ class GlobObfuscator(StringObfuscator):
 		)
 
 		self.charList = "".join(chr(i) for i in range(1, 127) if i != 37 and i != 47)
+		self.charList = "0123456789abcdef"
 		
 	def generate(self, sizePref, userCmd, writeableDir=None):
 		
@@ -155,8 +156,8 @@ class HexHash(StringObfuscator):
 	def obfuscate(self, sizePref, userCmd):
 		self.originalCmd = userCmd
 		
-		payload=""
-		for ch in list(userCmd + ' '):
+		self.payload=""
+		for ch in list(userCmd):
 			
 			hexchar = str(bytes(ch, 'utf-8').hex())
 			randomhash=""
@@ -166,11 +167,7 @@ class HexHash(StringObfuscator):
 				m.update(bytes(randomString, 'utf-8'))
 				randomhash=m.digest().hex()
 			index = randomhash.find(hexchar)
-			self.payload += 'echo -en "\\x$(printf \'' + randomString + '\' | md5sum | cut -b' + str(index+1) + '-' + str(index+2) + ')";'
-			
-			
-		
-		#self.payload=randomhash
+			self.payload += 'printf -- "\\x$(printf \'' + randomString + '\' | md5sum | cut -b' + str(index+1) + '-' + str(index+2) + ')";\n'
 		
 		return self.payload
 		
