@@ -27,6 +27,15 @@ class ObfuscationHandler(object):
         for i in range(self.layers):
             if self.userMutators is not None:
                 for userOb in self.userMutators:
+                    if userOb.count("/") == 2:
+                        if userOb[-1] == "/":
+                            userOb = userOb[:-1]
+                            payload = self.genObfuscationLayer(payload, userOb)
+                        else:
+                            userStub = userOb.split("/")[2]
+                            userOb = userOb[:-int(len(userStub) + 1)]
+                            payload = self.genObfuscationLayer(payload, userOb, userStub)
+                    
                     payload = self.genObfuscationLayer(payload, userOb)
             
             else:
@@ -34,13 +43,13 @@ class ObfuscationHandler(object):
 
         return payload
 
-    def genObfuscationLayer(self, payload, userOb=None):
+    def genObfuscationLayer(self, payload, userOb=None, userStub=None):
         tokObfuscator = cmdObfuscator = None
 
         if userOb is not None:
             if userOb.split("/")[0] == "command":
                 cmdObfuscator = choosePrefObfuscator(self.cmdObfuscators, self.sizePref, self.timePref, 
-                    self.binaryPref, self.prevCmdOb, userOb)
+                    self.binaryPref, self.prevCmdOb, userOb, userStub)
                 self.prevCmdOb = cmdObfuscator
                 payload = cmdObfuscator.obfuscate(self.sizePref, self.timePref, payload)
             elif userOb.split("/")[0] == "token":
@@ -49,7 +58,7 @@ class ObfuscationHandler(object):
 
         else:
             cmdObfuscator = choosePrefObfuscator(self.cmdObfuscators, self.sizePref, self.timePref, 
-                    self.binaryPref, self.prevCmdOb, userOb)
+                    self.binaryPref, self.prevCmdOb, userOb, userStub)
             self.prevCmdOb = cmdObfuscator
             tokObfuscator = choosePrefObfuscator(self.tokObfuscators, self.sizePref, userOb=userOb)
            

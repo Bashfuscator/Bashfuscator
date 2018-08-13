@@ -33,9 +33,15 @@ def check_positive(value):
 
 
 def getMutators(prefix, parsed_args, **kwargs):
-    allMutators = tokenObfuscators + commandObfuscators
+    allMutators = []
+    for cmdOb in commandObfuscators:
+        for stub in cmdOb.stubs:
+            allMutators.append(cmdOb.longName + "/" + stub.longName)
+
+    for tokOb in tokenObfuscators:
+        allMutators.append(tokOb.longName)
     
-    return [ob.longName for ob in allMutators]
+    return allMutators
 
 
 def listMutators():
