@@ -74,7 +74,6 @@ class FileGlob(StringObfuscator):
 			)
 		self.randGen.randShuffle(parts)
 		
-		self.payload = ""
 		self.payload += "mkdir -p '" + self.workingDir + "';"
 		self.payload += "".join(parts)
 		self.payload += "cat '" + self.workingDir + "'/" + "?" * cmdLogLen + ";"

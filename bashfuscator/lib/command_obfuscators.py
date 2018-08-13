@@ -12,7 +12,7 @@ class CommandObfuscator(Mutator):
     increases the size of the overall payload
     :param timeRating: rating from 1 to 5 of how much the CommandObfuscator 
     increases the execution time of the overall payload
-    :param reversable: True if the obfuscator cancels itself out when run
+    :param reversible: True if the obfuscator cancels itself out when run
     twice in a row on a command/script, False otherwise
     :param credits: whom or where inpiration for or the complete obfuscator 
     method was found at
