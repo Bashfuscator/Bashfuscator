@@ -152,14 +152,15 @@ class HexHash(StringObfuscator):
 			credits="elijah-barker"
 		)
 		
-	def obfuscate(self, sizePref, userCmd, evalWrappingCall=False):
+	def obfuscate(self, sizePref, userCmd):
 		self.originalCmd = userCmd
 		
-		
-		m = hashlib.md5()
-		randomString = self.randGen.randGenStr(32,32,"0123456789abcdef")
-		m.update(bytes(randomString, 'utf-8'))
-		randomhash=m.digest().hex()
+		for ch in list(userCmd):
+			print (bytes(ch, 'utf-8').hex())
+			m = hashlib.md5()
+			randomString = self.randGen.randGenStr(32,32,"0123456789abcdef")
+			m.update(bytes(randomString, 'utf-8'))
+			randomhash=m.digest().hex()
 		
 		self.payload=randomhash
 		
