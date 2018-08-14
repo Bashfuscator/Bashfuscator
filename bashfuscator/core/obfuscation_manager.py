@@ -75,8 +75,6 @@ class ObfuscationHandler(object):
                 tokObfuscator = self.choosePrefObfuscator(self.tokObfuscators, self.sizePref, userOb=userOb)
                 payload = tokObfuscator.obfuscate(self.sizePref, payload)
 
-            payload = self.evalWrap(payload)
-
         else:
             obChoice = self.randGen.randChoice(3)
 
