@@ -1,4 +1,4 @@
-# Bashfuscator
+# Bashfuscator Contribution Guide
 
 ## Style Guide
 
@@ -52,6 +52,8 @@ if userOb.split('/')[0] == 'command':                           #not preferred
 self.payload += 'printf -- "\\x$(printf \'' + randomString      #ok, string contains double quotes
 ```
 
+---
+
 ## Adding Obfuscators
 
 Obfuscators are the bread and butter of Bashfuscator. The more obfuscators Bashfuscator contains, the more the obfuscation possibilities increase. Adding an obfuscator to the Bashfuscator framework is a great way to contribute to the project, and a potentially easy way as well. Bashfuscator has been built from the ground up with modularity and extendability in mind, ease of contribution was and is one of the main goals of the project. Before diving in and start working on your new obfuscator, take a minute and read the guide below. It will make the development process quicker and smoother, and compliance is required before any new obfuscators are submitted.
@@ -73,9 +75,11 @@ While the different obfuscator types are different, they share a few things in c
 
 - Functions other than `obfuscate()` will be created only if they are necessary to avoid reusing code, or to separate logic if the obfuscation process is sufficiently complex.
 
-- `self.originalCmd = userCmd` is the first line of every obfuscation function. This is to ensure that the obfuscated and clear command for every layer is kept if need.
+- `self.originalCmd = userCmd` is the first line of `obfuscate()`. This is to ensure that the obfuscated and clear command for every layer is kept if need.
 
 - At the very end of `obfuscate()`, the obfuscated command will be assigned to `self.payload`, and `self.payload` will be returned. `self.payload` must not be used anywhere else in the `obfuscate()` function to avoid errors when layering payloads.
+
+---
 
 ### Adding Token Obfuscators
 
@@ -86,7 +90,7 @@ If an obfuscator is able to be deobfuscated and executed by bash at runtime, wit
 #### Token Obfuscator Layout
 
 ```python
-class Example(TokenObfuscator):
+class TokExample(TokenObfuscator):
     def __init__(self):
         super().__init__(
             name="Obfuscator Name",
@@ -99,10 +103,54 @@ class Example(TokenObfuscator):
     def obfuscate(self, sizePref, userCmd):
         self.originalCmd = userCmd              #required first line of obfuscate()
 
-        obCmd = "Obfuscate the input here"
+        obCmd = "Obfuscate userCmd here"
         obCmd = ...
 
         self.payload = obCmd                    #required before returning
 
         return self.payload
 ```
+
+---
+
+### Adding Command Obfuscators
+
+#### Command Obfuscator Definition
+
+If an obfuscator requires a deobfuscation stub to execute, then it is a command obfuscator.
+
+#### Command Obfuscator Layout
+
+```python
+class CmdExample(CommandObfuscator):
+    def __init__(self):
+        super().__init__(
+            name="Obfuscator Name",
+            description="Description of how the obfuscator changes the input",
+            sizeRating=2,
+            timeRating=1,
+            reversible=True,
+            credits="Creator of the obfuscator, or who or where inpiration for the obfuscator or code is from"
+        )
+
+        #stub will be selected automatically, or manually by user
+        self.stubs = [
+            Stub(
+                name="Stub Name",
+                binariesUsed=["List of binaries", "the stub uses"],
+                sizeRating=1,
+                timeRating=1,
+                escapeQuotes=True,
+                stub="""Actual stub code"""
+            ),
+        ]
+
+    def obfuscate(self, sizePref, timePref, userCmd):
+        self.originalCmd = userCmd                              #required first line
+
+        obCmd = "Obfuscate userCmd here"
+        obCmd = ...
+
+        self.payload = self.deobStub.genStub(sizePref, obCmd)   #required before returning
+
+        return self.payload
