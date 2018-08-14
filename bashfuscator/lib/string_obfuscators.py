@@ -18,7 +18,7 @@ class StringObfuscator(Mutator):
 	:param credits: whom or where inpiration for or the complete obfuscator 
 	method was found at
 	"""
-	def __init__(self, name, description, sizeRating, timeRating, fileWrite=False, credits=None):
+	def __init__(self, name, description, sizeRating, timeRating, binariesUsed=[], fileWrite=False, credits=None):
 		super().__init__(name, "string", credits)
 		
 		self.name = name
@@ -26,6 +26,7 @@ class StringObfuscator(Mutator):
 		self.sizeRating = sizeRating
 		self.timeRating = timeRating
 		self.fileWrite = fileWrite
+		self.binariesUsed = binariesUsed
 		self.originalCmd = ""
 		self.payload = ""
 
@@ -37,6 +38,7 @@ class GlobObfuscator(StringObfuscator):
 			description=description,
 			sizeRating=sizeRating,
 			timeRating=timeRating,
+			binariesUsed=["cat", "mkdir", "rm"],
 			fileWrite=True,
 			credits=credits
 		)
@@ -153,6 +155,7 @@ class HexHash(StringObfuscator):
 			description="Uses the output of md5 to encode strings",
 			sizeRating=5,
 			timeRating=5,
+			binariesUsed=["cut", "md5sum"],
 			credits="elijah-barker"
 		)
 		

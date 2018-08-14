@@ -1,4 +1,4 @@
-from bashfuscator.common.messages import printError
+from bashfuscator.common.messages import printError, printWarning
 from bashfuscator.common.random import RandomGen
 
 
@@ -31,6 +31,8 @@ class ObfuscationHandler(object):
         Generates the final payload based off of the user's options
         """
         payload = self.originalCmd
+        global revObWarn 
+        revObWarn = False
         
         for i in range(self.layers):
             if self.userMutators is not None:
@@ -66,7 +68,7 @@ class ObfuscationHandler(object):
 
             elif userOb.split("/")[0] == "string":
                 strObfuscator = self.choosePrefObfuscator(self.strObfuscators, self.sizePref, self.timePref, 
-                    filePref=self.filePref, userOb=userOb)
+                    self.binaryPref, filePref=self.filePref, userOb=userOb)
                 payload = strObfuscator.obfuscate(self.sizePref, payload)
 
             elif userOb.split("/")[0] == "token":
@@ -87,7 +89,7 @@ class ObfuscationHandler(object):
 
             elif obChoice == 1:
                 strObfuscator = self.choosePrefObfuscator(self.strObfuscators, self.sizePref, self.timePref, 
-                    filePref=self.filePref)
+                    self.binaryPref, filePref=self.filePref)
 
                 payload = strObfuscator.obfuscate(self.sizePref, payload)
 
@@ -106,10 +108,20 @@ class ObfuscationHandler(object):
         desired preferences, with a stub that uses desired binaries
         """
         selObfuscator = None
+        global revObWarn
+
+        if binaryPref is not None:
+            binList = binaryPref[0]
+            includeBinary = binaryPref[1]
 
         if userOb is not None:
             for ob in obfuscators:
                 if ob.longName == userOb:
+                    if ob.mutatorType == "string":
+                        for binary in ob.binariesUsed:
+                            if (binary in binList) != includeBinary:
+                                printWarning("'{0}' obfuscator contains an unwanted binary".format(userOb))
+                    
                     selObfuscator = ob
                     break
             
@@ -124,9 +136,14 @@ class ObfuscationHandler(object):
             if userOb is None:
                 selObfuscator = self.randGen.randSelect(prefObfuscators)
 
-            # make sure we don't choose the same obfuscator twice if it's reversable
-            if userOb is None and prevOb is not None and prevOb.reversible and prevOb.name == selObfuscator.name:
-                continue
+            # make sure we don't choose the same CommandObfuscator twice if it's reversable
+            if prevOb is not None and prevOb.reversible and prevOb.name == selObfuscator.name:
+                if userOb is not None:
+                    if not revObWarn:
+                        revObWarn = True
+                        printWarning("Reversible obfuscator '{0}' selected twice in a row; part of the payload may be in the clear".format(userOb))
+                else:
+                    continue
             
             if selObfuscator.mutatorType == "command":
                 selStub = self.choosePrefStub(selObfuscator.stubs, sizePref, timePref, binaryPref, userStub)
@@ -160,11 +177,11 @@ class ObfuscationHandler(object):
                     if binaryPref is not None:
                         for binary in stub.binariesUsed:
                             if (binary in binList) != includeBinary:
-                                raise RuntimeError("{0} stub contains an unwanted binary".format(userStub))
+                                printWarning("'{0}' stub contains an unwanted binary".format(userStub))
                     
                     return stub
 
-            raise KeyError("{0} stub not found".format(userStub))
+            printError("'{0}' stub not found".format(userStub))
 
         prefStubs = []
         if binaryPref is not None:

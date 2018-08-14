@@ -135,8 +135,8 @@ if __name__ == "__main__":
     advancedOpts.add_argument("--choose-mutators", nargs="+", metavar="MUTATOR", help="Manually choose what mutators are used in what order").completer = getMutators
     advancedOpts.add_argument("--layers", type=check_positive, help="Number of layers of obfuscation to apply. Default is 1 when --choose-mutators is used, otherwise: 2")
     binOpts = advancedOpts.add_mutually_exclusive_group()
-    binOpts.add_argument("--include-binaries", type=str, metavar="BINARIES", help="Binaries you exclusively want used in the generated payload")
-    binOpts.add_argument("--exclude-binaries", type=str, metavar="BINARIES", help="Binaries you don't want to used in the generated payload")
+    binOpts.add_argument("--include-binaries", nargs="+", type=str, metavar="BINARIES", help="Binaries you exclusively want used in the generated payload")
+    binOpts.add_argument("--exclude-binaries", nargs="+", type=str, metavar="BINARIES", help="Binaries you don't want to used in the generated payload")
     advancedOpts.add_argument("--no-file-write", action="store_true", help="Don't use obfuscators that require writing to files")
     #advancedOpts.add_argument("--no-minify", action="store_true", help="Don't minify script or command entered before obfuscation")
     advancedOpts = parser.add_argument("--test", action="store_true", help="Test the payload after running it")
@@ -165,9 +165,9 @@ if __name__ == "__main__":
         args.execution_time = 4
 
     if args.include_binaries is not None:
-        args.binaryPref = (args.include_binaries.split(","), True)
+        args.binaryPref = (args.include_binaries, True)
     elif args.exclude_binaries is not None:
-        args.binaryPref = (args.exclude_binaries.split(","), False)
+        args.binaryPref = (args.exclude_binaries, False)
     else:
         args.binaryPref = None
 
@@ -190,6 +190,7 @@ if __name__ == "__main__":
         pyperclip.copy(payload)
         printInfo("Payload copied to clipboard\n")
 
+    printInfo("Payload:\n")
     print(payload)
     
     if not args.quiet:
@@ -198,7 +199,7 @@ if __name__ == "__main__":
     printInfo("Payload size: {0} characters".format(len(payload)))
 
     if args.test:
-        printInfo("Testing payload:")
+        printInfo("Testing payload:\n")
         if args.outfile:
             proc = Popen(["bash", args.outfile], stdout=PIPE, stderr=STDOUT, shell=False, universal_newlines=True)
             stdout, __ = proc.communicate()
