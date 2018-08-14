@@ -54,9 +54,9 @@ class Stub(object):
         if self.escapeQuotes:
             if cmplxCmd:
                 for idx, cmd in enumerate(userCmd):
-                    userCmd[idx] = cmd.replace("'","'\"'\"'")
+                    userCmd[idx] = cmd.replace("'", "'\"'\"'")
             else:
-                userCmd = userCmd.replace("'","'\"'\"'")
+                userCmd = userCmd.replace("'", "'\"'\"'")
         
         genStub = self.stub
         for var in re.findall(r"VAR\d+", genStub):

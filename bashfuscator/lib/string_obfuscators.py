@@ -57,7 +57,7 @@ class GlobObfuscator(StringObfuscator):
 		if writeableDir is None or writeableDir == "":
 			self.writeableDir = ("/tmp/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen, self.charList))
 		
-		self.workingDir = self.writeableDir.replace("'","'\"'\"'")
+		self.workingDir = self.writeableDir.replace("'", "'\"'\"'")
 		
 		cmdChars = [userCmd[i:i + self.sectionSize] for i in range(0, len(userCmd), self.sectionSize)]
 		cmdLen = len(cmdChars)
@@ -68,7 +68,7 @@ class GlobObfuscator(StringObfuscator):
 		parts = []
 		for i in range(cmdLen):
 			ch = cmdChars[i]
-			ch = ch.replace("'","'\"'\"'")
+			ch = ch.replace("'", "'\"'\"'")
 			parts.append(
 				"printf -- '" + ch + "' > '" + self.workingDir + "/" + 
 				format(i, '0' + str(cmdLogLen) + "b").replace("0", "?").replace("1", "\n") + "';"
@@ -162,7 +162,7 @@ class HexHash(StringObfuscator):
 	def obfuscate(self, sizePref, userCmd):
 		self.originalCmd = userCmd
 		
-		self.payload=""
+		obCmd = ""
 		for ch in list(userCmd):
 			hexchar = str(bytes(ch, "utf-8").hex())
 			randomhash = ""
@@ -174,6 +174,8 @@ class HexHash(StringObfuscator):
 				randomhash = m.digest().hex()
 
 			index = randomhash.find(hexchar)
-			self.payload += 'printf -- "\\x$(printf \'' + randomString + "\'|md5sum|cut -b" + str(index + 1) + "-" + str(index + 2) + ')";\n'
+			obCmd += 'printf -- "\\x$(printf \'' + randomString + "\'|md5sum|cut -b" + str(index + 1) + "-" + str(index + 2) + ')";\n'
 		
+		self.payload = obCmd
+
 		return self.payload

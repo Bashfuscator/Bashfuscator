@@ -106,4 +106,4 @@ venv.bak/
 .vscode/
 
 # bash scripts
-.sh
+*.sh

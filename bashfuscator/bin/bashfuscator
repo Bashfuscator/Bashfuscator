@@ -43,6 +43,10 @@ def check_positive(value):
 
 
 def getMutators(prefix, parsed_args, **kwargs):
+    """
+    Returns a list of all mutator's longName attribute for
+    auto-completion in cli
+    """
     mutatorNames = []
     allMutators = commandObfuscators + stringObfuscators + tokenObfuscators
     for mutator in allMutators:
@@ -52,6 +56,11 @@ def getMutators(prefix, parsed_args, **kwargs):
 
 
 def getMutatorsAndStubs(prefix, parsed_args, **kwargs):
+    """
+    Returns a list of all mutator's longName attribute, and every
+    longName attribute of each CommandObfuscator's stubs for 
+    auto-completion in cli
+    """
     mutatorNames = []
     for cmdOb in commandObfuscators:
         for stub in cmdOb.stubs:
