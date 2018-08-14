@@ -17,14 +17,9 @@ class ObfuscationHandler(object):
         self.timePref = args.execution_time
         self.binaryPref = args.binaryPref
         self.filePref = args.no_file_write
+        self.originalCmd = args.command
         self.prevCmdOb = None
         self.randGen = RandomGen()
-
-        if args.command:
-            self.originalCmd = args.command
-        else:
-            with open(args.file, "rb") as infile:
-                self.originalCmd = infile.read()
 
     def generatePayload(self):
         """
@@ -115,7 +110,7 @@ class ObfuscationHandler(object):
         if userOb is not None:
             for ob in obfuscators:
                 if ob.longName == userOb:
-                    if ob.mutatorType == "string":
+                    if binaryPref is not None and ob.mutatorType == "string":
                         for binary in ob.binariesUsed:
                             if (binary in binList) != includeBinary:
                                 printWarning("'{0}' obfuscator contains an unwanted binary".format(userOb))
