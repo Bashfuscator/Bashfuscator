@@ -104,3 +104,6 @@ venv.bak/
 
 # vscode stuff
 .vscode/
+
+# bash scripts
+.sh

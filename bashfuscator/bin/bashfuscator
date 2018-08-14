@@ -43,18 +43,27 @@ def check_positive(value):
 
 
 def getMutators(prefix, parsed_args, **kwargs):
-    allMutators = []
+    mutatorNames = []
+    allMutators = commandObfuscators + stringObfuscators + tokenObfuscators
+    for mutator in allMutators:
+        mutatorNames.append(mutator.longName)
+
+    return mutatorNames
+
+
+def getMutatorsAndStubs(prefix, parsed_args, **kwargs):
+    mutatorNames = []
     for cmdOb in commandObfuscators:
         for stub in cmdOb.stubs:
-            allMutators.append(cmdOb.longName + "/" + stub.longName)
+            mutatorNames.append(cmdOb.longName + "/" + stub.longName)
 
     for strOb in stringObfuscators:
-        allMutators.append(strOb.longName)
+        mutatorNames.append(strOb.longName)
 
     for tokOb in tokenObfuscators:
-        allMutators.append(tokOb.longName)
+        mutatorNames.append(tokOb.longName)
     
-    return allMutators
+    return mutatorNames
 
 
 def listMutators():
@@ -133,7 +142,9 @@ if __name__ == "__main__":
     timeOpts.add_argument("-tM", "--max-execution-time", action="store_true", help="Generate the slowest payload possible")
 
     advancedOpts = parser.add_argument_group("Advanced Options")
-    advancedOpts.add_argument("--choose-mutators", nargs="+", metavar="MUTATOR", help="Manually choose what mutators are used in what order").completer = getMutators
+    chooseOpts = advancedOpts.add_mutually_exclusive_group()
+    chooseOpts.add_argument("--choose-mutators", nargs="+", metavar="MUTATOR", help="Manually choose what mutators are used in what order").completer = getMutators
+    chooseOpts.add_argument("--choose-all", nargs="+", metavar="MUTATOR", help="Manually choose what mutators and their stubs if applicable").completer = getMutatorsAndStubs
     advancedOpts.add_argument("--layers", type=check_positive, help="Number of layers of obfuscation to apply. Default is 1 when --choose-mutators is used, otherwise: 2")
     binOpts = advancedOpts.add_mutually_exclusive_group()
     binOpts.add_argument("--include-binaries", nargs="+", type=str, metavar="BINARIES", help="Binaries you exclusively want used in the generated payload")
