@@ -80,19 +80,19 @@ class ObfuscationHandler(object):
 
             if obChoice == 0:
                 cmdObfuscator = self.choosePrefObfuscator(self.cmdObfuscators, self.sizePref, self.timePref, 
-                    self.binaryPref, self.filePref, self.prevCmdOb, userOb, userStub)
+                    self.binaryPref, self.filePref, self.prevCmdOb)
                 self.prevCmdOb = cmdObfuscator
 
                 payload = cmdObfuscator.obfuscate(self.sizePref, self.timePref, payload)
 
             elif obChoice == 1:
                 strObfuscator = self.choosePrefObfuscator(self.strObfuscators, self.sizePref, self.timePref, 
-                    filePref=self.filePref, userOb=userOb)
+                    filePref=self.filePref)
 
                 payload = strObfuscator.obfuscate(self.sizePref, payload)
 
             else:
-                tokObfuscator = self.choosePrefObfuscator(self.tokObfuscators, self.sizePref, userOb=userOb)
+                tokObfuscator = self.choosePrefObfuscator(self.tokObfuscators, self.sizePref)
                 payload = tokObfuscator.obfuscate(self.sizePref, payload)
            
         return self.evalWrap(payload)
@@ -201,7 +201,7 @@ class ObfuscationHandler(object):
             for item in seq:
                 if minSize <= item.sizeRating <= maxSize:
                     if timePref is None or (minTime <= item.timeRating <= maxTime):
-                        if filePref is None or item.fileWrite != filePref:
+                        if not filePref or item.fileWrite != filePref:
                             if prevOb is not None and prevOb.reversible and prevOb == item:
                                 continue
                             else:

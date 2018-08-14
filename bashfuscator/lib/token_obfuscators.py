@@ -42,8 +42,10 @@ class AnsiCQuote(TokenObfuscator):
         
         obCmd = "printf -- $'\\"
 
-        if sizePref <= 1:
+        if sizePref < 2:
             maxChoice = 2
+        elif sizePref < 3:
+            maxChoice = 3
         else:
             maxChoice = 4
 
@@ -52,7 +54,7 @@ class AnsiCQuote(TokenObfuscator):
 
             # If sizePref is 3, randomly ANSI-C quote substrings of the original 
             # userCmd and randomly add empty strings
-            if sizePref == 3 and len(obCmd) > 3 and self.randGen.probibility(self.SUBSTR_QUOTE_PROB):
+            if sizePref == 4 and self.randGen.probibility(self.SUBSTR_QUOTE_PROB):
                 obCmd = obCmd[:-1] + "'" + "".join("''" for x in range(self.randGen.randGenNum(0, 5))) + "$'\\"
 
             if choice == 0:
