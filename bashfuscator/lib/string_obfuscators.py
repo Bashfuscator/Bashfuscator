@@ -15,7 +15,6 @@ class StringObfuscator(Mutator):
 	increases the size of the overall payload
 	:param timeRating: rating from 1 to 5 of how much the StringObfuscator 
 	increases the execution time of the overall payload
-	:param reversible: This value should always be false.
 	:param credits: whom or where inpiration for or the complete obfuscator 
 	method was found at
 	"""

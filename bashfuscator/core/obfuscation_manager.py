@@ -76,23 +76,26 @@ class ObfuscationHandler(object):
             payload = self.evalWrap(payload)
 
         else:
-            cmdObfuscator = self.choosePrefObfuscator(self.cmdObfuscators, self.sizePref, self.timePref, 
-                self.binaryPref, self.filePref, self.prevCmdOb, userOb, userStub)
-            self.prevCmdOb = cmdObfuscator
+            obChoice = self.randGen.randChoice(3)
 
-            strObfuscator = self.choosePrefObfuscator(self.strObfuscators, self.sizePref, self.timePref, 
-                filePref=self.filePref, userOb=userOb)
+            if obChoice == 0:
+                cmdObfuscator = self.choosePrefObfuscator(self.cmdObfuscators, self.sizePref, self.timePref, 
+                    self.binaryPref, self.filePref, self.prevCmdOb, userOb, userStub)
+                self.prevCmdOb = cmdObfuscator
 
-            tokObfuscator = self.choosePrefObfuscator(self.tokObfuscators, self.sizePref, userOb=userOb)
+                payload = cmdObfuscator.obfuscate(self.sizePref, self.timePref, payload)
+
+            elif obChoice == 1:
+                strObfuscator = self.choosePrefObfuscator(self.strObfuscators, self.sizePref, self.timePref, 
+                    filePref=self.filePref, userOb=userOb)
+
+                payload = strObfuscator.obfuscate(self.sizePref, payload)
+
+            else:
+                tokObfuscator = self.choosePrefObfuscator(self.tokObfuscators, self.sizePref, userOb=userOb)
+                payload = tokObfuscator.obfuscate(self.sizePref, payload)
            
-            payload = cmdObfuscator.obfuscate(self.sizePref, self.timePref, payload)
-            payload = self.evalWrap(payload)
-            payload = strObfuscator.obfuscate(self.sizePref, payload)
-            payload = self.evalWrap(payload)
-            #payload = tokObfuscator.obfuscate(self.sizePref, payload)
-            #payload = self.evalWrap(payload)
-
-        return payload
+        return self.evalWrap(payload)
 
     def evalWrap(self, payload):
         return '''eval "$({0})"'''.format(payload)
@@ -211,7 +214,7 @@ class ObfuscationHandler(object):
                         minSize -= 1
                     elif maxSize < 5:
                         maxSize += 1
-                        
+
                     if timePref is not None:
                         if minTime > 1:
                             minTime -= 1
