@@ -2,7 +2,7 @@
 
 from argparse import ArgumentTypeError, ArgumentParser, FileType
 from collections import OrderedDict
-from os import system
+from subprocess import STDOUT, PIPE, Popen
 from sys import exit
 
 from argcomplete import autocomplete
@@ -190,6 +190,7 @@ if __name__ == "__main__":
         printInfo("Payload copied to clipboard\n")
 
     print(payload)
+    
     if not args.quiet:
         print("")
 
@@ -198,6 +199,10 @@ if __name__ == "__main__":
     if args.test:
         printInfo("Testing payload:")
         if args.outfile:
-            system("bash {0}".format(args.outfile))
+            proc = Popen(["bash", args.outfile], stdout=PIPE, stderr=STDOUT, shell=False, universal_newlines=True)
+            stdout, __ = proc.communicate()
+            print(stdout)
         else:
-            system(payload)        
+            proc = Popen(payload, executable="/bin/bash", stdout=PIPE, stderr=STDOUT, shell=True, universal_newlines=True)
+            stdout, __ = proc.communicate()
+            print(stdout)  
