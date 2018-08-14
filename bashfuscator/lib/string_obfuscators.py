@@ -19,13 +19,14 @@ class StringObfuscator(Mutator):
 	:param credits: whom or where inpiration for or the complete obfuscator 
 	method was found at
 	"""
-	def __init__(self, name, description, sizeRating, timeRating, credits=None):
+	def __init__(self, name, description, sizeRating, timeRating, fileWrite=False, credits=None):
 		super().__init__(name, "string", credits)
 		
 		self.name = name
 		self.description = description
 		self.sizeRating = sizeRating
 		self.timeRating = timeRating
+		self.fileWrite = fileWrite
 		self.originalCmd = ""
 		self.payload = ""
 
@@ -37,6 +38,7 @@ class GlobObfuscator(StringObfuscator):
 			description=description,
 			sizeRating=sizeRating,
 			timeRating=timeRating,
+			fileWrite=True,
 			credits=credits
 		)
 

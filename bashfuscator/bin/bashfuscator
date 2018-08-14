@@ -137,6 +137,7 @@ if __name__ == "__main__":
     binOpts = advancedOpts.add_mutually_exclusive_group()
     binOpts.add_argument("--include-binaries", type=str, metavar="BINARIES", help="Binaries you exclusively want used in the generated payload")
     binOpts.add_argument("--exclude-binaries", type=str, metavar="BINARIES", help="Binaries you don't want to used in the generated payload")
+    advancedOpts.add_argument("--no-file-write", action="store_true", help="Don't use obfuscators that require writing to files")
     #advancedOpts.add_argument("--no-minify", action="store_true", help="Don't minify script or command entered before obfuscation")
     advancedOpts = parser.add_argument("--test", action="store_true", help="Test the payload after running it")
 

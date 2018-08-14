@@ -17,7 +17,7 @@ class CommandObfuscator(Mutator):
     :param credits: whom or where inpiration for or the complete obfuscator 
     method was found at
     """
-    def __init__(self, name, description, sizeRating, timeRating, reversible, credits=None):
+    def __init__(self, name, description, sizeRating, timeRating, reversible, fileWrite=False, credits=None):
         super().__init__(name, "command", credits)
         
         self.name = name
@@ -25,6 +25,7 @@ class CommandObfuscator(Mutator):
         self.sizeRating = sizeRating
         self.timeRating = timeRating
         self.reversible = reversible
+        self.fileWrite = fileWrite
         self.stubs = []
         self.deobStub = None
         self.originalCmd = ""

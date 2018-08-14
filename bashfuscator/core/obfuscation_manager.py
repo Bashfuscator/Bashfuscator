@@ -16,6 +16,7 @@ class ObfuscationHandler(object):
         self.sizePref = args.payload_size
         self.timePref = args.execution_time
         self.binaryPref = args.binaryPref
+        self.filePref = args.no_file_write
         self.prevCmdOb = None
         self.randGen = RandomGen()
 
@@ -26,6 +27,9 @@ class ObfuscationHandler(object):
                 self.originalCmd = infile.read()
 
     def generatePayload(self):
+        """
+        Generates the final payload based off of the user's options
+        """
         payload = self.originalCmd
         
         for i in range(self.layers):
@@ -48,17 +52,23 @@ class ObfuscationHandler(object):
         return payload
 
     def genObfuscationLayer(self, payload, userOb=None, userStub=None):
+        """
+        Generates one layer of obfuscation
+        """
         tokObfuscator = strObfuscator = cmdObfuscator = None
 
         if userOb is not None:
             if userOb.split("/")[0] == "command":
                 cmdObfuscator = self.choosePrefObfuscator(self.cmdObfuscators, self.sizePref, self.timePref, 
-                    self.binaryPref, self.prevCmdOb, userOb, userStub)
+                    self.binaryPref, self.filePref, self.prevCmdOb, userOb, userStub)
                 self.prevCmdOb = cmdObfuscator
                 payload = cmdObfuscator.obfuscate(self.sizePref, self.timePref, payload)
+
             elif userOb.split("/")[0] == "string":
-                strObfuscator = self.choosePrefObfuscator(self.strObfuscators, self.sizePref, userOb=userOb)
+                strObfuscator = self.choosePrefObfuscator(self.strObfuscators, self.sizePref, self.timePref, 
+                    filePref=self.filePref, userOb=userOb)
                 payload = strObfuscator.obfuscate(self.sizePref, payload)
+
             elif userOb.split("/")[0] == "token":
                 tokObfuscator = self.choosePrefObfuscator(self.tokObfuscators, self.sizePref, userOb=userOb)
                 payload = tokObfuscator.obfuscate(self.sizePref, payload)
@@ -67,9 +77,12 @@ class ObfuscationHandler(object):
 
         else:
             cmdObfuscator = self.choosePrefObfuscator(self.cmdObfuscators, self.sizePref, self.timePref, 
-                    self.binaryPref, self.prevCmdOb, userOb, userStub)
+                self.binaryPref, self.filePref, self.prevCmdOb, userOb, userStub)
             self.prevCmdOb = cmdObfuscator
-            strObfuscator = self.choosePrefObfuscator(self.strObfuscators, self.sizePref, userOb=userOb)
+
+            strObfuscator = self.choosePrefObfuscator(self.strObfuscators, self.sizePref, self.timePref, 
+                filePref=self.filePref, userOb=userOb)
+
             tokObfuscator = self.choosePrefObfuscator(self.tokObfuscators, self.sizePref, userOb=userOb)
            
             payload = cmdObfuscator.obfuscate(self.sizePref, self.timePref, payload)
@@ -77,16 +90,17 @@ class ObfuscationHandler(object):
             payload = strObfuscator.obfuscate(self.sizePref, payload)
             payload = self.evalWrap(payload)
             #payload = tokObfuscator.obfuscate(self.sizePref, payload)
+            #payload = self.evalWrap(payload)
 
         return payload
 
     def evalWrap(self, payload):
         return '''eval "$({0})"'''.format(payload)
 
-    def choosePrefObfuscator(self, obfuscators, sizePref, timePref=None, binaryPref=None, prevOb=None, userOb=None, userStub=None):
+    def choosePrefObfuscator(self, obfuscators, sizePref, timePref=None, binaryPref=None, filePref=None, prevOb=None, userOb=None, userStub=None):
         """
         Returns an obfuscator from a list of obfuscators which is of the 
-        desired sizeRating, timeRating, with a stub that uses desired binaries
+        desired preferences, with a stub that uses desired binaries
         """
         selObfuscator = None
 
@@ -100,7 +114,7 @@ class ObfuscationHandler(object):
                 printError("Selected obfuscator '{0}' not found".format(userOb))
         
         else:
-            prefObfuscators = self.getPrefItems(obfuscators, sizePref, timePref, prevOb)
+            prefObfuscators = self.getPrefItems(obfuscators, sizePref, timePref, filePref, prevOb)
 
         validChoice = False
         while not validChoice:
@@ -111,14 +125,14 @@ class ObfuscationHandler(object):
             if userOb is None and prevOb is not None and prevOb.reversible and prevOb.name == selObfuscator.name:
                 continue
             
-            if timePref is not None:
+            if selObfuscator.mutatorType == "command":
                 selStub = self.choosePrefStub(selObfuscator.stubs, sizePref, timePref, binaryPref, userStub)
 
                 if selStub is not None:
                     selObfuscator.deobStub = selStub
                     validChoice = True
 
-            # we are selecting a TokenObfuscator, they don't have stubs
+            # we aren't selecting a CommandObfuscator, only they have stubs
             else:
                 validChoice = True
 
@@ -167,10 +181,10 @@ class ObfuscationHandler(object):
 
         return selStub
 
-    def getPrefItems(self, seq, sizePref, timePref, prevOb=None):
+    def getPrefItems(self, seq, sizePref, timePref, filePref=None, prevOb=None):
         """
-        Returns items from seq which are of the desired sizeRating and
-        timeRating
+        Returns items from seq which are preferable to the user based
+        off of the options they chose
         """
         minSize, maxSize = self.getPrefRange(sizePref)
         
@@ -184,17 +198,25 @@ class ObfuscationHandler(object):
             for item in seq:
                 if minSize <= item.sizeRating <= maxSize:
                     if timePref is None or (minTime <= item.timeRating <= maxTime):
-                        if prevOb is not None and prevOb.reversible and prevOb == item:
-                            continue
-                        else:
-                            prefItems.append(item)
-                            foundItem = True
+                        if filePref is None or item.fileWrite != filePref:
+                            if prevOb is not None and prevOb.reversible and prevOb == item:
+                                continue
+                            else:
+                                prefItems.append(item)
+                                foundItem = True
             
             if not foundItem:
-                if minSize > 1:
-                    minSize -= 1
-                elif maxSize < 5:
-                    maxSize += 1
+                if not foundItem:
+                    if minSize > 1:
+                        minSize -= 1
+                    elif maxSize < 5:
+                        maxSize += 1
+                        
+                    if timePref is not None:
+                        if minTime > 1:
+                            minTime -= 1
+                        elif maxTime < 5:
+                            maxTime += 1
 
         return prefItems
 
