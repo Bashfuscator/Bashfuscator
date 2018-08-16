@@ -21,6 +21,9 @@ class ObfuscationHandler(object):
         self.prevCmdOb = None
         self.randGen = RandomGen()
 
+        if args.full_ascii_strings:
+            self.randGen.setFullAsciiStrings()
+
     def generatePayload(self):
         """
         Generates the final payload based off of the user's options
@@ -63,7 +66,7 @@ class ObfuscationHandler(object):
 
             elif userOb.split("/")[0] == "string":
                 strObfuscator = self.choosePrefObfuscator(self.strObfuscators, self.sizePref, self.timePref, 
-                    self.binaryPref, filePref=self.filePref, userOb=userOb)
+                    self.binaryPref, self.filePref, userOb=userOb)
                 payload = strObfuscator.obfuscate(self.sizePref, payload)
 
             elif userOb.split("/")[0] == "token":
@@ -82,7 +85,7 @@ class ObfuscationHandler(object):
 
             elif obChoice == 1:
                 strObfuscator = self.choosePrefObfuscator(self.strObfuscators, self.sizePref, self.timePref, 
-                    self.binaryPref, filePref=self.filePref)
+                    self.binaryPref, self.filePref)
 
                 payload = strObfuscator.obfuscate(self.sizePref, payload)
 
@@ -90,7 +93,10 @@ class ObfuscationHandler(object):
                 tokObfuscator = self.choosePrefObfuscator(self.tokObfuscators, self.sizePref)
                 payload = tokObfuscator.obfuscate(self.sizePref, payload)
            
-        return self.evalWrap(payload)
+        self.randGen.forgetUniqueStrs()
+        payload = self.evalWrap(payload)
+
+        return payload
 
     def evalWrap(self, payload):
         return '''eval "$({0})"'''.format(payload)
@@ -190,7 +196,7 @@ class ObfuscationHandler(object):
         if len(prefStubs):
             prefStubs = self.getPrefItems(prefStubs, sizePref, timePref)
 
-        selStub = RandomGen.randSelect(prefStubs)
+        selStub = self.randGen.randSelect(prefStubs)
 
         return selStub
 

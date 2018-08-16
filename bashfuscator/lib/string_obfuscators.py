@@ -48,14 +48,11 @@ class GlobObfuscator(StringObfuscator):
 		self.minDirLen = None
 		self.maxDirLen = None
 		self.sectionSize = None
-		# TODO: Maybe in the future, or make command line option:
-		#self.charList = "".join(chr(i) for i in range(1, 127) if i != 37 and i != 47)
-		self.charList = "0123456789abcdef"
 		
 	def generate(self, sizePref, userCmd, writeableDir=None):
 		# TODO: create a tempDir option where the user can pick the dir to write to
 		if writeableDir is None or writeableDir == "":
-			self.writeableDir = ("/tmp/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen, self.charList))
+			self.writeableDir = ("/tmp/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
 		
 		self.workingDir = self.writeableDir.replace("'", "'\"'\"'")
 		
@@ -71,7 +68,7 @@ class GlobObfuscator(StringObfuscator):
 			ch = ch.replace("'", "'\"'\"'")
 			parts.append(
 				"printf -- '" + ch + "' > '" + self.workingDir + "/" + 
-				format(i, '0' + str(cmdLogLen) + "b").replace("0", "?").replace("1", "\n") + "';"
+				format(i, "0" + str(cmdLogLen) + "b").replace("0", "?").replace("1", "\n") + "';"
 			)
 		self.randGen.randShuffle(parts)
 		
@@ -134,13 +131,13 @@ class FolderGlob(GlobObfuscator):
 		self.originalCmd = userCmd
 		
 		self.setSizes(sizePref, userCmd)
-		self.writeableDir = ("/tmp/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen, self.charList))
+		self.writeableDir = ("/tmp/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
 		self.workingDir= self.writeableDir.replace("'", "'\"'\"'")
 		
 		cmdChunks = [userCmd[i:i + self.sectionSize] for i in range(0, len(userCmd), self.sectionSize)]
 		parts=[]
 		for chunk in cmdChunks:
-			self.generate(sizePref, chunk, self.writeableDir + "/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen, self.charList))
+			self.generate(sizePref, chunk, self.writeableDir + "/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
 			parts.append(self.payload)
 			
 		self.payload = "".join(parts)

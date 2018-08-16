@@ -14,6 +14,14 @@ class RandomGen(object):
     randGen = random.SystemRandom()
     generatedVars = set()
     uniqueRandStrs = set()
+    randStrCharList = string.ascii_letters + string.digits
+
+    def setFullAsciiStrings(self):
+        RandomGen.randStrCharList = "".join(chr(i) for i in range(1, 127) if i != 39 and i != 47 and i != 96)
+
+    def forgetUniqueStrs(self):
+        RandomGen.generatedVars.clear()
+        RandomGen.uniqueRandStrs.clear()
 
     def randGenNum(self, min, max):
         """
@@ -40,8 +48,7 @@ class RandomGen(object):
 
         return randNum <= percent
 
-    @classmethod
-    def randSelect(cls, seq):
+    def randSelect(self, seq):
         """
         Returns a random element from the sequence
         seq
@@ -77,11 +84,11 @@ class RandomGen(object):
 
         maxVarLen = minVarLen * 2
 
-        charList = string.ascii_letters + string.digits
+        randVarCharList = string.ascii_letters + string.digits + "_"
 
         while True:
-            randomVar = self.randSelect(string.ascii_letters)
-            randomVar += self.randGenStr(minVarLen, maxVarLen - 1, charList)
+            randomVar = self.randSelect(string.ascii_letters + "_")
+            randomVar += self.randGenStr(minVarLen, maxVarLen - 1, randVarCharList)
 
             if len(randomVar) == 1 and randomVar.isdigit():
                 continue
@@ -93,10 +100,13 @@ class RandomGen(object):
 
         return randomVar
 
-    def randUniqueStr(self, minStrLen, maxStrLen, charList=(string.ascii_letters + string.digits)):
+    def randUniqueStr(self, minStrLen, maxStrLen, charList=None):
         """
         Returns a random string that is guaranteed to be unique
         """
+        if charList is None:
+            charList = RandomGen.randStrCharList
+
         minLen = minStrLen
         maxLen = maxStrLen
         commonStrNum = 0 
@@ -108,7 +118,7 @@ class RandomGen(object):
                 break 
             else:
                 commonStrNum += 1
-                if commonStrNum == 10:
+                if commonStrNum == 5:
                     minLen = maxLen
                     maxLen += 1
                     commonStrNum = 0 
@@ -117,11 +127,14 @@ class RandomGen(object):
 
         return randStr
 
-    def randGenStr(self, minStrLen, maxStrLen, charList=(string.ascii_letters + string.digits)):
+    def randGenStr(self, minStrLen, maxStrLen, charList=None):
         """
         Returns a random string, ranging in size from minStrLen to
         maxStrLen, using characters from charList.
         """ 
+        if charList is None:
+            charList = RandomGen.randStrCharList
+
         randVarLen = RandomGen.randGen.randint(minStrLen, maxStrLen)
         randStr = "".join(self.randSelect(charList) for x in range(randVarLen))
 
