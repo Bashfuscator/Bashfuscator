@@ -6,10 +6,9 @@ from bashfuscator.common.objects import Mutator
 
 
 class Compressor(Mutator):
-    def __init__(self, name, description, sizeRating, timeRating, credits=None):
-        super().__init__(name, "compress", credits)
+    def __init__(self, name, description, sizeRating, timeRating, notes=None, author=None, credits=None):
+        super().__init__(name, "compress", notes, author, credits)
         
-        self.name = name
         self.description = description
         self.sizeRating = sizeRating
         self.timeRating = timeRating
@@ -20,14 +19,14 @@ class Compressor(Mutator):
 class Bzip2(Compressor):
     def __init__(self):
         super().__init__(
-            "Bzip2",
-            "Compress command with bzip2",
-            3,
-            3,
-            "capnspacehook"
+            name="Bzip2",
+            description="Compress command with bzip2",
+            sizeRating=3,
+            timeRating=3,
+            author="capnspacehook"
         )
 
-    def compress(self, userCmd):
+    def compress(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
         compressedCmd = bz2.compress(userCmd.encode("utf-8"))
@@ -40,14 +39,14 @@ class Bzip2(Compressor):
 class Gzip(Compressor):
     def __init__(self):
         super().__init__(
-            "Gzip",
-            "Compress command with gzip",
-            3,
-            3,
-            "capnspacehook"
+            name="Gzip",
+            description="Compress command with gzip",
+            sizeRating=3,
+            timeRating=3,
+            author="capnspacehook"
         )
 
-    def compress(self, userCmd):
+    def compress(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
         compressedCmd = gzip.compress(userCmd.encode("utf-8"))

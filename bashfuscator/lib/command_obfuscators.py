@@ -17,10 +17,9 @@ class CommandObfuscator(Mutator):
     :param credits: whom or where inpiration for or the complete obfuscator 
     method was found at
     """
-    def __init__(self, name, description, sizeRating, timeRating, reversible, fileWrite=False, credits=None):
-        super().__init__(name, "command", credits)
+    def __init__(self, name, description, sizeRating, timeRating, reversible, fileWrite=False, notes=None, author=None, credits=None):
+        super().__init__(name, "command", notes, author, credits)
         
-        self.name = name
         self.description = description
         self.sizeRating = sizeRating
         self.timeRating = timeRating
@@ -40,7 +39,7 @@ class CaseSwap(CommandObfuscator):
             sizeRating=2,
             timeRating=1,
             reversible=True,
-            credits="capnspacehook"
+            author="capnspacehook"
         )
 
         self.stubs = [
@@ -79,6 +78,7 @@ class ForCode(CommandObfuscator):
             sizeRating=3,
             timeRating=2,
             reversible=False,
+            author="capnspacehook",
             credits="danielbohannon, https://github.com/danielbohannon/Invoke-DOSfuscation"
         )
 
@@ -119,7 +119,7 @@ class Reverse(CommandObfuscator):
             sizeRating=1,
             timeRating=1,
             reversible=True,
-            credits="capnspacehook"
+            author="capnspacehook"
         )
 
         self.stubs = [

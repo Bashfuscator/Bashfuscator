@@ -17,10 +17,9 @@ class TokenObfuscator(Mutator):
     :param credits: whom or where inpiration for or the complete obfuscator 
     method was found at
     """
-    def __init__(self, name, description, sizeRating, credits=None):
-        super().__init__(name, "token", credits)
+    def __init__(self, name, description, sizeRating, notes=None, author=None, credits=None):
+        super().__init__(name, "token", notes, author, credits)
 
-        self.name = name
         self.description = description
         self.sizeRating = sizeRating
         self.originalCmd = ""
@@ -32,7 +31,8 @@ class AnsiCQuote(TokenObfuscator):
         super().__init__(
             name="ANSI-C Quote",
             description="ANSI-C quotes a string",
-            sizeRating=3
+            sizeRating=3,
+            author="capnspacehook"
         )
     
         self.SUBSTR_QUOTE_PROB = 33

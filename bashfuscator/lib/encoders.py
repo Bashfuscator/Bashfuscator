@@ -4,10 +4,9 @@ from bashfuscator.common.objects import Mutator
 
 
 class Encoder(Mutator):
-    def __init__(self, name, description, sizeRating, timeRating, credits=None):
-        super().__init__(name, "encode", credits)
+    def __init__(self, name, description, sizeRating, timeRating, notes=None, author=None, credits=None):
+        super().__init__(name, "encode", notes, author, credits)
         
-        self.name = name
         self.description = description
         self.sizeRating = sizeRating
         self.timeRating = timeRating
@@ -18,14 +17,14 @@ class Encoder(Mutator):
 class Base64(Encoder):
     def __init__(self):
         super().__init__(
-            "Base64",
-            "Base64 encode command",
-            2,
-            1,
-            "capnspacehook"
+            name="Base64",
+            description="Base64 encode command",
+            sizeRating=2,
+            timeRating=1,
+            author="capnspacehook"
         )
 
-    def encode(self, userCmd):
+    def encode(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
         self.payload = userCmd.encode("base64").replace("\n", "")
@@ -37,14 +36,14 @@ class Base64(Encoder):
 class UrlEncode(Encoder):
     def __init__(self):
         super().__init__(
-            "UrlEncode",
-            "Url encode command",
-            3,
-            1,
-            "capnspacehook"
+            name="UrlEncode",
+            description="Url encode command",
+            sizeRating=3,
+            timeRating=1,
+            author="capnspacehook"
         )
 
-    def encode(self, userCmd):
+    def encode(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
         self.payload = quote_plus(userCmd)

@@ -72,7 +72,7 @@ class ObfuscationHandler(object):
                 selMutator = self.choosePrefMutator(self.strObfuscators, self.sizePref, self.timePref, 
                     self.binaryPref, self.filePref, userOb=userOb)
                     
-                payload = selMutator.obfuscate(self.sizePref, payload)
+                payload = selMutator.obfuscate(self.sizePref, self.timePref, payload)
 
             elif mutatorType == "token":
                 selMutator = self.choosePrefMutator(self.tokObfuscators, self.sizePref, userOb=userOb)
@@ -80,12 +80,11 @@ class ObfuscationHandler(object):
 
             elif mutatorType == "encode":
                 selMutator = self.choosePrefMutator(self.encoders, userOb=userOb)
-                payload = selMutator.encode(payload)
+                payload = selMutator.encode(self.sizePref, self.timePref, payload)
 
             elif mutatorType == "compress":
                 selMutator = self.choosePrefMutator(self.compressors, userOb=userOb)
-                payload = selMutator.compress(payload)
-
+                payload = selMutator.compress(self.sizePref, self.timePref, payload)
         else:
             obChoice = self.randGen.randChoice(3)
 
@@ -100,7 +99,7 @@ class ObfuscationHandler(object):
                 selMutator = self.choosePrefMutator(self.strObfuscators, self.sizePref, self.timePref, 
                     self.binaryPref, self.filePref)
 
-                payload = selMutator.obfuscate(self.sizePref, payload)
+                payload = selMutator.obfuscate(self.sizePref, self.timePref, payload)
 
             else:
                 selMutator = self.choosePrefMutator(self.tokObfuscators, self.sizePref)

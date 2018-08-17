@@ -18,10 +18,9 @@ class StringObfuscator(Mutator):
 	:param credits: whom or where inpiration for or the complete obfuscator 
 	method was found at
 	"""
-	def __init__(self, name, description, sizeRating, timeRating, binariesUsed=[], fileWrite=False, credits=None):
-		super().__init__(name, "string", credits)
+	def __init__(self, name, description, sizeRating, timeRating, binariesUsed=[], fileWrite=False, notes=None, author=None, credits=None):
+		super().__init__(name, "string", notes, author, credits)
 		
-		self.name = name
 		self.description = description
 		self.sizeRating = sizeRating
 		self.timeRating = timeRating
@@ -32,7 +31,7 @@ class StringObfuscator(Mutator):
 
 
 class GlobObfuscator(StringObfuscator):
-	def __init__(self, name, description, sizeRating, timeRating, credits=None):
+	def __init__(self, name, description, sizeRating, timeRating, author):
 		super().__init__(
 			name=name,
 			description=description,
@@ -40,7 +39,7 @@ class GlobObfuscator(StringObfuscator):
 			timeRating=timeRating,
 			binariesUsed=["cat", "mkdir", "rm"],
 			fileWrite=True,
-			credits=credits
+			author=author
 		)
 
 		self.writeableDir = ""
@@ -105,10 +104,10 @@ class FileGlob(GlobObfuscator):
 			description="Uses files and glob sorting to reassemble a string",
 			sizeRating=5,
 			timeRating=5,
-			credits="elijah-barker"
+			author="elijah-barker"
 		)
 
-	def obfuscate(self, sizePref, userCmd):
+	def obfuscate(self, sizePref, timePref, userCmd):
 		self.originalCmd = userCmd
 
 		self.setSizes(sizePref, userCmd)
@@ -124,10 +123,10 @@ class FolderGlob(GlobObfuscator):
 			description="Same as file glob, but better",
 			sizeRating=5,
 			timeRating=5,
-			credits="elijah-barker"
+			author="elijah-barker"
 		)
 
-	def obfuscate(self, sizePref, userCmd):
+	def obfuscate(self, sizePref, timePref, userCmd):
 		self.originalCmd = userCmd
 		
 		self.setSizes(sizePref, userCmd)
@@ -153,10 +152,10 @@ class HexHash(StringObfuscator):
 			sizeRating=5,
 			timeRating=5,
 			binariesUsed=["cut", "md5sum"],
-			credits="elijah-barker"
+			author="elijah-barker"
 		)
 		
-	def obfuscate(self, sizePref, userCmd):
+	def obfuscate(self, sizePref, timePref, userCmd):
 		self.originalCmd = userCmd
 		
 		obCmd = ""
