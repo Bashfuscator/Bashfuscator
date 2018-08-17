@@ -7,10 +7,12 @@ class ObfuscationHandler(object):
     Manages command and script obfuscation. Obfuscates based off of 
     the user's set options
     """
-    def __init__(self, cmdObfuscators, strObfuscators, tokObfuscators, args):
+    def __init__(self, cmdObfuscators, strObfuscators, tokObfuscators, encoders, compressors, args):
         self.cmdObfuscators = cmdObfuscators
         self.strObfuscators = strObfuscators
         self.tokObfuscators = tokObfuscators
+        self.encoders = encoders
+        self.compressors = compressors
         self.userMutators = args.choose_mutators
         self.layers = args.layers
         self.sizePref = args.payload_size
@@ -55,53 +57,72 @@ class ObfuscationHandler(object):
         """
         Generates one layer of obfuscation
         """
-        tokObfuscator = strObfuscator = cmdObfuscator = None
+        mutatorType = userOb.split("/")[0]
+        selMutator = None
 
         if userOb is not None:
-            if userOb.split("/")[0] == "command":
-                cmdObfuscator = self.choosePrefObfuscator(self.cmdObfuscators, self.sizePref, self.timePref, 
+            if mutatorType == "command":
+                selMutator = self.choosePrefMutator(self.cmdObfuscators, self.sizePref, self.timePref, 
                     self.binaryPref, self.filePref, self.prevCmdOb, userOb, userStub)
-                self.prevCmdOb = cmdObfuscator
-                payload = cmdObfuscator.obfuscate(self.sizePref, self.timePref, payload)
+                self.prevCmdOb = selMutator
 
-            elif userOb.split("/")[0] == "string":
-                strObfuscator = self.choosePrefObfuscator(self.strObfuscators, self.sizePref, self.timePref, 
+                payload = selMutator.obfuscate(self.sizePref, self.timePref, payload)
+
+            elif mutatorType == "string":
+                selMutator = self.choosePrefMutator(self.strObfuscators, self.sizePref, self.timePref, 
                     self.binaryPref, self.filePref, userOb=userOb)
-                payload = strObfuscator.obfuscate(self.sizePref, payload)
+                    
+                payload = selMutator.obfuscate(self.sizePref, payload)
 
-            elif userOb.split("/")[0] == "token":
-                tokObfuscator = self.choosePrefObfuscator(self.tokObfuscators, self.sizePref, userOb=userOb)
-                payload = tokObfuscator.obfuscate(self.sizePref, payload)
+            elif mutatorType == "token":
+                selMutator = self.choosePrefMutator(self.tokObfuscators, self.sizePref, userOb=userOb)
+                payload = selMutator.obfuscate(self.sizePref, payload)
+
+            elif mutatorType == "encode":
+                selMutator = self.choosePrefMutator(self.encoders, userOb=userOb)
+                payload = selMutator.encode(payload)
+
+            elif mutatorType == "compress":
+                selMutator = self.choosePrefMutator(self.compressors, userOb=userOb)
+                payload = selMutator.compress(payload)
 
         else:
             obChoice = self.randGen.randChoice(3)
 
             if obChoice == 0:
-                cmdObfuscator = self.choosePrefObfuscator(self.cmdObfuscators, self.sizePref, self.timePref, 
+                selMutator = self.choosePrefMutator(self.cmdObfuscators, self.sizePref, self.timePref, 
                     self.binaryPref, self.filePref, self.prevCmdOb)
-                self.prevCmdOb = cmdObfuscator
+                self.prevCmdOb = selMutator
 
-                payload = cmdObfuscator.obfuscate(self.sizePref, self.timePref, payload)
+                payload = selMutator.obfuscate(self.sizePref, self.timePref, payload)
 
             elif obChoice == 1:
-                strObfuscator = self.choosePrefObfuscator(self.strObfuscators, self.sizePref, self.timePref, 
+                selMutator = self.choosePrefMutator(self.strObfuscators, self.sizePref, self.timePref, 
                     self.binaryPref, self.filePref)
 
-                payload = strObfuscator.obfuscate(self.sizePref, payload)
+                payload = selMutator.obfuscate(self.sizePref, payload)
 
             else:
-                tokObfuscator = self.choosePrefObfuscator(self.tokObfuscators, self.sizePref)
-                payload = tokObfuscator.obfuscate(self.sizePref, payload)
+                selMutator = self.choosePrefMutator(self.tokObfuscators, self.sizePref)
+                payload = selMutator.obfuscate(self.sizePref, payload)
            
         self.randGen.forgetUniqueStrs()
-        payload = self.evalWrap(payload)
+        payload = self.evalWrap(payload, selMutator)
 
         return payload
 
-    def evalWrap(self, payload):
-        return '''eval "$({0})"'''.format(payload)
+    def evalWrap(self, payload, selMutator):
+        if selMutator.longName != "encode/urlencode":
+            if self.randGen.probibility(50):
+                wrappedPayload = '''eval "$({0})"'''.format(payload)
+            else:
+                wrappedPayload = '''printf -- "$({0})"|bash'''.format(payload)
+        else:
+            wrappedPayload = payload
+        
+        return wrappedPayload
 
-    def choosePrefObfuscator(self, obfuscators, sizePref, timePref=None, binaryPref=None, filePref=None, prevOb=None, userOb=None, userStub=None):
+    def choosePrefMutator(self, obfuscators, sizePref=None, timePref=None, binaryPref=None, filePref=None, prevOb=None, userOb=None, userStub=None):
         """
         Returns an obfuscator from a list of obfuscators which is of the 
         desired preferences, with a stub that uses desired binaries
@@ -109,11 +130,11 @@ class ObfuscationHandler(object):
         selObfuscator = None
         global revObWarn
 
-        if binaryPref is not None:
-            binList = binaryPref[0]
-            includeBinary = binaryPref[1]
-
         if userOb is not None:
+            if binaryPref is not None:
+                binList = binaryPref[0]
+                includeBinary = binaryPref[1]
+
             for ob in obfuscators:
                 if ob.longName == userOb:
                     if binaryPref is not None and ob.mutatorType == "string":
@@ -129,31 +150,17 @@ class ObfuscationHandler(object):
         
         else:
             prefObfuscators = self.getPrefItems(obfuscators, sizePref, timePref, filePref, prevOb)
+            selObfuscator = self.randGen.randSelect(prefObfuscators)
 
-        validChoice = False
-        while not validChoice:
-            if userOb is None:
-                selObfuscator = self.randGen.randSelect(prefObfuscators)
-
+        if selObfuscator.mutatorType == "command":
             # make sure we don't choose the same CommandObfuscator twice if it's reversable
             if prevOb is not None and prevOb.reversible and prevOb.name == selObfuscator.name:
                 if userOb is not None:
                     if not revObWarn:
                         revObWarn = True
                         printWarning("Reversible obfuscator '{0}' selected twice in a row; part of the payload may be in the clear".format(userOb))
-                else:
-                    continue
             
-            if selObfuscator.mutatorType == "command":
-                selStub = self.choosePrefStub(selObfuscator.stubs, sizePref, timePref, binaryPref, userStub)
-
-                if selStub is not None:
-                    selObfuscator.deobStub = selStub
-                    validChoice = True
-
-            # we aren't selecting a CommandObfuscator, only they have stubs
-            else:
-                validChoice = True
+            selObfuscator.deobStub = self.choosePrefStub(selObfuscator.stubs, sizePref, timePref, binaryPref, userStub)
 
         return selObfuscator
 

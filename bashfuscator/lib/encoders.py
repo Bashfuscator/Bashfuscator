@@ -1,9 +1,11 @@
+from urllib.parse import quote_plus
+
 from bashfuscator.common.objects import Mutator
 
 
 class Encoder(Mutator):
     def __init__(self, name, description, sizeRating, timeRating, credits=None):
-        super().__init__(name, "encoder", credits)
+        super().__init__(name, "encode", credits)
         
         self.name = name
         self.description = description
@@ -45,7 +47,6 @@ class UrlEncode(Encoder):
     def encode(self, userCmd):
         self.originalCmd = userCmd
 
-        for char in userCmd:
-            self.payload += char + "\x00"
+        self.payload = quote_plus(userCmd)
 
         return self.payload

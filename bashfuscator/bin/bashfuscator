@@ -16,22 +16,34 @@ from bashfuscator.core.obfuscation_manager import ObfuscationHandler
 from bashfuscator.lib.command_obfuscators import *
 from bashfuscator.lib.string_obfuscators import *
 from bashfuscator.lib.token_obfuscators import *
+from bashfuscator.lib.encoders import *
+from bashfuscator.lib.compressors import *
 
 
 commandObfuscators = [
     CaseSwap(),
     ForCode(),
-    Reverse()
+    Reverse(),
 ]
 
 stringObfuscators = [
-    FolderGlob(),
     FileGlob(),
-    HexHash()
+    FolderGlob(),
+    HexHash(),
 ]
 
 tokenObfuscators = [
-    AnsiCQuote()
+    AnsiCQuote(),
+]
+
+encoders = [
+    Base64(),
+    UrlEncode(),
+]
+
+compressors = [
+    Bzip2(),
+    Gzip(),
 ]
 
 
@@ -48,7 +60,7 @@ def getMutators(prefix, parsed_args, **kwargs):
     auto-completion in cli
     """
     mutatorNames = []
-    allMutators = commandObfuscators + stringObfuscators + tokenObfuscators
+    allMutators = commandObfuscators + stringObfuscators + tokenObfuscators + encoders + compressors
     for mutator in allMutators:
         mutatorNames.append(mutator.longName)
 
@@ -66,11 +78,9 @@ def getMutatorsAndStubs(prefix, parsed_args, **kwargs):
         for stub in cmdOb.stubs:
             mutatorNames.append(cmdOb.longName + "/" + stub.longName)
 
-    for strOb in stringObfuscators:
-        mutatorNames.append(strOb.longName)
-
-    for tokOb in tokenObfuscators:
-        mutatorNames.append(tokOb.longName)
+    mutators = stringObfuscators + tokenObfuscators + encoders + compressors
+    for mutator in mutators:
+        mutatorNames.append(mutator.longName)
     
     return mutatorNames
 
@@ -210,7 +220,7 @@ if __name__ == "__main__":
 
             args.command = infile.read().decode("utf-8")
 
-    obHandler = ObfuscationHandler(commandObfuscators, stringObfuscators, tokenObfuscators, args)
+    obHandler = ObfuscationHandler(commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors, args)
     payload = obHandler.generatePayload()
 
     if args.outfile:
