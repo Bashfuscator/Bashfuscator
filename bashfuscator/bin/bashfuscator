@@ -8,7 +8,6 @@ import re
 
 from argcomplete import autocomplete
 import pyperclip
-from tabulate import tabulate
 
 from bashfuscator.common.colors import bold
 from bashfuscator.common.messages import activateQuietMode, printInfo
@@ -86,57 +85,31 @@ def getMutatorsAndStubs(prefix, parsed_args, **kwargs):
 
 
 def listMutators():
-    cmdNames = []
-    cmdDecriptions = []
-    cmdSize = []
-    cmdTime = []
-    cmdCredits = []
-    for cmdOb in commandObfuscators:
-        cmdNames.append(cmdOb.name)
-        cmdDecriptions.append(cmdOb.description)
-        cmdSize.append(cmdOb.sizeRating)
-        cmdTime.append(cmdOb.timeRating)
-        cmdCredits.append(cmdOb.credits)
+    print(bold("Command Obfuscators:"))
+    listMutatorType(commandObfuscators)
 
-    strNames = []
-    strDecriptions = []
-    strSize = []
-    strTime = []
-    strCredits = []
-    for strOb in stringObfuscators:
-        strNames.append(strOb.name)
-        strDecriptions.append(strOb.description)
-        strSize.append(strOb.sizeRating)
-        strTime.append(strOb.timeRating)
-        strCredits.append(strOb.credits)
+    print(bold("\nString Obfuscators:"))
+    listMutatorType(stringObfuscators)
 
-    tokNames = []
-    tokDecriptions = []
-    tokSize = []
-    tokCredits = []
-    for tokOb in tokenObfuscators:
-        tokNames.append(tokOb.name)
-        tokDecriptions.append(tokOb.description)
-        tokSize.append(tokOb.sizeRating)
-        tokCredits.append(tokOb.credits)
+    print(bold("\nToken Obfuscators:"))
+    listMutatorType(tokenObfuscators)
 
-    cmdHeaders = ["Name", "Description", "Size Rating", "Time Rating", "Credits"]
-    cmdValues = [cmdNames, cmdDecriptions, cmdSize, cmdTime, cmdCredits]
+    print(bold("\nEncoders:"))
+    listMutatorType(encoders)
 
-    strHeaders = cmdHeaders
-    strValues = [strNames, strDecriptions, strSize, strTime, strCredits]
+    print(bold("\nCompressors:"))
+    listMutatorType(compressors)
 
-    tokHeaders = ["Name", "Description", "Size Rating", "Credits"]
-    tokValues = [tokNames, tokDecriptions, tokSize, tokCredits]
 
-    print(bold("Command Obfuscators:\n"))
-    print(tabulate(OrderedDict(zip(cmdHeaders, cmdValues)), headers="keys"))
-
-    print(bold("\nString Obfuscators:\n"))
-    print(tabulate(OrderedDict(zip(strHeaders, strValues)), headers="keys"))
-
-    print(bold("\nToken Obfuscators:\n"))
-    print(tabulate(OrderedDict(zip(tokHeaders, tokValues)), headers="keys"))
+def listMutatorType(mutators):
+    for mutator in mutators:
+        print("\nName: {0}".format(mutator.name))
+        print("Description: {0}".format(mutator.description))
+        print("Size Rating: {0}".format(mutator.sizeRating))
+        if mutator.mutatorType != "token": print("Time Rating: {0}".format(mutator.timeRating))
+        if mutator.notes is not None: print("Notes: {0}".format(mutator.notes))
+        if mutator.author is not None: print("Author: {0}".format(mutator.author))
+        if mutator.credits is not None: print("Credits: {0}".format(mutator.credits))
 
 
 if __name__ == "__main__":

@@ -32,7 +32,8 @@ class AnsiCQuote(TokenObfuscator):
             name="ANSI-C Quote",
             description="ANSI-C quotes a string",
             sizeRating=3,
-            author="capnspacehook"
+            author="capnspacehook",
+            credits="DissectMalware, https://twitter.com/DissectMalware/status/1023682809368653826"
         )
     
         self.SUBSTR_QUOTE_PROB = 33

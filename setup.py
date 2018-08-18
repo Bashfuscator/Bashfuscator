@@ -62,7 +62,6 @@ setup(
     install_requires=[
         "argcomplete",
         "pyperclip",
-        "tabulate"
     ],
     cmdclass={"install":CustomInstall}
 )
