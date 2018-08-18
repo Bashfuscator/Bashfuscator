@@ -103,13 +103,21 @@ def listMutators():
 
 def listMutatorType(mutators):
     for mutator in mutators:
-        print("\nName: {0}".format(mutator.name))
+        print(bold("\nName: {0}".format(mutator.name)))
         print("Description: {0}".format(mutator.description))
         print("Size Rating: {0}".format(mutator.sizeRating))
         if mutator.mutatorType != "token": print("Time Rating: {0}".format(mutator.timeRating))
         if mutator.notes is not None: print("Notes: {0}".format(mutator.notes))
         if mutator.author is not None: print("Author: {0}".format(mutator.author))
         if mutator.credits is not None: print("Credits: {0}".format(mutator.credits))
+
+        if mutator.mutatorType == "command":
+            print("\nStubs:")
+            for stub in mutator.stubs:
+                print("\n\tName: {0}".format(stub.name))
+                print("\tBinaries Used: {0}".format("".join(b + ", " for b in stub.binariesUsed)[:-2]))
+                print("\tSize Rating: {0}".format(stub.sizeRating))
+                print("\tTime Rating: {0}".format(stub.timeRating))
 
 
 if __name__ == "__main__":
