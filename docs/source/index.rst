@@ -9,18 +9,10 @@ Welcome to Bashfuscator's documentation!
 Contents:
 
 .. toctree::
-   :glob:
 
-   bin-doc/*
-   common-doc/*
-   core-doc/*
-   lib-doc/*
+   common-doc/index
+   core-doc/index
+   lib-doc/index
 
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+:ref:`genindex`
