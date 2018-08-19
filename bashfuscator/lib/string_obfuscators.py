@@ -159,13 +159,13 @@ class HexHash(StringObfuscator):
 		self.originalCmd = userCmd
 		
 		obCmd = ""
-		for ch in list(userCmd):
+		for ch in userCmd:
 			hexchar = str(bytes(ch, "utf-8").hex())
 			randomhash = ""
 
 			while not hexchar in randomhash:
 				m = hashlib.md5()
-				randomString = self.randGen.randUniqueStr(1, 3)
+				randomString = self.randGen.randGenStr(1, 3)
 				m.update(bytes(randomString, "utf-8"))
 				randomhash = m.digest().hex()
 

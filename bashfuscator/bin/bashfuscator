@@ -124,7 +124,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     progOpts = parser.add_argument_group("Program Options")
     inptOpts = progOpts.add_mutually_exclusive_group(required=True)
-    inptOpts.add_argument("-l", "--list", action="store_true", help="List all the availible obufscators, compressors, encoders, and encryptors")
+    inptOpts.add_argument("-l", "--list", action="store_true", help="List all the availible obfuscators, compressors, encoders, and encryptors")
     inptOpts.add_argument("-c", "--command", type=str, help="Command to obfuscate")
     inptOpts.add_argument("-f", "--file", type=str, help="Name of the script to obfuscate")
     #inptOpts.add_argument("--stdin", action="store_true", help="Receive command to obfuscate from stdin")
