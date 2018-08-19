@@ -1,5 +1,5 @@
 `obfuscation_manager.py` - Manages the obfuscation process
 ==========================================================
 
-.. automodule:: bashfuscator.core.obfuscation_manager
+.. automodule:: bashfuscator.core.obfuscation_handler
     :members:

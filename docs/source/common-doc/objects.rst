@@ -1,5 +1,5 @@
-`objects.py` - Base classes used throughout the framework
-=========================================================
+`objects.py`
+============
 
 .. automodule:: bashfuscator.common.objects
     :members:

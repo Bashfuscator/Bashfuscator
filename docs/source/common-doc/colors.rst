@@ -1,5 +1,5 @@
-`colors.py` - Provides helper functions for pretty-printing with colors
-=======================================================================
+`colors.py`
+===========
 
 .. automodule:: bashfuscator.common.colors
     :members:

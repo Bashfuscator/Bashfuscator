@@ -1,5 +1,5 @@
-`messages.py` - Functions to print output to the terminal
-=========================================================
+`messages.py`
+=============
 
 .. automodule:: bashfuscator.common.messages
     :members:

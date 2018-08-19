@@ -1,7 +1,5 @@
 """
-
-This file contains base classes that other classes inherit from thoughout the framework
-
+Base classes used throughout the framework.
 """
 import re
 
@@ -11,7 +9,27 @@ from bashfuscator.common.random import RandomGen
 
 class Mutator(object):
     """
-    Base class that all mutators inherit from
+    Base class that all Mutators inherit from. Automatically generates
+    a longName attribute that is used to choose Mutators on the 
+    command line, and stores a 
+    :class:`bashfuscator.common.random.RandomGen` object.
+
+    :param name: Name of the Mutator
+    :type name: str
+    :param mutatorType: child mutator's type
+    :type mutatorType: lowercase str
+    :param notes: any additional information useful to know when using
+        the Mutator
+    :type notes: str
+    :param author: creator of the Mutator
+    :type author: str
+    :param credits: whom or where inpiration for or the complete method 
+        of mutation was found at. Should be the name/handle of the 
+        person who inspired you, and/or a link to where you got the 
+        idea from. See 
+        :class:`bashfuscator.lib.token_obfuscators.AnsiCQuote` for an 
+        example
+    :type credits: str
     """
     def __init__(self, name, mutatorType, notes, author, credits):
         self.name = name
@@ -30,15 +48,20 @@ class Stub(object):
     generating random variable names, and so on. 
 
     :param name: name of the Stub
-    :param binariesUsed: list of strings containing all the binaries
-    used in the stub
+    :param binariesUsed: all the binaries
+        used in the stub
+    :type binariesUsed: list of strs
     :param sizeRating: rating from 1 to 5 of how much the Stub 
-    increases the size of the overall payload
+        increases the size of the overall payload
+    :type sizeRating: int
     :param timeRating: rating from 1 to 5 of how much the Stub 
-    increases the execution time of the overall payload
+        increases the execution time of the overall payload
+    :type timeRating: int
     :param escapeQuotes: True if the stub requires any quotes in the 
-    original command to be escaped, False otherwise
+        original command to be escaped, False otherwise
+    :type escapeQuotes: int
     :param stub: string containing the actual stub
+    :type stub: str
     """
     def __init__(self, name, binariesUsed, sizeRating, timeRating, escapeQuotes, stub):
         self.name = name
@@ -51,6 +74,16 @@ class Stub(object):
         self.randGen = RandomGen()
 
     def genStub(self, sizePref, userCmd):
+        """
+        Generate a valid deobfuscation stub and wrap an obfuscated
+        command in it. 
+
+        :param sizePref: sizePref user option
+        :type sizePref: int
+        :param userCmd: command(s) that need to be wrapped in a
+            deobfuscation stub
+        :type userCmd: str or list of strs
+        """
         cmplxCmd = type(userCmd) == list
 
         if self.escapeQuotes:
