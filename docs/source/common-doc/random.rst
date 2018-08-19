@@ -1,5 +1,5 @@
-`random.py` - Wrapper around random.SystemRandom
-================================================
+`random.py`
+===========
 
 .. automodule:: bashfuscator.common.random
     :members:

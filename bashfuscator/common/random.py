@@ -1,57 +1,86 @@
+"""
+Defines RandomGen, a wrapper around all common functions relying on
+randomness.
+"""
 import string
-import re
 import random
 
 
 class RandomGen(object):
     """
-    Wrapper around random.SystemRandom().
+    Wrapper around :py:class:`random.SystemRandom`.
     Provided for ease of use and to avoid
     having to initialize a SystemRandom object
     every time something random is desired.
-    @capnspacehook
+
+    .. note::
+        The default character set when generating random variable names
+        or strings is the alphanumeric charset, or the (almost) full ASCII
+        charset if :meth:`~RandomGen.setFullAsciiStrings` is called.
     """
     randGen = random.SystemRandom()
-    generatedVars = set()
-    uniqueRandStrs = set()
-    randStrCharList = string.ascii_letters + string.digits
+    _generatedVars = set()
+    _uniqueRandStrs = set()
+    _randStrCharList = string.ascii_letters + string.digits
 
     def setFullAsciiStrings(self):
-        RandomGen.randStrCharList = "".join(chr(i) for i in range(1, 127) if i != 39 and i != 47 and i != 96)
+        """
+        Set the default charset used when generating random
+        variables and strings to the (almost) full ASCII charset.
+        Only "'" and "/" are not used.
+        """
+        RandomGen._randStrCharList = "".join(chr(i) for i in range(1, 127) if i != 39 and i != 47)
 
     def forgetUniqueStrs(self):
-        RandomGen.generatedVars.clear()
-        RandomGen.uniqueRandStrs.clear()
+        """Clear the sets of previously generated variable names
+        and strings. Should be called when random variable 
+        names/strings are needed but can have the same name as 
+        previously generated variable names/strings without 
+        causing conflicts.
+        """
+        RandomGen._generatedVars.clear()
+        RandomGen._uniqueRandStrs.clear()
 
     def randGenNum(self, min, max):
         """
-        Returns a random number exclusively from
-        min to max
+        Randomly generate an integer inclusively.
+
+        :param min: minimum integer that can be returned
+        :type min: int
+        :param max: maximum integer that can be returned
+        :type max: int
         """
         return RandomGen.randGen.randint(min, max)
 
     def randChoice(self, max):
         """
-        Returns a random number from 0 to max - 1.
-        Useful when a random choice is needed
+        Generate a random choice. Useful when you need to choose
+        between a set number of choices randomly.
+
+        :param max: maximum integer that can be returned
+        :returns: integer from 0 to max-1 inclusively
         """
         return self.randGenNum(0, max - 1)
 
-    def probibility(self, percent):
+    def probibility(self, prob):
         """
-        Randomly generates a number from 0-100, 
-        and returns the result of the generated
-        number <= percent
-        @capnspacehook
+        Return True a certain percentage of the time.
+
+        :param prob: probability of returning True
+        :type prob: int
+        :returns: True prob percent of the time, False otherwise
         """
         randNum = self.randGenNum(0, 100)
 
-        return randNum <= percent
+        return randNum <= prob
 
     def randSelect(self, seq):
         """
-        Returns a random element from the sequence
-        seq
+        Randomly select an element from a sequence.
+        
+        :param seq: sequence to randomly select from
+        :type seq: list
+        :returns: element from seq, or None if seq is empty
         """
         if len(seq):
             selection = RandomGen.randGen.choice(seq)
@@ -62,16 +91,23 @@ class RandomGen(object):
 
     def randShuffle(self, seq):
         """
-        Randomly shuffles a list in-place
+        Randomly shuffle a sequence in-place.
+
+        :param seq: sequence to shuffle randomly
+        :type seq: list
         """
         RandomGen.randGen.shuffle(seq)
 
     def randGenVar(self, sizePref):
         """
-        Returns a unique randomly named variable, with length 
-        randomly chosen from minVarLen to maxVarLen.
-        Variable name can consist of uppercase and 
-        lowercase letters, as well as digits
+        Generate a unique randomly named variable. Variable names can
+        consist of uppercase and lowercase letters, digits, and
+        underscores, but will always start with a letter or underscore.
+
+        :param sizePref: sizePref user option. Controls the minimum and
+            maximum length of generated variable names
+        :type sizePref: int
+        :returns: unique random variable name
         """
         if sizePref == 0:
             minVarLen = 1
@@ -93,19 +129,33 @@ class RandomGen(object):
             if len(randomVar) == 1 and randomVar.isdigit():
                 continue
 
-            if randomVar not in RandomGen.generatedVars:
+            if randomVar not in RandomGen._generatedVars:
                 break
 
-        RandomGen.generatedVars.add(randomVar)
+        RandomGen._generatedVars.add(randomVar)
 
         return randomVar
 
     def randUniqueStr(self, minStrLen, maxStrLen, charList=None):
         """
-        Returns a random string that is guaranteed to be unique
+        Generate a random string that is guaranteed to be unique.
+
+        :param minStrLen: minimum length of generated string
+        :type minStrLen: int
+        :param maxStrLen: maximum length of generated string
+        :type maxStrLen: int
+        :param charList: list of characters that will be used when
+            generating the random string. If it is not specified, the
+            default character set will be used
+        :type charList: str or list of chrs
+
+        .. note:: 
+            Runtime will increase as more and more unique strings are
+            generated, unless 
+            :meth:`~RandomGen.forgetUniqueStrs` is called.
         """
         if charList is None:
-            charList = RandomGen.randStrCharList
+            charList = RandomGen._randStrCharList
 
         minLen = minStrLen
         maxLen = maxStrLen
@@ -114,7 +164,7 @@ class RandomGen(object):
         while True:
             randStr = self.randGenStr(minLen, maxLen, charList)
 
-            if randStr not in RandomGen.uniqueRandStrs:
+            if randStr not in RandomGen._uniqueRandStrs:
                 break 
             else:
                 commonStrNum += 1
@@ -123,17 +173,18 @@ class RandomGen(object):
                     maxLen += 1
                     commonStrNum = 0 
 
-        RandomGen.uniqueRandStrs.add(randStr)
+        RandomGen._uniqueRandStrs.add(randStr)
 
         return randStr
 
     def randGenStr(self, minStrLen, maxStrLen, charList=None):
         """
-        Returns a random string, ranging in size from minStrLen to
-        maxStrLen, using characters from charList.
+        Generate a random string. Functions the same as
+        :meth:`~RandomGen.randUniqueStr`, the only difference being
+        that the generated string is NOT guaranteed to be unique.
         """ 
         if charList is None:
-            charList = RandomGen.randStrCharList
+            charList = RandomGen._randStrCharList
 
         randVarLen = RandomGen.randGen.randint(minStrLen, maxStrLen)
         randStr = "".join(self.randSelect(charList) for x in range(randVarLen))
