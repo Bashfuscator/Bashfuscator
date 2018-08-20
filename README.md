@@ -1,8 +1,9 @@
 # Bashfuscator
 
-## Setup
+Bashfuscator is a modular and fully configureable Bash obfuscator. It is currently in heavy
+development and extremely alpha, be aware of that if you decide to test it. If you do want
+to test it, or want to help with development, head on over to the [documentation](https://bashfuscator.readthedocs.io/en/latest/lib-doc/string_obfuscators.html).
 
-1. `git clone https://github.com/Bashfuscator/Bashfuscator`
-2. `sudo apt-get install python3-pip python3-argcomplete`
-3. `cd Bashfuscator`
-4. `python3 setup.py install --user`
+## Disclaimer
+
+Bashfuscator was created for educational purposes *only*, use only on computers or networks you have explicit permission to do so. The Bashfuscator team is not responsible for any illegal or malicious acts preformed with this project.

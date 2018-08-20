@@ -10,9 +10,9 @@ Contents:
 
 .. toctree::
 
-   common-doc/index
-   core-doc/index
-   lib-doc/index
+   Installation
+   Quick Start
+   Module Documentation
 
 
 :ref:`genindex`

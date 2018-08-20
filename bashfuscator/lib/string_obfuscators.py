@@ -28,7 +28,7 @@ class StringObfuscator(Mutator):
 	:type timeRating: int
 	:param binariesUsed: list of all the binaries the StringObfuscator
 		uses
-	:type reversible: list of strs
+	:type binariesUsed: list of strs
 	:param fileWrite: True if the Command Obfuscator requires 
 		creating/writing to files, False otherwise
 	:type fileWrite: bool
