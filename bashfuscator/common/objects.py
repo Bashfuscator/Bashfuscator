@@ -16,7 +16,7 @@ class Mutator(object):
 
     :param name: Name of the Mutator
     :type name: str
-    :param mutatorType: child mutator's type
+    :param mutatorType: child Mutator's type
     :type mutatorType: lowercase str
     :param notes: any additional information useful to know when using
         the Mutator

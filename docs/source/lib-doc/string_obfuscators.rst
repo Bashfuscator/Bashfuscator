@@ -1,5 +1,6 @@
-`string_obfuscators.py` - String Obfuscators used by the framework
-==================================================================
+`string_obfuscators.py`
+=======================
 
 .. automodule:: bashfuscator.lib.string_obfuscators
+    :show-inheritance:
     :members:

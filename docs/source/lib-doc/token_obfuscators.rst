@@ -1,5 +1,6 @@
-`token_obfuscators.py` - Token Obfuscators used by the framework
-================================================================
+`token_obfuscators.py`
+======================
 
 .. automodule:: bashfuscator.lib.token_obfuscators
+    :show-inheritance:
     :members:

@@ -1,5 +1,6 @@
-`encoders.py` - Encoders used by the framework
-==============================================
+`encoders.py`
+=============
 
 .. automodule:: bashfuscator.lib.encoders
+    :show-inheritance:
     :members:

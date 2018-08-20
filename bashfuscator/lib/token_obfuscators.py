@@ -1,3 +1,6 @@
+"""
+Token Obfuscators used by the framework.
+"""
 from binascii import hexlify
 import string
 
@@ -6,16 +9,24 @@ from bashfuscator.common.objects import Mutator
 
 class TokenObfuscator(Mutator):
     """
-    Base class for all token obfuscators. If the obfuscator is able to
-    be deobfuscated and executed by bash at runtime, without a stub, 
-    then it is a token obfuscator.
+    Base class for all token obfuscators. If an obfuscator is able to
+    be deobfuscated and executed by bash at runtime, without bash
+    having to execute a stub or any code, then it is a Token Obfuscator.
 
-    :param name: name of the Token Obfuscator
-    :param description: short description of what the TokenObfuscator does
-    :param sizeRating: rating from 1 to 5 of how much the TokenObfuscator 
-    increases the size of the overall payload
-    :param credits: whom or where inpiration for or the complete obfuscator 
-    method was found at
+    :param name: name of the TokenObfuscator
+    :type name: str
+    :param description: short description of what the TokenObfuscator
+        does
+    :type description: str
+    :param sizeRating: rating from 1 to 5 of how much the 
+        TokenObfuscator increases the size of the overall payload
+    :type sizeRating: int
+    :param notes: see :class:`bashfuscator.common.objects.Mutator`
+    :type notes: str
+    :param author: see :class:`bashfuscator.common.objects.Mutator`
+    :type author: str
+    :param credits: see :class:`bashfuscator.common.objects.Mutator`
+    :type credits: str
     """
     def __init__(self, name, description, sizeRating, notes=None, author=None, credits=None):
         super().__init__(name, "token", notes, author, credits)

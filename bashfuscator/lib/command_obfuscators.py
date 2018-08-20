@@ -1,21 +1,39 @@
+"""
+Command Obfuscators used by the framework.
+"""
 from bashfuscator.common.objects import Mutator, Stub
 
 
 class CommandObfuscator(Mutator):
     """
-    Base class for all command obfuscators. If an obfuscator requires
-    a deobfuscation stub to execute, then it is a command obfuscator.
+    Base class for all Command Obfuscators. If an obfuscator takes the
+    original input, mutates it, and requires a deobfuscation stub to
+    execute, then it is a Command Obfuscator.
     
     :param name: name of the CommandObfuscator
-    :param description: short description of what the CommandObfuscator does
-    :param sizeRating: rating from 1 to 5 of how much the CommandObfuscator 
-    increases the size of the overall payload
-    :param timeRating: rating from 1 to 5 of how much the CommandObfuscator 
-    increases the execution time of the overall payload
-    :param reversible: True if the obfuscator cancels itself out when run
-    twice in a row on a command/script, False otherwise
-    :param credits: whom or where inpiration for or the complete obfuscator 
-    method was found at
+    :type name: str
+    :param description: short description of what the CommandObfuscator 
+        does
+    :type description: str
+    :param sizeRating: rating from 1 to 5 of how much the 
+        CommandObfuscator increases the size of the overall payload
+    :type sizeRating: int
+    :param timeRating: rating from 1 to 5 of how much the
+        CommandObfuscator increases the execution time of the overall
+        payload
+    :type timeRating: int
+    :param reversible: True if the obfuscator cancels itself out when
+        run twice in a row on a command/script, False otherwise
+    :type reversible: bool
+    :param fileWrite: True if the Command Obfuscator requires 
+        creating/writing to files, False otherwise
+    :type fileWrite: bool
+    :param notes: see :class:`bashfuscator.common.objects.Mutator`
+    :type notes: str
+    :param author: see :class:`bashfuscator.common.objects.Mutator`
+    :type author: str
+    :param credits: see :class:`bashfuscator.common.objects.Mutator`
+    :type credits: str
     """
     def __init__(self, name, description, sizeRating, timeRating, reversible, fileWrite=False, notes=None, author=None, credits=None):
         super().__init__(name, "command", notes, author, credits)

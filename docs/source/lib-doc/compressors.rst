@@ -1,5 +1,6 @@
-`compressors.py` - Compressors used by the framework
-====================================================
+`compressors.py`
+================
 
 .. automodule:: bashfuscator.lib.compressors
+    :show-inheritance:
     :members:

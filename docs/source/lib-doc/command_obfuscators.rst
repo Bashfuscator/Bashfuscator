@@ -1,5 +1,6 @@
-`command_obfuscators.py` - Command Obfuscators used by the framework
-====================================================================
+`command_obfuscators.py`
+========================
 
 .. automodule:: bashfuscator.lib.command_obfuscators
+    :show-inheritance:
     :members:

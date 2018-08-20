@@ -108,6 +108,10 @@ class RandomGen(object):
             maximum length of generated variable names
         :type sizePref: int
         :returns: unique random variable name
+
+        .. note::
+            :meth:`~RandomGen.randUniqueStr` is called under the hood,
+            therefore the same performance concerns apply.
         """
         if sizePref == 0:
             minVarLen = 1
@@ -148,10 +152,11 @@ class RandomGen(object):
             generating the random string. If it is not specified, the
             default character set will be used
         :type charList: str or list of chrs
+        :returns: unique random string
 
         .. note:: 
-            Runtime will increase as more and more unique strings are
-            generated, unless 
+            Runtime will increase incrementally as more and more unique
+            strings are generated, unless 
             :meth:`~RandomGen.forgetUniqueStrs` is called.
         """
         if charList is None:
@@ -168,6 +173,8 @@ class RandomGen(object):
                 break 
             else:
                 commonStrNum += 1
+                # if 5 collisions are generated in a row, chances are that we are reaching the upper bound
+                # of our keyspace, so make the keyspace bigger so we can keep generating unique strings
                 if commonStrNum == 5:
                     minLen = maxLen
                     maxLen += 1
