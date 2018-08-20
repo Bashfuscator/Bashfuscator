@@ -52,6 +52,18 @@ if userOb.split('/')[0] == 'command':                           #not preferred
 self.payload += 'printf -- "\\x$(printf \'' + randomString      #ok, string contains double quotes
 ```
 
+- When adding imports to files, make sure the imports are alphabetical, and when possible import only what functions and classes that are needed.
+
+```python
+import binascii
+from sys import exit        #good
+exit(0)
+
+import sys                  #only needed to import sys.exit
+import binascii             #not in alphabetical order
+sys.exit(0)
+```
+
 ---
 
 ## Adding Obfuscators
@@ -154,3 +166,12 @@ class CmdExample(CommandObfuscator):
         self.payload = self.deobStub.genStub(sizePref, obCmd)   #required before returning
 
         return self.payload
+```
+
+---
+
+## Git Guidelines
+
+- Commit early and often. More numerous, smaller commits are prefered to few large ones.
+- Write meaningful commit messages. 'Misc tweaks' doesn't describe what was changed at all. When someone needs to go back and find that one commit that broke things, meaningful commit names make the process much less painful.
+- Try to accomplish one main thing in each commit. Don't try to fix 5 issues in one commit, or add 3 features either.

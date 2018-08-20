@@ -12,7 +12,7 @@ Contents:
 
    Installation
    Quick Start
-   Module Documentation
+   Module Documentation/index
 
 
 :ref:`genindex`
