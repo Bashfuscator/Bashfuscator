@@ -91,7 +91,7 @@ class ObfuscationHandler(object):
         userMutator or userStub parameters, the Mutator and/or Stub
         specified by userMutator and/or userStub will be used to mutate
         the payload. If those parameters are not used, a Mutator and
-        Stub if appropriate will be chosen automatically.
+        Stub (if appropriate) will be chosen automatically.
 
         :param payload: input command(s) to obfuscate
         :type payload: str
@@ -184,8 +184,35 @@ class ObfuscationHandler(object):
 
     def choosePrefMutator(self, mutators, sizePref=None, timePref=None, binaryPref=None, filePref=None, prevCmdOb=None, userMutator=None, userStub=None):
         """
-        Returns an obfuscator from a list of mutators which is of the 
-        desired preferences, with a stub that uses desired binaries
+        Chooses a Mutator from a list of mutators which is of the 
+        desired preferences, with a stub that uses desired binaries if
+        appropriate. If called with the userMutator or userStub 
+        parameters, the Mutator and/or Stub specified by userMutator
+        and/or userStub will be chosen. If those parameters are not
+        used, a Mutator and Stub (if appropriate) will be chosen
+        automatically based off of the values of the other parameters.
+
+        :param mutators: list of Mutators to choose a Mutator from
+        :param sizePref: payload size user preference
+        :type sizePref: int
+        :param timePref: execution time user preference
+        :type timePref: int 
+        :param binaryPref: list of binaries that the chosen Mutator
+            should or should not use
+        :type binaryPref: tuple containing a list of strs, and a bool
+        :param filePref: file write user preference
+        :type filePref: bool
+        :param prevCmdOb: the previous CommandObfuscator used. Should
+            only be passed if a CommandObfuscator was used to generate
+            the most recent obfuscation layer
+        :type prevCmdOb:
+            :class:`bashfuscator.lib.command_mutators.CommandObfuscator`
+        :param userMutator: the specific Mutator the user chose to use
+        :type userMutator: lowercase str
+        :param userStub: the specific Stub the user chose to use
+        :type userStub: lowercase str
+        :returns: a :class:`bashfuscator.common.objects.Mutator`
+            object
         """
         selMutator = None
         global revObWarn
@@ -214,11 +241,9 @@ class ObfuscationHandler(object):
 
         if selMutator.mutatorType == "command":
             # make sure we don't choose the same CommandObfuscator twice if it's reversible
-            if prevCmdOb is not None and prevCmdOb.reversible and prevCmdOb.name == selMutator.name:
-                if userMutator is not None:
-                    if not revObWarn:
-                        revObWarn = True
-                        printWarning("Reversible obfuscator '{0}' selected twice in a row; part of the payload may be in the clear".format(userMutator))
+            if prevCmdOb is not None and prevCmdOb.reversible and prevCmdOb.name == selMutator.name and not revObWarn:
+                revObWarn = True
+                printWarning("Reversible obfuscator '{0}' selected twice in a row; part of the payload may be in the clear".format(userMutator))
             
             selMutator.deobStub = self.choosePrefStub(selMutator.stubs, sizePref, timePref, binaryPref, userStub)
 
@@ -226,11 +251,24 @@ class ObfuscationHandler(object):
 
     def choosePrefStub(self, stubs, sizePref, timePref, binaryPref, userStub=None):
         """
-        Returns a stub which is of the desired sizeRating, timeRating, and 
-        use desired binaries, or None if no stubs use desired binaries 
-        unless the user has elected to manually select a stub. In that
-        case, that specific stub is searched for and is checked to make 
-        sure it aligns with the users preferences for used binaries
+        Choose a stub which is of the desired sizeRating, timeRating,
+        and uses desired binaries. If the userStub parameter is passed,
+        the specific stub defined by userStub is searched for and is
+        checked to make sure it aligns with the users preferences for 
+        used binaries.
+
+        :param stubs: list of Stubs to choose from
+        :param sizePref: payload size user preference
+        :type sizePref: int
+        :param timePref: execution time user preference
+        :type timePref: int 
+        :param binaryPref: list of binaries that the chosen Mutator
+            should or should not use
+        :type binaryPref: tuple containing a list of strs, and a bool
+        :param userStub: the specific Stub the user chose to use
+        :type userStub: lowercase str
+        :returns: a :class:`bashfuscator.common.objects.Stub`
+            object
         """
         if binaryPref is not None:
             binList = binaryPref[0]
@@ -269,8 +307,23 @@ class ObfuscationHandler(object):
 
     def getPrefItems(self, seq, sizePref, timePref, filePref=None, prevCmdOb=None):
         """
-        Returns items from seq which are preferable to the user based
-        off of the options they chose
+        Get Mutators or Stubs from a sequence which are suitable to use
+        based off the user's preferences.
+
+        :param seq: list of Mutators of Stubs
+        :type seq: list
+        :param sizePref: payload size user preference
+        :type sizePref: int
+        :param timePref: execution time user preference
+        :type timePref: int
+        :param filePref: file write user preference
+        :type filePref: bool
+        :param prevCmdOb: the previous CommandObfuscator used. Should
+            only be passed if a CommandObfuscator was used to generate
+            the most recent obfuscation layer
+        :type prevCmdOb:
+            :class:`bashfuscator.lib.command_mutators.CommandObfuscator`
+        :returns: a list of Mutators or Stubs
         """
         minSize, maxSize = self.getPrefRange(sizePref)
         

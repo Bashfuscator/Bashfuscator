@@ -1,8 +1,8 @@
 # Bashfuscator
 
-Bashfuscator is a modular and fully configureable Bash obfuscator. It is currently in heavy
+Bashfuscator is a modular and fully configurable Bash obfuscator. It is currently in heavy
 development and extremely alpha, be aware of that if you decide to test it. If you do want
-to test it, or want to help with development, head on over to the [documentation](https://bashfuscator.readthedocs.io/en/latest/lib-doc/string_obfuscators.html).
+to test it, or want to help with development, head on over to the [documentation](https://bashfuscator.readthedocs.io/en/latest).
 
 ## Disclaimer
 
