@@ -104,10 +104,11 @@ class ObfuscationHandler(object):
         :returns: a str containing the 'payload' argument obfuscated by
             a single Mutator
         """
-        mutatorType = userMutator.split("/")[0]
         selMutator = None
 
         if userMutator is not None:
+            mutatorType = userMutator.split("/")[0]
+
             if mutatorType == "command":
                 selMutator = self.choosePrefMutator(self.cmdObfuscators, self.sizePref, self.timePref, 
                     self.binaryPref, self.filePref, self.prevCmdOb, userMutator, userStub)
