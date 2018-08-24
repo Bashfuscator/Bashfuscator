@@ -41,7 +41,7 @@ class ObfuscationHandler(object):
         self.tokObfuscators = tokObfuscators
         self.encoders = encoders
         self.compressors = compressors
-        self.userMutators = args.choose_mutators
+        
         self.layers = args.layers
         self.sizePref = args.payload_size
         self.timePref = args.execution_time
@@ -50,6 +50,11 @@ class ObfuscationHandler(object):
         self.originalCmd = args.command
         self.prevCmdOb = None
         self.randGen = RandomGen()
+
+        if args.choose_mutators:
+            self.userMutators = args.choose_mutators
+        elif args.choose_all:
+            self.userMutators = args.choose_all
 
         if args.full_ascii_strings:
             self.randGen.setFullAsciiStrings()
@@ -78,8 +83,6 @@ class ObfuscationHandler(object):
                             userMutator = userMutator[:-int(len(userStub) + 1)]
                             payload = self.genObfuscationLayer(payload, userMutator, userStub)
                     
-                    payload = self.genObfuscationLayer(payload, userMutator)
-            
             else:
                 payload = self.genObfuscationLayer(payload)
 
