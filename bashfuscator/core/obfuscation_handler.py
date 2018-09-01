@@ -372,9 +372,12 @@ class ObfuscationHandler(object):
         elif pref == 1:
             min = 1
             max = 2
-        elif pref < 4:
+        elif pref == 2:
             min = 1
-            max = pref + 2
+            max = 3
+        elif pref == 3:
+            min = 1
+            max = 5
         else:
             min = max = 5
 
