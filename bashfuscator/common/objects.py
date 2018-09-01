@@ -35,7 +35,7 @@ class Mutator(object):
     def __init__(self, name, mutatorType, notes, author, credits):
         self.name = name
         self.mutatorType = mutatorType
-        self.longName = self.mutatorType + "/" self.name.replace(" ", "_").lower()
+        self.longName = self.mutatorType + "/" + self.name.replace(" ", "_").lower()
         self.notes = notes
         self.author = author
         self.credits = credits

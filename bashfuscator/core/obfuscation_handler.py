@@ -56,6 +56,8 @@ class ObfuscationHandler(object):
             self.userMutators = args.choose_mutators
         elif args.choose_all:
             self.userMutators = args.choose_all
+        else:
+            self.userMutators = None
 
         if args.full_ascii_strings:
             self.randGen.setFullAsciiStrings()
