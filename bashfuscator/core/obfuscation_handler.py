@@ -268,7 +268,7 @@ class ObfuscationHandler(object):
         :type sizePref: int
         :param timePref: execution time user preference
         :type timePref: int
-        param binaryPref: list of binaries that the chosen Mutator
+        :param binaryPref: list of binaries that the chosen Mutator
             should or should not use
         :type binaryPref: tuple containing a list of strs, and a bool
         :param filePref: file write user preference
@@ -331,7 +331,7 @@ class ObfuscationHandler(object):
         :type sizePref: int
         :param timePref: execution time user preference
         :type timePref: int
-        param binaryPref: list of binaries that the chosen Mutator
+        :param binaryPref: list of binaries that the chosen Mutator
             should or should not use
         :type binaryPref: tuple containing a list of strs, and a bool
         :returns: list of
