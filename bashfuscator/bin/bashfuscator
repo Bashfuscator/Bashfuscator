@@ -185,7 +185,7 @@ if __name__ == "__main__":
         args.binaryPref = None
 
     if args.layers is None:
-        if args.choose_mutators is not None:
+        if args.choose_mutators is not None or args.choose_all is not None:
             args.layers = 1
         else:
             args.layers = 2
