@@ -7,6 +7,7 @@ import string
 
 from bashfuscator.common.objects import Mutator
 
+
 class StringObfuscator(Mutator):
 	"""
 	Base class for all String Obfuscators. A String Obfuscator is a
@@ -39,6 +40,7 @@ class StringObfuscator(Mutator):
 	:param credits: see :class:`bashfuscator.common.objects.Mutator`
 	:type credits: str
 	"""
+
 	def __init__(self, name, description, sizeRating, timeRating, binariesUsed=[], fileWrite=False, notes=None, author=None, credits=None):
 		super().__init__(name, "string", notes, author, credits)
 		
@@ -96,7 +98,7 @@ class GlobObfuscator(StringObfuscator):
 		self.payload += "mkdir -p '" + self.workingDir + "';"
 		self.payload += "".join(parts)
 		self.payload += "cat '" + self.workingDir + "'/" + "?" * cmdLogLen + ";"
-		self.payload += "rm '"  + self.workingDir + "'/" + "?" * cmdLogLen + ";"
+        self.payload += "rm '" + self.workingDir + "'/" + "?" * cmdLogLen + ";"
 	
 	def setSizes(self, sizePref, userCmd):
 		if sizePref == 0:
@@ -117,6 +119,7 @@ class GlobObfuscator(StringObfuscator):
 		elif sizePref == 4:
 			self.minDirLen = self.maxDirLen = 32
 			self.sectionSize = 1
+
 
 class FileGlob(GlobObfuscator):
 	def __init__(self):
@@ -152,10 +155,10 @@ class FolderGlob(GlobObfuscator):
 		
 		self.setSizes(sizePref, userCmd)
 		self.writeableDir = ("/tmp/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
-		self.workingDir= self.writeableDir.replace("'", "'\"'\"'")
+        self.workingDir = self.writeableDir.replace("'", "'\"'\"'")
 		
 		cmdChunks = [userCmd[i:i + self.sectionSize] for i in range(0, len(userCmd), self.sectionSize)]
-		parts=[]
+        parts = []
 		for chunk in cmdChunks:
 			self.generate(sizePref, chunk, self.writeableDir + "/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
 			parts.append(self.payload)

@@ -29,13 +29,14 @@ class RandomGen(object):
         variables and strings to the (almost) full ASCII charset.
         Only "'" and "/" are not used.
         """
-        RandomGen._randStrCharList = "".join(chr(i) for i in range(1, 127) if i != 39 and i != 47)
+        RandomGen._randStrCharList = "".join(
+            chr(i) for i in range(1, 127) if i != 39 and i != 47)
 
     def forgetUniqueStrs(self):
         """Clear the sets of previously generated variable names
-        and strings. Should be called when random variable 
-        names/strings are needed but can have the same name as 
-        previously generated variable names/strings without 
+        and strings. Should be called when random variable
+        names/strings are needed but can have the same name as
+        previously generated variable names/strings without
         causing conflicts.
         """
         RandomGen._generatedVars.clear()
@@ -77,16 +78,16 @@ class RandomGen(object):
     def randSelect(self, seq):
         """
         Randomly select an element from a sequence.
-        
+
         :param seq: sequence to randomly select from
         :type seq: list
         :returns: element from seq, or None if seq is empty
         """
-        if len(seq):
+        if seq:
             selection = RandomGen.randGen.choice(seq)
         else:
             selection = None
-        
+
         return selection
 
     def randShuffle(self, seq):
@@ -154,9 +155,9 @@ class RandomGen(object):
         :type charList: str or list of chrs
         :returns: unique random string
 
-        .. note:: 
+        .. note::
             Runtime will increase incrementally as more and more unique
-            strings are generated, unless 
+            strings are generated, unless
             :meth:`~RandomGen.forgetUniqueStrs` is called.
         """
         if charList is None:
@@ -164,13 +165,13 @@ class RandomGen(object):
 
         minLen = minStrLen
         maxLen = maxStrLen
-        commonStrNum = 0 
+        commonStrNum = 0
 
         while True:
             randStr = self.randGenStr(minLen, maxLen, charList)
 
             if randStr not in RandomGen._uniqueRandStrs:
-                break 
+                break
             else:
                 commonStrNum += 1
                 # if 5 collisions are generated in a row, chances are that we are reaching the upper bound
@@ -178,7 +179,7 @@ class RandomGen(object):
                 if commonStrNum == 5:
                     minLen = maxLen
                     maxLen += 1
-                    commonStrNum = 0 
+                    commonStrNum = 0
 
         RandomGen._uniqueRandStrs.add(randStr)
 
@@ -189,7 +190,7 @@ class RandomGen(object):
         Generate a random string. Functions the same as
         :meth:`~RandomGen.randUniqueStr`, the only difference being
         that the generated string is NOT guaranteed to be unique.
-        """ 
+        """
         if charList is None:
             charList = RandomGen._randStrCharList
 

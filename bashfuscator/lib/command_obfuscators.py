@@ -9,7 +9,7 @@ class CommandObfuscator(Mutator):
     Base class for all Command Obfuscators. If an obfuscator takes the
     original input, mutates it, and requires a deobfuscation stub to
     execute, then it is a Command Obfuscator.
-    
+
     :param name: name of the CommandObfuscator
     :type name: str
     :param description: short description of what the CommandObfuscator 
@@ -35,9 +35,10 @@ class CommandObfuscator(Mutator):
     :param credits: see :class:`bashfuscator.common.objects.Mutator`
     :type credits: str
     """
+
     def __init__(self, name, description, sizeRating, timeRating, reversible, fileWrite=False, notes=None, author=None, credits=None):
         super().__init__(name, "command", notes, author, credits)
-        
+
         self.description = description
         self.sizeRating = sizeRating
         self.timeRating = timeRating
@@ -54,7 +55,7 @@ class CaseSwap(CommandObfuscator):
         super().__init__(
             name="Case Swapper",
             description="Flips the case of all alpha chars",
-            sizeRating=2,
+            sizeRating=1,
             timeRating=1,
             reversible=True,
             author="capnspacehook"
@@ -169,8 +170,8 @@ class Reverse(CommandObfuscator):
 
     def obfuscate(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
-        
+
         obCmd = self.originalCmd[::-1]
         self.payload = self.deobStub.genStub(sizePref, obCmd)
-        
+
         return self.payload

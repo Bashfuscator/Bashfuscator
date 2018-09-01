@@ -35,6 +35,7 @@ class ObfuscationHandler(object):
     :type args: arguments parsed from
         :py:meth:`argparse.ArgumentParser.parse_args`
     """
+
     def __init__(self, cmdObfuscators, strObfuscators, tokObfuscators, encoders, compressors, args):
         self.cmdObfuscators = cmdObfuscators
         self.strObfuscators = strObfuscators
@@ -297,8 +298,7 @@ class ObfuscationHandler(object):
         else:
             prefStubs = stubs
 
-
-        if len(prefStubs):
+        if prefStubs:
             prefStubs = self.getPrefItems(prefStubs, sizePref, timePref)
 
         selStub = self.randGen.randSelect(prefStubs)

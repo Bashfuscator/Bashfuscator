@@ -1,5 +1,6 @@
 from bashfuscator.common.random import RandomGen
 
+
 def obfuscateInt(num, smallExpr):
     """
     Obfuscate an integer by replacing the int
@@ -17,11 +18,11 @@ def obfuscateInt(num, smallExpr):
             expr, pieces = genSimpleExpr(piece, smallExpr)
             subExprs.append(expr % (pieces[0], pieces[1], pieces[2]))
         numExpr = exprStr % (subExprs[0], subExprs[1], subExprs[2])
-        
+
     # Randomly replace '+' with '--'. Same thing, more confusing
     match = re.search(r"\+\d+", numExpr)
     beginingExprLen = 0
-    while match is not None:   
+    while match is not None:
         match = list(match.span())
         match[0] += beginingExprLen
         match[1] += beginingExprLen
@@ -30,18 +31,18 @@ def obfuscateInt(num, smallExpr):
             numExpr = numExpr[:match[0]] + "-(-" + numExpr[match[0] + 1:match[1]] + ")" + numExpr[match[1]:]
         beginingExprLen = len(numExpr[:match[1]])
         match = re.search(r"\+\d+", numExpr[match[1]:])
-    
+
     # Properly separate any double '-' signs. Some langs complain
     match = re.search(r"--\d+", numExpr)
     beginingExprLen = 0
-    while match is not None:   
+    while match is not None:
         match = list(match.span())
         match[0] += beginingExprLen
         match[1] += beginingExprLen
         numExpr = numExpr[:match[0]] + "-(" + numExpr[match[0] + 1:match[1]] + ")" + numExpr[match[1]:]
         beginingExprLen = len(numExpr[:match[1]])
         match = re.search(r"--\d+", numExpr[match[1]:])
-    
+
     # Bash requires mathematical expressions to be in $((expression)) syntax
     numExpr = "$((" + numExpr + "))"
     return numExpr

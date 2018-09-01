@@ -10,8 +10,8 @@ from bashfuscator.common.random import RandomGen
 class Mutator(object):
     """
     Base class that all Mutators inherit from. Automatically generates
-    a longName attribute that is used to choose Mutators on the 
-    command line, and stores a 
+    a longName attribute that is used to choose Mutators on the
+    command line, and stores a
     :class:`bashfuscator.common.random.RandomGen` object.
 
     :param name: Name of the Mutator
@@ -23,18 +23,19 @@ class Mutator(object):
     :type notes: str
     :param author: creator of the Mutator
     :type author: str
-    :param credits: whom or where inpiration for or the complete method 
-        of mutation was found at. Should be the name/handle of the 
-        person who inspired you, and/or a link to where you got the 
-        idea from. See 
-        :class:`bashfuscator.lib.token_obfuscators.AnsiCQuote` for an 
+    :param credits: whom or where inpiration for or the complete method
+        of mutation was found at. Should be the name/handle of the
+        person who inspired you, and/or a link to where you got the
+        idea from. See
+        :class:`bashfuscator.lib.token_obfuscators.AnsiCQuote` for an
         example
     :type credits: str
     """
+
     def __init__(self, name, mutatorType, notes, author, credits):
         self.name = name
         self.mutatorType = mutatorType
-        self.longName = self.mutatorType + "/" + self.name.replace(" ", "_").lower()
+        self.longName = self.mutatorType + "/" self.name.replace(" ", "_").lower()
         self.notes = notes
         self.author = author
         self.credits = credits
@@ -44,25 +45,26 @@ class Mutator(object):
 class Stub(object):
     """
     This class is in charge of generating a valid deobfuscation stub,
-    taking care of properly escaping quotes in the user's input, 
-    generating random variable names, and so on. 
+    taking care of properly escaping quotes in the user's input,
+    generating random variable names, and so on.
 
     :param name: name of the Stub
     :param binariesUsed: all the binaries
         used in the stub
     :type binariesUsed: list of strs
-    :param sizeRating: rating from 1 to 5 of how much the Stub 
+    :param sizeRating: rating from 1 to 5 of how much the Stub
         increases the size of the overall payload
     :type sizeRating: int
-    :param timeRating: rating from 1 to 5 of how much the Stub 
+    :param timeRating: rating from 1 to 5 of how much the Stub
         increases the execution time of the overall payload
     :type timeRating: int
-    :param escapeQuotes: True if the stub requires any quotes in the 
+    :param escapeQuotes: True if the stub requires any quotes in the
         original command to be escaped, False otherwise
     :type escapeQuotes: int
     :param stub: string containing the actual stub
     :type stub: str
     """
+
     def __init__(self, name, binariesUsed, sizeRating, timeRating, escapeQuotes, stub):
         self.name = name
         self.longName = self.name.replace(" ", "_").lower()
@@ -76,7 +78,7 @@ class Stub(object):
     def genStub(self, sizePref, userCmd):
         """
         Generate a valid deobfuscation stub and wrap an obfuscated
-        command in it. 
+        command in it.
 
         :param sizePref: sizePref user option
         :type sizePref: int
@@ -92,7 +94,7 @@ class Stub(object):
                     userCmd[idx] = cmd.replace("'", "'\"'\"'")
             else:
                 userCmd = userCmd.replace("'", "'\"'\"'")
-        
+
         genStub = self.stub
         for var in re.findall(r"VAR\d+", genStub):
             genStub = genStub.replace(var, self.randGen.randGenVar(sizePref))
@@ -104,7 +106,7 @@ class Stub(object):
                     genStub = genStub.replace(cmd, userCmd[idx])
             else:
                 printError("Stub '{0}' is improperly formatted: no 'CMD' string found".format(self.stub.name))
-        
+
         else:
             genStub = genStub.replace("CMD", userCmd)
 

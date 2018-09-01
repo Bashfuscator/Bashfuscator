@@ -33,9 +33,10 @@ class Compressor(Mutator):
     :param credits: see :class:`bashfuscator.common.objects.Mutator`
     :type credits: str
     """
+
     def __init__(self, name, description, sizeRating, timeRating, notes=None, author=None, credits=None):
         super().__init__(name, "compress", notes, author, credits)
-        
+
         self.description = description
         self.sizeRating = sizeRating
         self.timeRating = timeRating

@@ -28,6 +28,7 @@ class TokenObfuscator(Mutator):
     :param credits: see :class:`bashfuscator.common.objects.Mutator`
     :type credits: str
     """
+
     def __init__(self, name, description, sizeRating, notes=None, author=None, credits=None):
         super().__init__(name, "token", notes, author, credits)
 
@@ -46,12 +47,12 @@ class AnsiCQuote(TokenObfuscator):
             author="capnspacehook",
             credits="DissectMalware, https://twitter.com/DissectMalware/status/1023682809368653826"
         )
-    
+
         self.SUBSTR_QUOTE_PROB = 33
 
     def obfuscate(self, sizePref, userCmd):
         self.originalCmd = userCmd
-        
+
         obCmd = "printf -- $'\\"
 
         if sizePref < 2:
@@ -64,10 +65,11 @@ class AnsiCQuote(TokenObfuscator):
         for char in self.originalCmd:
             choice = self.randGen.randChoice(maxChoice)
 
-            # If sizePref is 3, randomly ANSI-C quote substrings of the original 
+            # If sizePref is 3, randomly ANSI-C quote substrings of the original
             # userCmd and randomly add empty strings
             if sizePref == 4 and self.randGen.probibility(self.SUBSTR_QUOTE_PROB):
-                obCmd = obCmd[:-1] + "'" + "".join("''" for x in range(self.randGen.randGenNum(0, 5))) + "$'\\"
+                obCmd = obCmd[:-1] + "'" + "".join("''" for x in range(
+                    self.randGen.randGenNum(0, 5))) + "$'\\"
 
             if choice == 0:
                 obCmd += oct(ord(char))[2:] + "\\"
@@ -81,4 +83,3 @@ class AnsiCQuote(TokenObfuscator):
         self.payload = obCmd[:-1] + "'"
 
         return self.payload
-        

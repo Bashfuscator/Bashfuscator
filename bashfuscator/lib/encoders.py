@@ -30,16 +30,17 @@ class Encoder(Mutator):
     :param credits: see :class:`bashfuscator.common.objects.Mutator`
     :type credits: str
     """
+
     def __init__(self, name, description, sizeRating, timeRating, notes=None, author=None, credits=None):
         super().__init__(name, "encode", notes, author, credits)
-        
+
         self.description = description
         self.sizeRating = sizeRating
         self.timeRating = timeRating
         self.originalCmd = ""
         self.payload = ""
 
-    
+
 class Base64(Encoder):
     def __init__(self):
         super().__init__(

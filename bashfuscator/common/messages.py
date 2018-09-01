@@ -6,22 +6,24 @@ from sys import exit
 from bashfuscator.common.colors import blue, yellow, red, bold
 
 
-quietOutput = False
+QUIET_OUTPUT = False
+
+
 def activateQuietMode():
     """Activate quiet mode, only print errors."""
-    global quietOutput
-    quietOutput = True
+    global QUIET_OUTPUT
+    QUIET_OUTPUT = True
 
 
 def printInfo(msg):
     """Format and print informational messages to the terminal."""
-    if not quietOutput:
+    if not QUIET_OUTPUT:
         print("[{0}] {1}".format(blue("+"), msg))
 
 
 def printWarning(msg):
     """Format and print warning messages to the terminal."""
-    if not quietOutput:
+    if not QUIET_OUTPUT:
         print(yellow("[!] {0}".format(msg)))
 
 
