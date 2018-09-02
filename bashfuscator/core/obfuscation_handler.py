@@ -452,17 +452,17 @@ class ObfuscationHandler(object):
         :returns: tuple of minimum and maximum ratings
         """
         if pref == 0:
-            min = max = 1
+            minRating = maxRating = 1
         elif pref == 1:
-            min = 1
-            max = 2
+            minRating = 1
+            maxRating = 2
         elif pref == 2:
-            min = 1
-            max = 3
+            minRating = 1
+            maxRating = 3
         elif pref == 3:
-            min = 1
-            max = 5
+            minRating = 1
+            maxRating = 5
         else:
-            min = max = 5
+            minRating = maxRating = 5
 
-        return (min, max)
+        return (minRating, maxRating)
