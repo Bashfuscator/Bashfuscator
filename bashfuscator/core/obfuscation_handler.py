@@ -73,7 +73,7 @@ class ObfuscationHandler(object):
         payload = self.originalCmd
         
         for i in range(self.layers):
-            if self.userMutators is not None:
+            if self.userMutators:
                 for userMutator in self.userMutators:
                     if userMutator.count("/") == 2:
                         if userMutator[-1] == "/":
@@ -284,9 +284,9 @@ class ObfuscationHandler(object):
         """
         goodMutators = self.getPrefItems(mutators, sizePref, timePref)
 
-        if binaryPref is not None:
-                binList = binaryPref[0]
-                includeBinary = binaryPref[1]
+        if binaryPref:
+            binList = binaryPref[0]
+            includeBinary = binaryPref[1]
 
         prefMutators = []
         for mutator in goodMutators:
@@ -294,7 +294,7 @@ class ObfuscationHandler(object):
                 continue
 
             elif mutator.mutatorType == "command":
-                if prevCmdOb is not None and prevCmdOb.reversible and prevCmdOb.name == mutator.name:
+                if prevCmdOb and prevCmdOb.reversible and prevCmdOb.name == mutator.name:
                     continue
 
                 prefStubs = self.getPrefStubs(mutator.stubs, sizePref, timePref, binaryPref)
@@ -306,7 +306,7 @@ class ObfuscationHandler(object):
 
             # TODO: decide if TokenObfuscators should be allowed if the user chooses to only use certain binaries,
             # TokenObfuscators don't use any binaries 
-            elif mutator.mutatorType == "string":
+            elif mutator.mutatorType == "string" and binaryPref:
                 badBinary = False
                 for binary in mutator.binariesUsed:
                     if (binary in binList) != includeBinary:
@@ -341,16 +341,18 @@ class ObfuscationHandler(object):
         prefStubs = self.getPrefItems(stubs, sizePref, timePref)
 
         if binaryPref is not None:
-                binList = binaryPref[0]
-                includeBinary = binaryPref[1]
+            binList = binaryPref[0]
+            includeBinary = binaryPref[1]
         
         # weed out the stubs that don't use preferred binaries
         stubsWithPrefBinaries = []
-        if binaryPref is not None:
+        if binaryPref:
             for stub in prefStubs:
                 for binary in stub.binariesUsed:
                     if (binary in binList) == includeBinary:
                        stubsWithPrefBinaries.append(stub)
+        else:
+            stubsWithPrefBinaries = prefStubs
 
         return stubsWithPrefBinaries
 
