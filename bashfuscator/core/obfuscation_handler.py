@@ -280,7 +280,8 @@ class ObfuscationHandler(object):
             :class:`bashfuscator.lib.command_mutators.CommandObfuscator`
         :returns: list of
             :class:`bashfuscator.common.objects.Mutator`
-            objects
+            objects, or None if there are no preferable Mutators in the
+            'mutators' argument
         """
         goodMutators = self.getPrefItems(mutators, sizePref, timePref)
 
@@ -336,7 +337,8 @@ class ObfuscationHandler(object):
         :type binaryPref: tuple containing a list of strs, and a bool
         :returns: list of
             :class:`bashfuscator.common.objects.Stub`
-            objects
+            objects, or None if there are no preferable Stubs in the
+            'stubs' argument
         """
         prefStubs = self.getPrefItems(stubs, sizePref, timePref)
 
