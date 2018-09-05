@@ -77,13 +77,18 @@ class RandomGen(object):
 
     def randSelect(self, seq):
         """
-        Randomly select an element from a sequence.
+        Randomly select an element from a sequence. If the argument
+        'seq' is a dict, a randomly selected key will be returned.
 
         :param seq: sequence to randomly select from
         :type seq: list
-        :returns: element from seq, or None if seq is empty
+        :returns: element from seq if seq is a list, a key if seq
+        is a dict, or None if seq is empty
         """
-        if seq:
+        if isinstance(seq, dict):
+            selection = RandomGen.randGen.choice(list(seq.keys()))
+
+        elif seq:
             selection = RandomGen.randGen.choice(seq)
         else:
             selection = None
