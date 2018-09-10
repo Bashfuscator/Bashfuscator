@@ -123,7 +123,7 @@ def listMutatorType(mutators):
 if __name__ == "__main__":
     parser = ArgumentParser()
     progOpts = parser.add_argument_group("Program Options")
-    inptOpts = progOpts.add_mutually_exclusive_group(required=True)
+    inptOpts = progOpts.add_mutually_exclusive_group()
     progOpts.add_argument("-l", "--list", action="store_true", help="List all the availible obfuscators, compressors, encoders, and encryptors")
     inptOpts.add_argument("-c", "--command", type=str, help="Command to obfuscate")
     inptOpts.add_argument("-f", "--file", type=str, help="Name of the script to obfuscate")
@@ -152,7 +152,7 @@ if __name__ == "__main__":
     advancedOpts.add_argument("--full-ascii-strings", action="store_true", help="Use the full ASCII character set (with a few exceptions) when generating random strings")
     advancedOpts.add_argument("--no-file-write", action="store_true", help="Don't use obfuscators that require writing to files")
     #advancedOpts.add_argument("--no-minify", action="store_true", help="Don't minify script or command entered before obfuscation")
-    advancedOpts = parser.add_argument("--test", action="store_true", help="Test the payload after running it")
+    advancedOpts = parser.add_argument("--test", action="store_true", help="Test the payload after running it. Not compatible with -q")
 
     misc = parser.add_argument_group("Misc Options")
     misc.add_argument("--clip", action="store_true", help="Copy the payload to clipboard")
@@ -163,6 +163,16 @@ if __name__ == "__main__":
     if args.list:
         listMutators()
         exit(0)
+
+    if not args.command and not args.file:
+        parser.print_usage()
+        print("bashfuscator: error: one of the arguments -c/--command -f/--file is required")
+        exit(1)
+
+    if args.quiet and args.test:
+        parser.print_usage()
+        print("bashfuscator: error: argument --test: not allowed with argument -q/--quiet")
+        exit(1)
 
     if args.quiet:
         activateQuietMode()
