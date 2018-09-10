@@ -100,10 +100,10 @@ class SpecialCharCommand(TokenObfuscator):
         zeroCmdSyntax = [":", "${__}", "_=;", "_=()", "${__[@]}", "${!__[@]}", ":(){ :; };", \
             "_(){ _; };", "_(){ _; };:", "_(){ :; };", "_(){ :; };_", "_(){ :; };:"]
 
-        # TODO: test and build list of what symbols work as keys for associative arrays
+        # TODO: test and build list of what symbols work as keys for associative arrays 
         # '*', '\', '@', '[', ']', '`', '~' cause problems
-        symbols = ["#", "$", "%", "&", "(", ")", "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "^", "_", "{", "|", "}"]
-        
+        self.symbols = ["!", "#", "$", "%", "&", "(", ")", "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "^", "_", "{", "|", "}", "~", " "]
+
         zeroCmd = self.randGen.randSelect(zeroCmdSyntax)
 
         # 1/2 of the time wrap zeroCmd in braces
@@ -114,7 +114,7 @@ class SpecialCharCommand(TokenObfuscator):
             zeroCmd = "{ " + zeroCmd + " }"
 
         digitArrayName = self.randGen.randUniqueStr(3, 5, "_")
-        initialDigitVar = self.randGen.randUniqueStr(1, 1, symbols)
+        initialDigitVar = self.genSymbolVar()
 
         # 1/2 of the time set the first index of the array to the return code of zeroCmd
         if self.randGen.probibility(50):
@@ -134,7 +134,7 @@ class SpecialCharCommand(TokenObfuscator):
                     zeroCmd += ";"
 
             digitsInstantiationStr = "declare -A {0}".format(digitArrayName)
-            
+
             zeroCmd = "$({0})".format(zeroCmd)
 
             if self.randGen.probibility(50):
@@ -148,37 +148,40 @@ class SpecialCharCommand(TokenObfuscator):
         accessInitialElementStr = self.accessElementStr.format(initialDigitVar)
 
         # TODO: add and test more increment syntaxes
-        incrementSyntaxChoices = ["(({0}={1}++));"]
+        incrementSyntaxChoices = ["(({0}={1}++));", "{0}=$(({1}++));"]
         self.digitVars = []
 
         for i in range(0, 10):
-            self.digitVars.append(self.randGen.randUniqueStr(1, 1, symbols))
+            self.digitVars.append(self.genSymbolVar())
             setNewDigitVarStr = self.setElementStr.format(self.digitVars[i])
 
             incrementStr = self.randGen.randSelect(incrementSyntaxChoices)
             incrementStr = incrementStr.format(setNewDigitVarStr, setInitialElementStr)
 
             digitsInstantiationStr += incrementStr
+            #digitsInstantiationStr += "echo {0};".format(self.accessElementStr.format(self.digitVars[i]))
 
         # build the string 'printf' from substrings of error messages
-        cmdNotFoundErrMsg = "bash: _: command not found"
-        cmdNotFoundErrVar = self.randGen.randUniqueStr(1, 1, symbols)
-        cmdNotFoundErrStr = "{0}=$({{ _; }} {1}>&{2});".format(
+        cmdNotFoundErrMsg = "bash: -: command not found"
+        cmdNotFoundErrVar = self.genSymbolVar()
+        cmdNotFoundErrStr = "{0}=$({1} '{{ -; }} '{2}'>&'{3});".format(
             self.setElementStr.format(cmdNotFoundErrVar),
+            "eval",
             self.accessElementStr.format(self.digitVars[2]),
             self.accessElementStr.format(self.digitVars[1])
         )
 
         badStubstitutionErrMsg = "bash: ${}: bad substitution"
-        badStubstitutionErrVar = self.randGen.randUniqueStr(1, 1, symbols)
-        badStubstitutionErrStr = "{0}=$({{ ${{}}; }} {1}>&{2});".format(
+        badStubstitutionErrVar = self.genSymbolVar()
+        badStubstitutionErrStr = "{0}=$({1} '{{ ${{}}; }} '{2}'>&'{3});".format(
             self.setElementStr.format(badStubstitutionErrVar),
+            "eval",
             self.accessElementStr.format(self.digitVars[2]),
             self.accessElementStr.format(self.digitVars[1])
         )
 
         # get the string 'bash' from one of the error messages above
-        bashStrVar = self.randGen.randUniqueStr(1, 1, symbols)
+        bashStrVar = self.genSymbolVar()
         bashStr = "{0}=${{{1}:{2}:{3}}};".format(
             self.setElementStr.format(bashStrVar),
             self.setElementStr.format(cmdNotFoundErrVar),
@@ -187,7 +190,7 @@ class SpecialCharCommand(TokenObfuscator):
         )
 
         # get the character 'c' from the 'command not found' error message
-        cCharVar = self.randGen.randUniqueStr(1, 1, symbols)
+        cCharVar = self.genSymbolVar()
         cCharStr = "{0}=${{{1}:{2}:{3}}};".format(
             self.setElementStr.format(cCharVar),
             self.setElementStr.format(cmdNotFoundErrVar),
@@ -196,11 +199,12 @@ class SpecialCharCommand(TokenObfuscator):
         )
 
         syntaxErrorMsg = "bash: -c: line 0: syntax error near unexpected token `;' bash: -c: line 0: `;'"
-        syntaxErrorVar = self.randGen.randUniqueStr(1, 1, symbols)
-        syntaxErrorStr = "{0}=$({{ {1} -{2} ';'; }} {3}>&{4});".format(
+        syntaxErrorVar = self.genSymbolVar()
+        syntaxErrorStr = """{0}=$({1} '{{ {2} -{3} ";"; }} '{4}'>&'{5});""".format(
             self.setElementStr.format(syntaxErrorVar),
+            "eval",
             self.accessElementStr.format(bashStrVar),
-            self.setElementStr.format(cCharVar),
+            self.accessElementStr.format(cCharVar),
             self.accessElementStr.format(self.digitVars[2]),
             self.accessElementStr.format(self.digitVars[1])
         )
@@ -217,6 +221,21 @@ class SpecialCharCommand(TokenObfuscator):
             else:
                 symbolCommandStr += ''
 
+    def genSymbolVar(self, min=1, max=3, redirectVar=False):
+        goodVar = False
+        badVars = [" ", "~", "$!", "$#", "$$", "$(", "$-", "$?", "$_", "${", ":~", "<(", ">(", "~+", "~-", "~/", "~:", "", "$!", "$#", "$$", "$(", "$-", "$?", "$_", "${", ":~", "<(", ">(", "!$!", "!$#", "!$$", "!$(", "!$-", "!$?", "!$_", "!${", "!:~", "!<(", "!>(", "#$!", "#$#", "#$$", "#$(", "#$-", "#$?", "#$_", "#${", "#:~", "#<(", "#>(", "$!", "$!!", "$!#", "$!$", "$!%", "$!&", "$!(", "$!)", "$!+", "$!,", "$!-", "$!.", "$!/", "$!:", "$!;", "$!<", "$!=", "$!>", "$!?", "$!^", "$!_", "$!{", "$!|", "$!}", "$!~", "$#", "$#!", "$##", "$#$", "$#%", "$#&", "$#(", "$#)", "$#+", "$#,", "$#-", "$#.", "$#/", "$#:", "$#;", "$#<", "$#=", "$#>", "$#?", "$#^", "$#_", "$#{", "$#|", "$#}", "$#~", "$$", "$$!", "$$#", "$$$", "$$%", "$$&", "$$(", "$$)", "$$+", "$$,", "$$-", "$$.", "$$/", "$$:", "$$;", "$$<", "$$=", "$$>", "$$?", "$$^", "$$_", "$${", "$$|", "$$}", "$$~", "$(", "$(!", "$(#", "$($", "$(%", "$(&", "$((", "$()", "$(+", "$(,", "$(-", "$(.", "$(/", "$(:", "$(;", "$(<", "$(=", "$(>", "$(?", "$(^", "$(_", "$({", "$(|", "$(}", "$(~", "$-", "$-!", "$-#", "$-$", "$-%", "$-&", "$-(", "$-)", "$-+", "$-,", "$--", "$-.", "$-/", "$-:", "$-;", "$-<", "$-=", "$->", "$-?", "$-^", "$-_", "$-{", "$-|", "$-}", "$-~", "$:~", "$<(", "$>(", "$?", "$?!", "$?#", "$?$", "$?%", "$?&", "$?(", "$?)", "$?+", "$?,", "$?-", "$?.", "$?/", "$?:", "$?;", "$?<", "$?=", "$?>", "$??", "$?^", "$?_", "$?{", "$?|", "$?}", "$?~", "$_", "$_!", "$_#", "$_$", "$_%", "$_&", "$_(", "$_)", "$_+", "$_,", "$_-", "$_.", "$_/", "$_:", "$_;", "$_<", "$_=", "$_>", "$_?", "$_^", "$__", "$_{", "$_|", "$_}", "$_~", "${", "${!", "${#", "${$", "${%", "${&", "${(", "${)", "${+", "${,", "${-", "${.", "${/", "${:", "${;", "${<", "${=", "${>", "${?", "${^", "${_", "${{", "${|", "${}", "${~", "%$!", "%$#", "%$$", "%$(", "%$-", "%$?", "%$_", "%${", "%:~", "%<(", "%>(", "&$!", "&$#", "&$$", "&$(", "&$-", "&$?", "&$_", "&${", "&:~", "&<(", "&>(", "($!", "($#", "($$", "($(", "($-", "($?", "($_", "(${", "(:~", "(<(", "(>(", ")$!", ")$#", ")$$", ")$(", ")$-", ")$?", ")$_", ")${", "):~", ")<(", ")>(", "+$!", "+$#", "+$$", "+$(", "+$-", "+$?", "+$_", "+${", "+:~", "+<(", "+>(", ",$!", ",$#", ",$$", ",$(", ",$-", ",$?", ",$_", ",${", ",:~", ",<(", ",>(", "-$!", "-$#", "-$$", "-$(", "-$-", "-$?", "-$_", "-${", "-:~", "-<(", "->(", ".$!", ".$#", ".$$", ".$(", ".$-", ".$?", ".$_", ".${", ".:~", ".<(", ".>(", "/$!", "/$#", "/$$", "/$(", "/$-", "/$?", "/$_", "/${", "/:~", "/<(", "/>(", ":$!", ":$#", ":$$", ":$(", ":$-", ":$?", ":$_", ":${", "::~", ":<(", ":>(", ":~+", ":~-", ":~/", ":~:", ";$!", ";$#", ";$$", ";$(", ";$-", ";$?", ";$_", ";${", ";:~", ";<(", ";>(", "<$!", "<$#", "<$$", "<$(", "<$-", "<$?", "<$_", "<${", "<(", "<(!", "<(#", "<($", "<(%", "<(&", "<((", "<()", "<(+", "<(,", "<(-", "<(.", "<(/", "<(:", "<(;", "<(<", "<(=", "<(>", "<(?", "<(^", "<(_", "<({", "<(|", "<(}", "<(~", "<:~", "<<(", "<>(", "=$!", "=$#", "=$$", "=$(", "=$-", "=$?", "=$_", "=${", "=:~", "=<(", "=>(", ">$!", ">$#", ">$$", ">$(", ">$-", ">$?", ">$_", ">${", ">(", ">(!", ">(#", ">($", ">(%", ">(&", ">((", ">()", ">(+", ">(,", ">(-", ">(.", ">(/", ">(:", ">(;", ">(<", ">(=", ">(>", ">(?", ">(^", ">(_", ">({", ">(|", ">(}", ">(~", ">:~", "><(", ">>(", "?$!", "?$#", "?$$", "?$(", "?$-", "?$?", "?$_", "?${", "?:~", "?<(", "?>(", "^$!", "^$#", "^$$", "^$(", "^$-", "^$?", "^$_", "^${", "^:~", "^<(", "^>(", "_$!", "_$#", "_$$", "_$(", "_$-", "_$?", "_$_", "_${", "_:~", "_<(", "_>(", "{$!", "{$#", "{$$", "{$(", "{$-", "{$?", "{$_", "{${", "{:~", "{<(", "{>(", "|$!", "|$#", "|$$", "|$(", "|$-", "|$?", "|$_", "|${", "|:~", "|<(", "|>(", "}$!", "}$#", "}$$", "}$(", "}$-", "}$?", "}$_", "}${", "}:~", "}<(", "}>(", "~$!", "~$#", "~$$", "~$(", "~$-", "~$?", "~$_", "~${", "~+/", "~+:", "~-/", "~-:", "~/", "~/!", "~/#", "~/$", "~/%", "~/&", "~/(", "~/)", "~/+", "~/,", "~/-", "~/.", "~//", "~/:", "~/;", "~/<", "~/=", "~/>", "~/?", "~/^", "~/_", "~/{", "~/|", "~/}", "~/~", "~:", "~:!", "~:#", "~:$", "~:%", "~:&", "~:(", "~:)", "~:+", "~:,", "~:-", "~:.", "~:/", "~::", "~:;", "~:<", "~:=", "~:>", "~:?", "~:^", "~:_", "~:{", "~:|", "~:}", "~:~", "~<(", "~>("]
+
+        while not goodVar:
+            symbolVar = self.randGen.randUniqueStr(1, 3, self.symbols)
+
+            if not redirectVar:
+                if symbolVar not in badVars:
+                    goodVar = True
+            
+            else:
+                goodVar = True
+
+        return symbolVar
 
     def getCharCode(self, char):
         octCode = str(oct(ord(char)))[2:]
