@@ -71,10 +71,8 @@ class GlobObfuscator(StringObfuscator):
         self.maxDirLen = None
         self.sectionSize = None
 
-    def generate(self, sizePref, userCmd, writeableDir=None):
-        # TODO: create a tempDir option where the user can pick the dir to write to
-        if writeableDir is None or writeableDir == "":
-            self.writeableDir = ("/tmp/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
+    def generate(self, sizePref, userCmd, writeDir=None):
+        self.writeableDir = (writeDir + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
 
         self.workingDir = self.writeableDir.replace("'", "'\"'\"'")
 
@@ -94,6 +92,7 @@ class GlobObfuscator(StringObfuscator):
             )
         self.randGen.randShuffle(parts)
 
+        # TODO: randomize ordering of 'rm' statements
         self.payload = ""
         self.payload += "mkdir -p '" + self.workingDir + "';"
         self.payload += "".join(parts)
@@ -131,11 +130,11 @@ class FileGlob(GlobObfuscator):
             author="elijah-barker"
         )
 
-    def obfuscate(self, sizePref, timePref, userCmd):
+    def mutate(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
         self.setSizes(sizePref, userCmd)
-        self.generate(sizePref, userCmd)
+        self.generate(sizePref, userCmd, self.writeDir)
 
         return self.payload
 
@@ -150,15 +149,17 @@ class FolderGlob(GlobObfuscator):
             author="elijah-barker"
         )
 
-    def obfuscate(self, sizePref, timePref, userCmd):
+    def mutate(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
         self.setSizes(sizePref, userCmd)
-        self.writeableDir = ("/tmp/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
+        self.writeableDir = (self.writeDir + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
         self.workingDir = self.writeableDir.replace("'", "'\"'\"'")
 
         cmdChunks = [userCmd[i:i + self.sectionSize] for i in range(0, len(userCmd), self.sectionSize)]
         parts = []
+
+        # TODO: remove created folders
         for chunk in cmdChunks:
             self.generate(sizePref, chunk, self.writeableDir + "/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
             parts.append(self.payload)
@@ -179,7 +180,7 @@ class HexHash(StringObfuscator):
             author="elijah-barker"
         )
 
-    def obfuscate(self, sizePref, timePref, userCmd):
+    def mutate(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
         obCmd = ""

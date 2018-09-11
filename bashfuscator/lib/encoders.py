@@ -51,7 +51,7 @@ class Base64(Encoder):
             author="capnspacehook"
         )
 
-    def encode(self, sizePref, timePref, userCmd):
+    def mutate(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
         self.payload = userCmd.encode("base64").replace("\n", "")
@@ -70,7 +70,7 @@ class UrlEncode(Encoder):
             author="capnspacehook"
         )
 
-    def encode(self, sizePref, timePref, userCmd):
+    def mutate(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
         self.payload = quote_plus(userCmd)

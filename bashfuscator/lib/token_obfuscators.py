@@ -50,7 +50,7 @@ class AnsiCQuote(TokenObfuscator):
 
         self.SUBSTR_QUOTE_PROB = 33
 
-    def obfuscate(self, sizePref, userCmd):
+    def mutate(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
         obCmd = "printf -- $'\\"

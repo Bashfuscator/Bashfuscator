@@ -48,6 +48,7 @@ class ObfuscationHandler(object):
         self.timePref = args.execution_time
         self.binaryPref = args.binaryPref
         self.filePref = args.no_file_write
+        self.writeDir = args.write_dir
         self.originalCmd = args.command
         self.prevCmdOb = None
         self.randGen = RandomGen()
@@ -120,25 +121,18 @@ class ObfuscationHandler(object):
                     self.binaryPref, self.filePref, self.prevCmdOb, userMutator, userStub)
                 self.prevCmdOb = selMutator
 
-                payload = selMutator.obfuscate(self.sizePref, self.timePref, payload)
-
             elif mutatorType == "string":
                 selMutator = self.choosePrefMutator(self.strObfuscators, self.sizePref, self.timePref, 
                     self.binaryPref, self.filePref, userMutator=userMutator)
                     
-                payload = selMutator.obfuscate(self.sizePref, self.timePref, payload)
-
             elif mutatorType == "token":
                 selMutator = self.choosePrefMutator(self.tokObfuscators, self.sizePref, userMutator=userMutator)
-                payload = selMutator.obfuscate(self.sizePref, payload)
 
             elif mutatorType == "encode":
                 selMutator = self.choosePrefMutator(self.encoders, userMutator=userMutator)
-                payload = selMutator.encode(self.sizePref, self.timePref, payload)
 
             elif mutatorType == "compress":
                 selMutator = self.choosePrefMutator(self.compressors, userMutator=userMutator)
-                payload = selMutator.compress(self.sizePref, self.timePref, payload)
         else:
             # TODO: handle case when no mutators of chosen type are compatible with user's preferences
             obChoice = self.randGen.randChoice(3)
@@ -148,18 +142,16 @@ class ObfuscationHandler(object):
                     self.binaryPref, self.filePref, self.prevCmdOb)
                 self.prevCmdOb = selMutator
 
-                payload = selMutator.obfuscate(self.sizePref, self.timePref, payload)
-
             elif obChoice == 1:
                 selMutator = self.choosePrefMutator(self.strObfuscators, self.sizePref, self.timePref, 
                     self.binaryPref, self.filePref)
 
-                payload = selMutator.obfuscate(self.sizePref, self.timePref, payload)
-
             else:
                 selMutator = self.choosePrefMutator(self.tokObfuscators, self.sizePref)
-                payload = selMutator.obfuscate(self.sizePref, payload)
            
+        selMutator.writeDir = self.writeDir
+        payload = selMutator.mutate(self.sizePref, self.timePref, payload)
+        
         self.randGen.forgetUniqueStrs()
         payload = self.evalWrap(payload, selMutator)
 

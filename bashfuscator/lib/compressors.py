@@ -54,7 +54,7 @@ class Bzip2(Compressor):
             author="capnspacehook"
         )
 
-    def compress(self, sizePref, timePref, userCmd):
+    def mutate(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
         compressedCmd = bz2.compress(userCmd.encode("utf-8"))
@@ -74,7 +74,7 @@ class Gzip(Compressor):
             author="capnspacehook"
         )
 
-    def compress(self, sizePref, timePref, userCmd):
+    def mutate(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
         compressedCmd = gzip.compress(userCmd.encode("utf-8"))
