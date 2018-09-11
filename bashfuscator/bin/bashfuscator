@@ -212,6 +212,9 @@ if __name__ == "__main__":
 
             args.command = infile.read().decode("utf-8")
 
+    if args.write_dir[-1:] != "/":
+        args.write_dir += "/"
+
     obHandler = ObfuscationHandler(commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors, args)
     payload = obHandler.generatePayload()
 
