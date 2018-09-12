@@ -223,7 +223,7 @@ class ObfuscationHandler(object):
 
             for mutator in mutators:
                 if mutator.longName == userMutator:
-                    if filePref is not None and mutator.fileWrite == filePref:
+                    if filePref and mutator.fileWrite == filePref:
                         printWarning("'{0}' mutator preforms file writes".format(userMutator))
 
                     elif binaryPref is not None and mutator.mutatorType == "string":
