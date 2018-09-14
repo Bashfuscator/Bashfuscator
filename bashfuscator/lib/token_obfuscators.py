@@ -162,7 +162,7 @@ class SpecialCharCommand(TokenObfuscator):
         # build the string 'printf' from substrings of error messages
         charInstanstiationStr = "{0}=${{{1}:{2}:{3}}};"
 
-        cmdNotFoundErrMsg = "/bin/bash: -: command not found"
+        cmdNotFoundErrMsg = "bash: -: command not found"
         cmdNotFoundErrVar = self.genSymbolVar()
         cmdNotFoundErrStr = "{0}=$({1} '{{ -; }} '{2}'>&'{3});".format(
             self.setElementStr.format(cmdNotFoundErrVar),
@@ -171,7 +171,7 @@ class SpecialCharCommand(TokenObfuscator):
             self.accessElementStr.format(self.digitVars[1])
         )
 
-        badStubstitutionErrMsg = "/bin/bash: ${}: bad substitution"
+        badStubstitutionErrMsg = "bash: ${}: bad substitution"
         badStubstitutionErrVar = self.genSymbolVar()
         badStubstitutionErrStr = "{0}=$({1} '{{ ${{}}; }} '{2}'>&'{3});".format(
             self.setElementStr.format(badStubstitutionErrVar),
@@ -182,20 +182,29 @@ class SpecialCharCommand(TokenObfuscator):
 
         # get the string 'bash' from one of the error messages above
         bashStrVar = self.genSymbolVar(bashBracesVar=True)
-        bashStr = charInstanstiationStr.format(
+
+        bashCmdNotFndStr = charInstanstiationStr.format(
             self.setElementStr.format(bashStrVar),
             self.setElementStr.format(cmdNotFoundErrVar),
-            self.accessElementStr.format(self.digitVars[5]),
+            self.accessElementStr.format(self.digitVars[0]),
             self.accessElementStr.format(self.digitVars[4])
         )
+
+        bashBadSubStr = charInstanstiationStr.format(
+            self.setElementStr.format(bashStrVar),
+            self.setElementStr.format(badStubstitutionErrVar),
+            self.accessElementStr.format(self.digitVars[0]),
+            self.accessElementStr.format(self.digitVars[4])
+        )
+
+        bashRandStr = self.randGen.randSelect([bashCmdNotFndStr + bashBadSubStr])
 
         # get the character 'c' from the 'command not found' error message
         cCharVar = self.genSymbolVar(bashBracesVar=True)
         cCharStr = charInstanstiationStr.format(
             self.setElementStr.format(cCharVar),
             self.setElementStr.format(cmdNotFoundErrVar),
-            self.accessElementStr.format(self.digitVars[1]) +
-            self.accessElementStr.format(self.digitVars[4]),
+            self.accessElementStr.format(self.digitVars[9]),
             self.accessElementStr.format(self.digitVars[1])
         )
 
@@ -210,7 +219,21 @@ class SpecialCharCommand(TokenObfuscator):
             self.accessElementStr.format(self.digitVars[1])
         )
 
-        printfInstanstiationStr = cmdNotFoundErrStr + badStubstitutionErrStr + bashStr + cCharStr + syntaxErrorStr
+        printfInstanstiationStrCombinations = [
+            cmdNotFoundErrStr + badStubstitutionErrStr + bashRandStr + cCharStr + syntaxErrorStr,
+            cmdNotFoundErrStr + badStubstitutionErrStr + cCharStr + bashRandStr + syntaxErrorStr,
+            cmdNotFoundErrStr + bashCmdNotFndStr + badStubstitutionErrStr + cCharStr + syntaxErrorStr,
+            cmdNotFoundErrStr + bashCmdNotFndStr + cCharStr + badStubstitutionErrStr + syntaxErrorStr,
+            cmdNotFoundErrStr + bashCmdNotFndStr + cCharStr + syntaxErrorStr + badStubstitutionErrStr,
+            cmdNotFoundErrStr + cCharStr + badStubstitutionErrStr + bashRandStr + syntaxErrorStr,
+            cmdNotFoundErrStr + cCharStr + bashCmdNotFndStr + badStubstitutionErrStr + syntaxErrorStr,
+            cmdNotFoundErrStr + cCharStr + bashCmdNotFndStr + syntaxErrorStr + badStubstitutionErrStr,
+            badStubstitutionErrStr + cmdNotFoundErrStr + bashRandStr + cCharStr + syntaxErrorStr,
+            badStubstitutionErrStr + cmdNotFoundErrStr + cCharStr + bashRandStr + syntaxErrorStr,
+            badStubstitutionErrStr + bashBadSubStr + cmdNotFoundErrStr + cCharStr + syntaxErrorStr
+        ]
+
+        printfInstanstiationStr = self.randGen.randSelect(printfInstanstiationStrCombinations)
 
         printfCharsInstatiationStrs = []
         printfCharVarNames = {}

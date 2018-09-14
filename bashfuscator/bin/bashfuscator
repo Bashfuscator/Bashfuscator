@@ -233,6 +233,6 @@ if __name__ == "__main__":
             stdout, __ = proc.communicate()
             print(stdout)
         else:
-            proc = Popen(payload, executable="/bin/bash", stdout=PIPE, stderr=STDOUT, shell=True, universal_newlines=True)
+            proc = Popen(payload, executable="bash", stdout=PIPE, stderr=STDOUT, shell=True, universal_newlines=True)
             stdout, __ = proc.communicate()
             print(stdout)  
