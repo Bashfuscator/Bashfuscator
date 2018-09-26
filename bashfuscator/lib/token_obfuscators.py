@@ -186,57 +186,21 @@ class SpecialCharCommand(TokenObfuscator):
         evalVar = self.genSymbolVar()
         arrayInitializationStrs.append("{0}={1};".format(self.setElementStr.format(evalVar), self.genSymbolAlphabetStr(lowerAlphabetVar, upperAlphabetVar, "eval")))
 
-        for i in range(1, 10):
+        catKeyVar = self.genSymbolVar()
+        catVarCopyStr = "{0}=${1};".format(self.setElementStr.format(catKeyVar), catVar)
+        catVar = catKeyVar
+
+        for i in range(0, 10):
             newDigitVar = self.genSymbolVar()
 
             arrayInitializationStrs.append("{0}=${1};".format(self.setElementStr.format(newDigitVar), self.digitVars[i]))
             self.digitVars[i] = newDigitVar
 
-        # randomize the order of the main array element initialization statements, 
-        # but make sure the 'cat' and 'zero' variables are set before the argv0
-        # variable is set
         self.randGen.randShuffle(arrayInitializationStrs)
-
-        catKeyVar = self.genSymbolVar()
-        catVarCopyStr = "{0}=${1};".format(self.setElementStr.format(catKeyVar), catVar)
-        catVar = catKeyVar
-        catStrInsertIndex = self.randGen.randGenNum(0, len(arrayInitializationStrs) - 2)
-        arrayInitializationStrs.insert(catStrInsertIndex, catVarCopyStr)
-
-        zeroDigitVar = self.genSymbolVar()
-        zeroDigitVarCopyStr = "{0}=${1};".format(self.setElementStr.format(zeroDigitVar), self.digitVars[0])
-        self.digitVars[0] = zeroDigitVar
-        zeroDigitVarInsertIndex = self.randGen.randGenNum(0, len(arrayInitializationStrs) - 2)
-        arrayInitializationStrs.insert(zeroDigitVarInsertIndex, zeroDigitVarCopyStr)
-
-        argv0Var = self.genSymbolVar()
-        argv0VarInstantiationStr = r'. <({0}<<<{1}="\${2}");'.format(
-            self.accessElementStr.format(catVar), 
-            self.setElementStr.format(argv0Var),
-            self.accessElementStr.format(self.digitVars[0])    
-        )
-
-        argv0StrInsertIndex = self.randGen.randGenNum(max(catStrInsertIndex + 2, zeroDigitVarInsertIndex + 2), len(arrayInitializationStrs))
-        arrayInitializationStrs.insert(argv0StrInsertIndex, argv0VarInstantiationStr)
-
         arrayInstantiationStr += "".join(arrayInitializationStrs)
 
 
         # build the string 'printf' from substrings of error messages
-        """
-        cmdNotFoundSymbols = ["$", "+", ",", "-", "=", "?", "@", "]", "^", "_"]
-        cmdNotFoundCmdSymbol = self.randGen.randSelect(cmdNotFoundSymbols)
-        cmdNotFoundErrMsg = ": {0}: command not found".format(cmdNotFoundCmdSymbol)
-        cmdNotFoundErrVar = self.genSymbolVar()
-        cmdNotFoundErrStr = "{0}=$({1} '{{ {2}; }} '{3}'>&'{4});".format(
-            self.setElementStr.format(cmdNotFoundErrVar),
-            self.accessElementStr.format(evalVar),
-            cmdNotFoundCmdSymbol,
-            self.accessElementStr.format(self.digitVars[2]),
-            self.accessElementStr.format(self.digitVars[1])
-        )
-        """
-
         badStubstitutionErrMsg = " bad substitution"
         badStubstitutionErrVar = self.genSymbolVar()
         badStubstitutionErrStr = "{0}=$({1} '{{ ${{}}; }} '{2}'>&'{3});{0}=${{{0}##*:}};".format(
