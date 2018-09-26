@@ -91,6 +91,8 @@ class SpecialCharCommand(TokenObfuscator):
             name="Special Char Command",
             description="Converts commands to only use special characters",
             sizeRating=2,
+            author="capnspacehook",
+            credits="danielbohannon, https://github.com/danielbohannon/Invoke-Obfuscation"
         )
 
     def obfuscate(self, sizePref, userCmd):
@@ -100,7 +102,6 @@ class SpecialCharCommand(TokenObfuscator):
         zeroCmdSyntax = [":", "${__}", "_=;", "_=()", "${__[@]}", "${!__[@]}", ":(){ :; };", \
             "_(){ _; };", "_(){ _; };:", "_(){ :; };", "_(){ :; };_", "_(){ :; };:"]
 
-        # TODO: test and build list of what symbols work as keys for associative arrays
         self.symbols = [" ", "!", "#", "$", "%", "&", "(", ")", "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "^", "_", "{", "|", "}", "~"]
 
         zeroCmd = self.randGen.randSelect(zeroCmdSyntax)
@@ -109,102 +110,181 @@ class SpecialCharCommand(TokenObfuscator):
         if self.randGen.probibility(50):
             if zeroCmd[-1:] != ";":
                 zeroCmd += ";"
-            
+
             zeroCmd = "{ " + zeroCmd + " }"
 
-        digitArrayName = self.randGen.randUniqueStr(3, 5, "_")
-        initialDigitVar = self.genSymbolVar()
+        initialDigitVar = self.randGen.randUniqueStr(4, 24, "_")
 
-        # 1/2 of the time set the first index of the array to the return code of zeroCmd
         if self.randGen.probibility(50):
             if zeroCmd[-1:] != ";":
                 zeroCmd += ";"
 
-            digitsInstantiationStr = "{0}declare -A {1}".format(zeroCmd, digitArrayName)
+            arrayInstantiationStr = "{0}{1}=$?;".format(zeroCmd, initialDigitVar)
 
-            if self.randGen.probibility(50):
-                digitsInstantiationStr += "['{0}']=$?;".format(initialDigitVar)
-            else:
-                digitsInstantiationStr += ";{0}['{1}']=$?;".format(digitArrayName, initialDigitVar)
-        
         else:
-            if self.randGen.probibility(50):
-                if zeroCmd[-1:] != ";":
-                    zeroCmd += ";"
+            if self.randGen.probibility(50) and zeroCmd[-1:] != ";":
+                zeroCmd += ";"
 
-            digitsInstantiationStr = "declare -A {0}".format(digitArrayName)
-
-            zeroCmd = "$({0})".format(zeroCmd)
-
-            if self.randGen.probibility(50):
-                digitsInstantiationStr += "['{0}']={1};".format(initialDigitVar, zeroCmd)
-            else:
-                digitsInstantiationStr += ";{0}['{1}']={2};".format(digitArrayName, initialDigitVar, zeroCmd)
-
-        self.accessElementStr = "${{" + digitArrayName + "['{0}']}}"
-        self.setElementStr = digitArrayName + "['{0}']"
-        setInitialElementStr = self.setElementStr.format(initialDigitVar)
-        accessInitialElementStr = self.accessElementStr.format(initialDigitVar)
+            arrayInstantiationStr = "{0}=$({1});".format(initialDigitVar, zeroCmd)
 
         # TODO: add and test more increment syntaxes
-        incrementSyntaxChoices = ["(({0}={1}++));", "{0}=$(({1}++));"]
+        incrementSyntaxChoices = ["(({0}={1}++));", "{0}=$(({1}++));", "{0}=$[{1}++];"]
         self.digitVars = []
 
         for i in range(0, 10):
-            self.digitVars.append(self.genSymbolVar())
-            setNewDigitVarStr = self.setElementStr.format(self.digitVars[i])
+            self.digitVars.append(self.randGen.randUniqueStr(4, 24, "_"))
 
             incrementStr = self.randGen.randSelect(incrementSyntaxChoices)
-            incrementStr = incrementStr.format(setNewDigitVarStr, setInitialElementStr)
+            incrementStr = incrementStr.format(self.digitVars[i], initialDigitVar)
 
-            digitsInstantiationStr += incrementStr
+            arrayInstantiationStr += incrementStr
+
+        procPIDDirsVar = self.randGen.randUniqueStr(4, 24, "_")
+        arrayInstantiationStr += "{0}=(/????/$$/????);".format(procPIDDirsVar)
+
+        procPIDAttrArrayVar = self.randGen.randUniqueStr(4, 24, "_")
+        arrayInstantiationStr += "{0}=${{{1}[${2}]}};".format(procPIDAttrArrayVar, procPIDDirsVar, self.digitVars[0])
+
+        procPathArrayVar = self.randGen.randUniqueStr(4, 24, "_")
+        arrayInstantiationStr += "{0}=(${{{1}//\// }});".format(procPathArrayVar, procPIDAttrArrayVar)
+
+        attrVar = self.randGen.randUniqueStr(4, 24, "_")
+        arrayInstantiationStr += "{0}=${{{1}[${2}]}};".format(attrVar, procPathArrayVar, self.digitVars[2])
+
+        cattrVar = self.randGen.randUniqueStr(4, 24, "_")
+        arrayInstantiationStr += "{0}=${{{1}: -${2}:${2}}}${3};".format(cattrVar, procPathArrayVar, self.digitVars[1], attrVar)
+
+        catVar = self.randGen.randUniqueStr(4, 24, "_")
+        arrayInstantiationStr += "{0}=${{{1}:{2}:{3}}};".format(catVar, cattrVar, self.digitVars[0], self.digitVars[3])
+
+        aVar = self.randGen.randUniqueStr(4, 24, "_")
+        arrayInstantiationStr += "{0}=${{{1}:{2}:{3}}};".format(aVar, attrVar, self.digitVars[0], self.digitVars[1])
+
+        AVar = self.randGen.randUniqueStr(4, 24, "_")
+        arrayInstantiationStr += "{0}=${{{1}^}};".format(AVar, aVar)
+
+        fromAtoaVar = self.randGen.randUniqueStr(4, 24, "_")
+        arrayInstantiationStr += r". <(${0}<<<{1}=\({{${2}..${3}}}\));".format(catVar, fromAtoaVar, AVar, aVar)
+
+        upperAlphabetVar = self.randGen.randUniqueStr(4, 24, "_")
+        arrayInstantiationStr += "{0}=(${{{1}[@]:${2}:${3}${4}}});".format(upperAlphabetVar, fromAtoaVar, self.digitVars[0], self.digitVars[2], self.digitVars[6])
+
+        lowerAlphabetVar = self.randGen.randUniqueStr(4, 24, "_")
+        arrayInstantiationStr += "{0}=(${{{1}[@],,}});".format(lowerAlphabetVar, upperAlphabetVar)
+
+        declareVar = self.randGen.randUniqueStr(4, 24, "_")
+        arrayInstantiationStr += "{0}={1};".format(declareVar, self.genSymbolAlphabetStr(lowerAlphabetVar, upperAlphabetVar, self.randGen.randSelect(["declare", "typeset"]) + " -A"))
+
+        mainArrayName = self.randGen.randUniqueStr(3, 5, "_")
+        arrayInstantiationStr += "${0} {1};".format(declareVar, mainArrayName)
+
+        self.accessElementStr = "${{" + mainArrayName + "['{0}']}}"
+        self.setElementStr = mainArrayName + "['{0}']"
+
+        arrayInitializationStrs = []
+
+        evalVar = self.genSymbolVar()
+        arrayInitializationStrs.append("{0}={1};".format(self.setElementStr.format(evalVar), self.genSymbolAlphabetStr(lowerAlphabetVar, upperAlphabetVar, "eval")))
+
+        for i in range(1, 10):
+            newDigitVar = self.genSymbolVar()
+
+            arrayInitializationStrs.append("{0}=${1};".format(self.setElementStr.format(newDigitVar), self.digitVars[i]))
+            self.digitVars[i] = newDigitVar
+
+        # randomize the order of the main array element initialization statements, 
+        # but make sure the 'cat' and 'zero' variables are set before the argv0
+        # variable is set
+        self.randGen.randShuffle(arrayInitializationStrs)
+
+        catKeyVar = self.genSymbolVar()
+        catVarCopyStr = "{0}=${1};".format(self.setElementStr.format(catKeyVar), catVar)
+        catVar = catKeyVar
+        catStrInsertIndex = self.randGen.randGenNum(0, len(arrayInitializationStrs) - 2)
+        arrayInitializationStrs.insert(catStrInsertIndex, catVarCopyStr)
+
+        zeroDigitVar = self.genSymbolVar()
+        zeroDigitVarCopyStr = "{0}=${1};".format(self.setElementStr.format(zeroDigitVar), self.digitVars[0])
+        self.digitVars[0] = zeroDigitVar
+        zeroDigitVarInsertIndex = self.randGen.randGenNum(0, len(arrayInitializationStrs) - 2)
+        arrayInitializationStrs.insert(zeroDigitVarInsertIndex, zeroDigitVarCopyStr)
+
+        argv0Var = self.genSymbolVar()
+        argv0VarInstantiationStr = r'. <({0}<<<{1}="\${2}");'.format(
+            self.accessElementStr.format(catVar), 
+            self.setElementStr.format(argv0Var),
+            self.accessElementStr.format(self.digitVars[0])    
+        )
+
+        argv0StrInsertIndex = self.randGen.randGenNum(max(catStrInsertIndex + 2, zeroDigitVarInsertIndex + 2), len(arrayInitializationStrs))
+        arrayInitializationStrs.insert(argv0StrInsertIndex, argv0VarInstantiationStr)
+
+        arrayInstantiationStr += "".join(arrayInitializationStrs)
+
 
         # build the string 'printf' from substrings of error messages
-        charInstanstiationStr = "{0}=${{{1}:{2}:{3}}};"
-
-        cmdNotFoundErrMsg = "bash: -: command not found"
+        """
+        cmdNotFoundSymbols = ["$", "+", ",", "-", "=", "?", "@", "]", "^", "_"]
+        cmdNotFoundCmdSymbol = self.randGen.randSelect(cmdNotFoundSymbols)
+        cmdNotFoundErrMsg = ": {0}: command not found".format(cmdNotFoundCmdSymbol)
         cmdNotFoundErrVar = self.genSymbolVar()
-        cmdNotFoundErrStr = "{0}=$({1} '{{ -; }} '{2}'>&'{3});".format(
+        cmdNotFoundErrStr = "{0}=$({1} '{{ {2}; }} '{3}'>&'{4});".format(
             self.setElementStr.format(cmdNotFoundErrVar),
-            "eval",
+            self.accessElementStr.format(evalVar),
+            cmdNotFoundCmdSymbol,
             self.accessElementStr.format(self.digitVars[2]),
             self.accessElementStr.format(self.digitVars[1])
         )
+        """
 
-        badStubstitutionErrMsg = "bash: ${}: bad substitution"
+        badStubstitutionErrMsg = " bad substitution"
         badStubstitutionErrVar = self.genSymbolVar()
-        badStubstitutionErrStr = "{0}=$({1} '{{ ${{}}; }} '{2}'>&'{3});".format(
+        badStubstitutionErrStr = "{0}=$({1} '{{ ${{}}; }} '{2}'>&'{3});{0}=${{{0}##*:}};".format(
             self.setElementStr.format(badStubstitutionErrVar),
-            "eval",
+            self.accessElementStr.format(evalVar),
             self.accessElementStr.format(self.digitVars[2]),
             self.accessElementStr.format(self.digitVars[1])
         )
 
-        # get the string 'bash' from one of the error messages above
-        bashStrVar = self.genSymbolVar(bashBracesVar=True)
-
-        bashCmdNotFndStr = charInstanstiationStr.format(
-            self.setElementStr.format(bashStrVar),
-            self.setElementStr.format(cmdNotFoundErrVar),
-            self.accessElementStr.format(self.digitVars[0]),
-            self.accessElementStr.format(self.digitVars[4])
+        noSuchFileOrDirErrSymbols = ["!", "#", "$", "%", "+", ",", "-", ":", "=", "?", "@", "[", "]", "^", "_", "{", "}", "~"]
+        noSuchFileOrDirErrCmdSymbol = self.randGen.randSelect(noSuchFileOrDirErrSymbols)
+        noSuchFileOrDirErrMsg = " No such file or directory"
+        noSuchFileOrDirErrVar = self.genSymbolVar()
+        noSuchFileOrDirErrStr = "{0}=$({1} '{{ ./{2}; }} '{3}'>&'{4});{0}=${{{0}##*:}};".format(
+            self.setElementStr.format(noSuchFileOrDirErrVar),
+            self.accessElementStr.format(evalVar),
+            noSuchFileOrDirErrCmdSymbol,
+            self.accessElementStr.format(self.digitVars[2]),
+            self.accessElementStr.format(self.digitVars[1])
         )
 
-        bashBadSubStr = charInstanstiationStr.format(
+        # get the string 'bash'
+        bashStrVar = self.genSymbolVar(bashBracesVar=True)
+        bashStr = "{0}=${{{1}:{2}:{3}}}".format(
             self.setElementStr.format(bashStrVar),
             self.setElementStr.format(badStubstitutionErrVar),
             self.accessElementStr.format(self.digitVars[0]),
-            self.accessElementStr.format(self.digitVars[4])
+            self.accessElementStr.format(self.digitVars[3]),
         )
 
-        bashRandStr = self.randGen.randSelect([bashCmdNotFndStr + bashBadSubStr])
+        bashStr += "${{{0}:{1}:{2}}}".format(
+            self.setElementStr.format(noSuchFileOrDirErrVar),
+            self.accessElementStr.format(self.digitVars[4]),
+            self.accessElementStr.format(self.digitVars[1])
+        )
+
+        bashStr += "${{{0}:{1}:{2}}};".format(
+            self.setElementStr.format(noSuchFileOrDirErrVar),
+            self.accessElementStr.format(self.digitVars[7]),
+            self.accessElementStr.format(self.digitVars[1])
+        )
 
         # get the character 'c' from the 'command not found' error message
         cCharVar = self.genSymbolVar(bashBracesVar=True)
-        cCharStr = charInstanstiationStr.format(
+        cCharStr = "{0}=${{{1}:{2}:{3}}};".format(
             self.setElementStr.format(cCharVar),
-            self.setElementStr.format(cmdNotFoundErrVar),
-            self.accessElementStr.format(self.digitVars[9]),
+            self.setElementStr.format(noSuchFileOrDirErrVar),
+            self.accessElementStr.format(self.digitVars[6]),
             self.accessElementStr.format(self.digitVars[1])
         )
 
@@ -212,35 +292,24 @@ class SpecialCharCommand(TokenObfuscator):
         syntaxErrorVar = self.genSymbolVar()
         syntaxErrorStr = """{0}=$({1} '{{ {2} -{3} ";"; }} '{4}'>&'{5});""".format(
             self.setElementStr.format(syntaxErrorVar),
-            "eval",
+            self.accessElementStr.format(evalVar),
             self.accessElementStr.format(bashStrVar),
             self.accessElementStr.format(cCharVar),
             self.accessElementStr.format(self.digitVars[2]),
             self.accessElementStr.format(self.digitVars[1])
         )
 
-        printfInstanstiationStrCombinations = [
-            cmdNotFoundErrStr + badStubstitutionErrStr + bashRandStr + cCharStr + syntaxErrorStr,
-            cmdNotFoundErrStr + badStubstitutionErrStr + cCharStr + bashRandStr + syntaxErrorStr,
-            cmdNotFoundErrStr + bashCmdNotFndStr + badStubstitutionErrStr + cCharStr + syntaxErrorStr,
-            cmdNotFoundErrStr + bashCmdNotFndStr + cCharStr + badStubstitutionErrStr + syntaxErrorStr,
-            cmdNotFoundErrStr + bashCmdNotFndStr + cCharStr + syntaxErrorStr + badStubstitutionErrStr,
-            cmdNotFoundErrStr + cCharStr + badStubstitutionErrStr + bashRandStr + syntaxErrorStr,
-            cmdNotFoundErrStr + cCharStr + bashCmdNotFndStr + badStubstitutionErrStr + syntaxErrorStr,
-            cmdNotFoundErrStr + cCharStr + bashCmdNotFndStr + syntaxErrorStr + badStubstitutionErrStr,
-            badStubstitutionErrStr + cmdNotFoundErrStr + bashRandStr + cCharStr + syntaxErrorStr,
-            badStubstitutionErrStr + cmdNotFoundErrStr + cCharStr + bashRandStr + syntaxErrorStr,
-            badStubstitutionErrStr + bashBadSubStr + cmdNotFoundErrStr + cCharStr + syntaxErrorStr
-        ]
+        printfInstanstiationStr = badStubstitutionErrStr + noSuchFileOrDirErrStr + bashStr + cCharStr + syntaxErrorStr
 
-        printfInstanstiationStr = self.randGen.randSelect(printfInstanstiationStrCombinations)
+        #return arrayInstantiationStr + printfInstanstiationStr
 
+        #store all the possible variations of generating the string 'printf'
         printfCharsInstatiationStrs = []
         printfCharVarNames = {}
         for char in "printf":
             charVars = []
 
-            for errMsg, errVar in [(cmdNotFoundErrMsg, cmdNotFoundErrVar), (badStubstitutionErrMsg, badStubstitutionErrVar), (syntaxErrorMsg, syntaxErrorVar)]:
+            for errMsg, errVar in [(badStubstitutionErrMsg, badStubstitutionErrVar), (noSuchFileOrDirErrMsg, noSuchFileOrDirErrVar), (syntaxErrorMsg, syntaxErrorVar)]:
                 indexes = [i for i, letter in enumerate(errMsg) if letter == char]
 
                 for idx in indexes:
@@ -250,38 +319,77 @@ class SpecialCharCommand(TokenObfuscator):
                     for digit in str(idx):
                         digitAccessStr += self.accessElementStr.format(self.digitVars[int(digit)])
 
-                    printfCharsInstatiationStrs.append(charInstanstiationStr.format(
+                    printfCharsInstatiationStrs.append("{0}=${{{1}:{2}:{3}}};".format(
                         self.setElementStr.format(charVarName),
                         self.setElementStr.format(errVar),
                         digitAccessStr,
-                        self.accessElementStr.format(self.digitVars[1])
+                        self.accessElementStr.format(self.digitVars[1]),
                     ))
 
                     charVars.append(charVarName)
 
             printfCharVarNames[char] = charVars
 
-        self.randGen.randShuffle(printfCharsInstatiationStrs)
+        #self.randGen.randShuffle(printfCharsInstatiationStrs)
         printfInstanstiationStr += "".join(printfCharsInstatiationStrs)
 
+
+        # build up 'printf' strings that will print the input and allow it to be executed
         symbolCommandStr = ""
         for cmdChar in userCmd:
             printfStr = ""
-            
+
             for printfChar in "printf":
                 printfStr += self.accessElementStr.format(self.randGen.randSelect(printfCharVarNames[printfChar]))
 
             octCode = str(oct(ord(cmdChar)))[2:]
-        
+
             digitsAccess = ""
             for char in octCode:
                 digitsAccess += '"' + self.accessElementStr.format(self.digitVars[int(char)]) + '"'
 
             symbolCommandStr += r'{0} "\\{1}";'.format(printfStr, digitsAccess)
 
-        self.payload = digitsInstantiationStr + printfInstanstiationStr + symbolCommandStr
+        self.payload = arrayInstantiationStr + printfInstanstiationStr + symbolCommandStr
 
         return self.payload
+
+
+    def genSymbolAlphabetStr(self, lowerArrayName, upperArrayName, initialStr):
+        invertSyntaxChoices = ["~", "~~"]
+        lowerSyntaxChoices = [",", ",,"] + invertSyntaxChoices
+        upperSyntaxChoices = ["^", "^^"] + invertSyntaxChoices
+
+        symbolStr = ""
+        for c in initialStr:
+            if c in string.punctuation + " ":
+                symbolStr += '"{0}"'.format(c)
+
+            elif c in string.ascii_lowercase:
+                index = string.ascii_lowercase.find(c)
+
+                indexStr = ""
+                for i in str(index):
+                    indexStr += "${0}".format(self.digitVars[int(i)])
+                
+                if self.randGen.probibility(50):
+                    symbolStr += "${{{0}[{1}]{2}}}".format(lowerArrayName, indexStr, "")
+                else:
+                    symbolStr += "${{{0}[{1}]{2}}}".format(upperArrayName, indexStr, self.randGen.randSelect(lowerSyntaxChoices))
+
+            elif c in string.ascii_uppercase:
+                index = string.ascii_uppercase.find(c)
+
+                indexStr = ""
+                for i in str(index):
+                    indexStr += "${0}".format(self.digitVars[int(i)])
+
+                if self.randGen.probibility(50):
+                    symbolStr += "${{{0}[{1}]{2}}}".format(upperArrayName, indexStr, "")
+                else:
+                    symbolStr += "${{{0}[{1}]{2}}}".format(lowerArrayName, indexStr, self.randGen.randSelect(upperSyntaxChoices))
+
+        return symbolStr
 
     def genSymbolVar(self, min=1, max=3, bashBracesVar=False):
         goodVar = False
