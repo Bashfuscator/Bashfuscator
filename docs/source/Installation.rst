@@ -6,8 +6,8 @@ Installation of Bashfuscator is simple. Just follow these steps:
 .. code-block:: bash
    :linenos:
 
+   sudo apt-get install python3 python3-pip python3-argcomplete xclip
    git clone https://github.com/Bashfuscator/Bashfuscator
-   sudo apt-get install python3 python3-pip python3-argcomplete
    cd Bashfuscator
    python3 setup.py install --user
 
