@@ -127,7 +127,6 @@ class SpecialCharCommand(TokenObfuscator):
 
             arrayInstantiationStr = "{0}=`{1}`{2}".format(initialDigitVar, zeroCmd, self.genCommandSeporatorStr())
 
-        # TODO: add and test more increment syntaxes
         incrementSyntaxChoices = ["(({0}={1}++)){2}", "{0}=$(({1}++)){2}", "{0}=$[{1}++]{2}"]
         self.digitVars = []
 
@@ -198,6 +197,7 @@ class SpecialCharCommand(TokenObfuscator):
             self.genCommandSeporatorStr()
         )
 
+        longOneVar = self.digitVars[1]
         longTwoVar = self.digitVars[2]
 
         arithemticOperators = ["+", "-"]
@@ -221,7 +221,13 @@ class SpecialCharCommand(TokenObfuscator):
         catVar = catKeyVar
 
         # TODO: find list of symbol vars that break here
-        arrayInitializationStrs.append("{0} '{{ $[{1}]; }} '${2}'>':{3}".format(self.genAccessElementStr(evalVar), self.genAccessElementStr(tempVar), longTwoVar, self.genCommandSeporatorStr()))
+        arrayInitializationStrs.append(": {0} '{{ $[{1}]; }} '${2}'>'{3}{4}".format(
+            self.genAccessElementStr(evalVar), 
+            self.genAccessElementStr(tempVar), 
+            longTwoVar,
+            longOneVar,
+            self.genCommandSeporatorStr()
+        ))
 
         self.randGen.randShuffle(arrayInitializationStrs)
         arrayInstantiationStr += "".join(arrayInitializationStrs)
