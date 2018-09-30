@@ -119,82 +119,109 @@ class SpecialCharCommand(TokenObfuscator):
             if zeroCmd[-1:] != ";":
                 zeroCmd += ";"
 
-            arrayInstantiationStr = "{0}{1}=$?;".format(zeroCmd, initialDigitVar)
+            arrayInstantiationStr = "{0}{1}=$?{2}".format(zeroCmd, initialDigitVar, self.genCommandSeporatorStr())
 
         else:
             if self.randGen.probibility(50) and zeroCmd[-1:] != ";":
                 zeroCmd += ";"
 
-            arrayInstantiationStr = "{0}=$({1});".format(initialDigitVar, zeroCmd)
+            arrayInstantiationStr = "{0}=`{1}`{2}".format(initialDigitVar, zeroCmd, self.genCommandSeporatorStr())
 
         # TODO: add and test more increment syntaxes
-        incrementSyntaxChoices = ["(({0}={1}++));", "{0}=$(({1}++));", "{0}=$[{1}++];"]
+        incrementSyntaxChoices = ["(({0}={1}++)){2}", "{0}=$(({1}++)){2}", "{0}=$[{1}++]{2}"]
         self.digitVars = []
 
         for i in range(0, 10):
             self.digitVars.append(self.randGen.randUniqueStr(4, 24, "_"))
 
             incrementStr = self.randGen.randSelect(incrementSyntaxChoices)
-            incrementStr = incrementStr.format(self.digitVars[i], initialDigitVar)
+            incrementStr = incrementStr.format(self.digitVars[i], initialDigitVar, self.genCommandSeporatorStr())
 
             arrayInstantiationStr += incrementStr
 
         procPIDDirsVar = self.randGen.randUniqueStr(4, 24, "_")
-        arrayInstantiationStr += "{0}=(/????/$$/????);".format(procPIDDirsVar)
+        arrayInstantiationStr += "{0}=(/????/$$/????){1}".format(procPIDDirsVar, self.genCommandSeporatorStr())
 
         procPIDAttrArrayVar = self.randGen.randUniqueStr(4, 24, "_")
-        arrayInstantiationStr += "{0}=${{{1}[${2}]}};".format(procPIDAttrArrayVar, procPIDDirsVar, self.digitVars[0])
+        arrayInstantiationStr += "{0}=${{{1}[${2}]}}{3}".format(procPIDAttrArrayVar, procPIDDirsVar, self.digitVars[0], self.genCommandSeporatorStr())
 
         procPathArrayVar = self.randGen.randUniqueStr(4, 24, "_")
-        arrayInstantiationStr += "{0}=(${{{1}//\// }});".format(procPathArrayVar, procPIDAttrArrayVar)
+        arrayInstantiationStr += "{0}=(${{{1}//\// }}){2}".format(procPathArrayVar, procPIDAttrArrayVar, self.genCommandSeporatorStr())
 
         attrVar = self.randGen.randUniqueStr(4, 24, "_")
-        arrayInstantiationStr += "{0}=${{{1}[${2}]}};".format(attrVar, procPathArrayVar, self.digitVars[2])
+        arrayInstantiationStr += "{0}=${{{1}[${2}]}}{3}".format(attrVar, procPathArrayVar, self.digitVars[2], self.genCommandSeporatorStr())
 
         cattrVar = self.randGen.randUniqueStr(4, 24, "_")
-        arrayInstantiationStr += "{0}=${{{1}: -${2}:${2}}}${3};".format(cattrVar, procPathArrayVar, self.digitVars[1], attrVar)
+        arrayInstantiationStr += "{0}=${{{1}: -${2}:${2}}}${3}{4}".format(cattrVar, procPathArrayVar, self.digitVars[1], attrVar, self.genCommandSeporatorStr())
 
         catVar = self.randGen.randUniqueStr(4, 24, "_")
-        arrayInstantiationStr += "{0}=${{{1}:{2}:{3}}};".format(catVar, cattrVar, self.digitVars[0], self.digitVars[3])
+        arrayInstantiationStr += "{0}=${{{1}:{2}:{3}}}{4}".format(catVar, cattrVar, self.digitVars[0], self.digitVars[3], self.genCommandSeporatorStr())
 
         aVar = self.randGen.randUniqueStr(4, 24, "_")
-        arrayInstantiationStr += "{0}=${{{1}:{2}:{3}}};".format(aVar, attrVar, self.digitVars[0], self.digitVars[1])
+        arrayInstantiationStr += "{0}=${{{1}:{2}:{3}}}{4}".format(aVar, attrVar, self.digitVars[0], self.digitVars[1], self.genCommandSeporatorStr())
 
         AVar = self.randGen.randUniqueStr(4, 24, "_")
-        arrayInstantiationStr += "{0}=${{{1}^}};".format(AVar, aVar)
+        arrayInstantiationStr += "{0}=${{{1}^}}{2}".format(AVar, aVar, self.genCommandSeporatorStr())
 
         fromAtoaVar = self.randGen.randUniqueStr(4, 24, "_")
-        arrayInstantiationStr += r". <(${0}<<<{1}=\({{${2}..${3}}}\));".format(catVar, fromAtoaVar, AVar, aVar)
+        arrayInstantiationStr += r". <(${0}<<<{1}=\({{${2}..${3}}}\)){4}".format(catVar, fromAtoaVar, AVar, aVar, self.genCommandSeporatorStr())
 
         upperAlphabetVar = self.randGen.randUniqueStr(4, 24, "_")
-        arrayInstantiationStr += "{0}=(${{{1}[@]:${2}:${3}${4}}});".format(upperAlphabetVar, fromAtoaVar, self.digitVars[0], self.digitVars[2], self.digitVars[6])
+        arrayInstantiationStr += "{0}=(${{{1}[@]:${2}:${3}${4}}}){5}".format(upperAlphabetVar, fromAtoaVar, self.digitVars[0], self.digitVars[2], self.digitVars[6], self.genCommandSeporatorStr())
 
         lowerAlphabetVar = self.randGen.randUniqueStr(4, 24, "_")
-        arrayInstantiationStr += "{0}=(${{{1}[@],,}});".format(lowerAlphabetVar, upperAlphabetVar)
+        arrayInstantiationStr += "{0}=(${{{1}[@],,}}){2}".format(lowerAlphabetVar, upperAlphabetVar, self.genCommandSeporatorStr())
 
         declareVar = self.randGen.randUniqueStr(4, 24, "_")
-        arrayInstantiationStr += "{0}={1};".format(declareVar, self.genSymbolAlphabetStr(lowerAlphabetVar, upperAlphabetVar, self.randGen.randSelect(["declare", "typeset"]) + " -A"))
+        arrayInstantiationStr += "{0}={1}{2}".format(declareVar, self.genSymbolAlphabetStr(lowerAlphabetVar, upperAlphabetVar, self.randGen.randSelect(["declare", "typeset"]) + " -A"), self.genCommandSeporatorStr())
 
-        mainArrayName = self.randGen.randUniqueStr(3, 5, "_")
-        arrayInstantiationStr += "${0} {1};".format(declareVar, mainArrayName)
-
-        self.accessElementStr = "${{" + mainArrayName + "['{0}']}}"
-        self.setElementStr = mainArrayName + "['{0}']"
+        self.mainArrayName = self.randGen.randUniqueStr(3, 5, "_")
+        arrayInstantiationStr += "${0} {1}{2}".format(declareVar, self.mainArrayName, self.genCommandSeporatorStr())
 
         arrayInitializationStrs = []
 
         evalVar = self.genSymbolVar()
-        arrayInitializationStrs.append("{0}={1};".format(self.setElementStr.format(evalVar), self.genSymbolAlphabetStr(lowerAlphabetVar, upperAlphabetVar, "eval")))
+        arrayInstantiationStr += "{0}={1}{2}".format(self.genSetElementStr(evalVar), self.genSymbolAlphabetStr(lowerAlphabetVar, upperAlphabetVar, "eval"), self.genCommandSeporatorStr())
+
+        tempVar = self.genSymbolVar()
+        self.digitVars[0] = self.genSymbolVar()
+        cmdSubstitutionsStr = "$(:)"
+        arrayInstantiationStr += "{0}=`{1} '{{ {2}; }} '${3}'>&'${4}`{5}{6}=${{#{7}}}{8}".format(
+            self.genSetElementStr(tempVar), 
+            self.genAccessElementStr(evalVar),
+            cmdSubstitutionsStr,
+            self.digitVars[2],
+            self.digitVars[1],
+            self.genCommandSeporatorStr(),
+            self.genSetElementStr(self.digitVars[0]),
+            self.genSetElementStr(tempVar),
+            self.genCommandSeporatorStr()
+        )
+
+        longTwoVar = self.digitVars[2]
+
+        arithemticOperators = ["+", "-"]
+        arithmeticExpansionSyntax = ["{0}=$(({1}{2}{3})){4}", "{0}=$[{1}{2}{3}]{4}", "(({0}={1}{2}{3})){4}"]
+        for i in range(1, 10):
+            newDigitVar = self.genSymbolVar()
+            arithmeticSyntax = self.randGen.randSelect(arithmeticExpansionSyntax)
+
+            arrayInitializationStrs.append(arithmeticSyntax.format(
+                self.genSetElementStr(newDigitVar), 
+                self.digitVars[i],
+                self.randGen.randSelect(arithemticOperators),
+                self.genSetElementStr(self.digitVars[0]),
+                self.genCommandSeporatorStr()
+            ))
+
+            self.digitVars[i] = newDigitVar
 
         catKeyVar = self.genSymbolVar()
-        catVarCopyStr = "{0}=${1};".format(self.setElementStr.format(catKeyVar), catVar)
+        arrayInitializationStrs.append("{0}=${1}{2}".format(self.genSetElementStr(catKeyVar), catVar, self.genCommandSeporatorStr()))
         catVar = catKeyVar
 
-        for i in range(0, 10):
-            newDigitVar = self.genSymbolVar()
-
-            arrayInitializationStrs.append("{0}=${1};".format(self.setElementStr.format(newDigitVar), self.digitVars[i]))
-            self.digitVars[i] = newDigitVar
+        # TODO: find list of symbol vars that break here
+        arrayInitializationStrs.append("{0} '{{ $[{1}]; }} '${2}'>':{3}".format(self.genAccessElementStr(evalVar), self.genAccessElementStr(tempVar), longTwoVar, self.genCommandSeporatorStr()))
 
         self.randGen.randShuffle(arrayInitializationStrs)
         arrayInstantiationStr += "".join(arrayInitializationStrs)
@@ -203,69 +230,86 @@ class SpecialCharCommand(TokenObfuscator):
         # build the string 'printf' from substrings of error messages
         badStubstitutionErrMsg = " bad substitution"
         badStubstitutionErrVar = self.genSymbolVar()
-        badStubstitutionErrStr = "{0}=$({1} '{{ ${{}}; }} '{2}'>&'{3});{0}=${{{0}##*:}};".format(
-            self.setElementStr.format(badStubstitutionErrVar),
-            self.accessElementStr.format(evalVar),
-            self.accessElementStr.format(self.digitVars[2]),
-            self.accessElementStr.format(self.digitVars[1])
+        badStubstitutionErrStr = "{0}=`{1} '{{ ${{}}; }} '{2}'>&'{3}`{4}{0}=${{{0}##*:}}{5}".format(
+            self.genSetElementStr(badStubstitutionErrVar),
+            self.genAccessElementStr(evalVar),
+            self.genAccessElementStr(self.digitVars[2]),
+            self.genAccessElementStr(self.digitVars[1]),
+            self.genCommandSeporatorStr(False),
+            self.genCommandSeporatorStr()
         )
 
         noSuchFileOrDirErrSymbols = ["!", "#", "$", "%", "+", ",", "-", ":", "=", "?", "@", "[", "]", "^", "_", "{", "}", "~"]
         noSuchFileOrDirErrCmdSymbol = self.randGen.randSelect(noSuchFileOrDirErrSymbols)
         noSuchFileOrDirErrMsg = " No such file or directory"
         noSuchFileOrDirErrVar = self.genSymbolVar()
-        noSuchFileOrDirErrStr = "{0}=$({1} '{{ ./{2}; }} '{3}'>&'{4});{0}=${{{0}##*:}};".format(
-            self.setElementStr.format(noSuchFileOrDirErrVar),
-            self.accessElementStr.format(evalVar),
+        noSuchFileOrDirErrStr = "{0}=`{1} '{{ ./{2}; }} '{3}'>&'{4}`{5}{0}=${{{0}##*:}}{6}".format(
+            self.genSetElementStr(noSuchFileOrDirErrVar),
+            self.genAccessElementStr(evalVar),
             noSuchFileOrDirErrCmdSymbol,
-            self.accessElementStr.format(self.digitVars[2]),
-            self.accessElementStr.format(self.digitVars[1])
+            self.genAccessElementStr(self.digitVars[2]),
+            self.genAccessElementStr(self.digitVars[1]),
+            self.genCommandSeporatorStr(False),
+            self.genCommandSeporatorStr()
         )
 
         # get the string 'bash'
         bashStrVar = self.genSymbolVar(bashBracesVar=True)
         bashStr = "{0}=${{{1}:{2}:{3}}}".format(
-            self.setElementStr.format(bashStrVar),
-            self.setElementStr.format(badStubstitutionErrVar),
-            self.accessElementStr.format(self.digitVars[0]),
-            self.accessElementStr.format(self.digitVars[3]),
+            self.genSetElementStr(bashStrVar),
+            self.genSetElementStr(badStubstitutionErrVar),
+            self.genAccessElementStr(self.digitVars[0]),
+            self.genAccessElementStr(self.digitVars[3]),
         )
 
         bashStr += "${{{0}:{1}:{2}}}".format(
-            self.setElementStr.format(noSuchFileOrDirErrVar),
-            self.accessElementStr.format(self.digitVars[4]),
-            self.accessElementStr.format(self.digitVars[1])
+            self.genSetElementStr(noSuchFileOrDirErrVar),
+            self.genAccessElementStr(self.digitVars[4]),
+            self.genAccessElementStr(self.digitVars[1])
         )
 
-        bashStr += "${{{0}:{1}:{2}}};".format(
-            self.setElementStr.format(noSuchFileOrDirErrVar),
-            self.accessElementStr.format(self.digitVars[7]),
-            self.accessElementStr.format(self.digitVars[1])
+        bashStr += "${{{0}:{1}:{2}}}{3}".format(
+            self.genSetElementStr(noSuchFileOrDirErrVar),
+            self.genAccessElementStr(self.digitVars[7]),
+            self.genAccessElementStr(self.digitVars[1]),
+            self.genCommandSeporatorStr()
         )
 
         # get the character 'c' from the 'command not found' error message
         cCharVar = self.genSymbolVar(bashBracesVar=True)
-        cCharStr = "{0}=${{{1}:{2}:{3}}};".format(
-            self.setElementStr.format(cCharVar),
-            self.setElementStr.format(noSuchFileOrDirErrVar),
-            self.accessElementStr.format(self.digitVars[6]),
-            self.accessElementStr.format(self.digitVars[1])
+        cCharStr = "{0}=${{{1}:{2}:{3}}}{4}".format(
+            self.genSetElementStr(cCharVar),
+            self.genSetElementStr(noSuchFileOrDirErrVar),
+            self.genAccessElementStr(self.digitVars[6]),
+            self.genAccessElementStr(self.digitVars[1]),
+            self.genCommandSeporatorStr()
         )
 
         syntaxErrorMsg = "bash: -c: line 0: syntax error near unexpected token `;' bash: -c: line 0: `;'"
         syntaxErrorVar = self.genSymbolVar()
-        syntaxErrorStr = """{0}=$({1} '{{ {2} -{3} ";"; }} '{4}'>&'{5});""".format(
-            self.setElementStr.format(syntaxErrorVar),
-            self.accessElementStr.format(evalVar),
-            self.accessElementStr.format(bashStrVar),
-            self.accessElementStr.format(cCharVar),
-            self.accessElementStr.format(self.digitVars[2]),
-            self.accessElementStr.format(self.digitVars[1])
+        syntaxErrorStr = """{0}=`{1} '{{ {2} -{3} ";"; }} '{4}'>&'{5}`{6}""".format(
+            self.genSetElementStr(syntaxErrorVar),
+            self.genAccessElementStr(evalVar),
+            self.genAccessElementStr(bashStrVar),
+            self.genAccessElementStr(cCharVar),
+            self.genAccessElementStr(self.digitVars[2]),
+            self.genAccessElementStr(self.digitVars[1]),
+            self.genCommandSeporatorStr(False)
         )
 
-        printfInstanstiationStr = badStubstitutionErrStr + noSuchFileOrDirErrStr + bashStr + cCharStr + syntaxErrorStr
+        # get the character 'x' from the 'syntax' error message
+        xCharVar = self.genSymbolVar(bashBracesVar=True)
+        xCharStr = "{0}=${{{1}:{2}{3}:{4}}}{5}".format(
+            self.genSetElementStr(xCharVar),
+            self.genSetElementStr(syntaxErrorVar),
+            self.genAccessElementStr(self.digitVars[2]),
+            self.genAccessElementStr(self.digitVars[3]),
+            self.genAccessElementStr(self.digitVars[1]),
+            self.genCommandSeporatorStr()
+        )
 
-        #return arrayInstantiationStr + printfInstanstiationStr
+        printfInstanstiationStr = badStubstitutionErrStr + noSuchFileOrDirErrStr + bashStr + cCharStr + syntaxErrorStr + xCharStr
+
 
         #store all the possible variations of generating the string 'printf'
         printfCharsInstatiationStrs = []
@@ -281,20 +325,21 @@ class SpecialCharCommand(TokenObfuscator):
 
                     digitAccessStr = ""
                     for digit in str(idx):
-                        digitAccessStr += self.accessElementStr.format(self.digitVars[int(digit)])
+                        digitAccessStr += self.genAccessElementStr(self.digitVars[int(digit)])
 
-                    printfCharsInstatiationStrs.append("{0}=${{{1}:{2}:{3}}};".format(
-                        self.setElementStr.format(charVarName),
-                        self.setElementStr.format(errVar),
+                    printfCharsInstatiationStrs.append("{0}=${{{1}:{2}:{3}}}{4}".format(
+                        self.genSetElementStr(charVarName),
+                        self.genSetElementStr(errVar),
                         digitAccessStr,
-                        self.accessElementStr.format(self.digitVars[1]),
+                        self.genAccessElementStr(self.digitVars[1]),
+                        self.genCommandSeporatorStr()
                     ))
 
                     charVars.append(charVarName)
 
             printfCharVarNames[char] = charVars
 
-        #self.randGen.randShuffle(printfCharsInstatiationStrs)
+        self.randGen.randShuffle(printfCharsInstatiationStrs)
         printfInstanstiationStr += "".join(printfCharsInstatiationStrs)
 
 
@@ -304,20 +349,44 @@ class SpecialCharCommand(TokenObfuscator):
             printfStr = ""
 
             for printfChar in "printf":
-                printfStr += self.accessElementStr.format(self.randGen.randSelect(printfCharVarNames[printfChar]))
-
-            octCode = str(oct(ord(cmdChar)))[2:]
+                printfStr += self.genAccessElementStr(self.randGen.randSelect(printfCharVarNames[printfChar]))
 
             digitsAccess = ""
-            for char in octCode:
-                digitsAccess += '"' + self.accessElementStr.format(self.digitVars[int(char)]) + '"'
+            # if char's hex representation only contains alpha chars, 1/2 of the time use that for the printf statement
+            hexCode = str(hex(ord(cmdChar)))[2:]
+            if hexCode.isdigit() and self.randGen.probibility(50):
+                for char in hexCode:
+                    digitsAccess += '"' + self.genAccessElementStr(self.digitVars[int(char)]) + '"'
 
-            symbolCommandStr += r'{0} "\\{1}";'.format(printfStr, digitsAccess)
+                symbolCommandStr += r'{0} "\\{1}{2}"'.format(printfStr, self.genAccessElementStr(xCharVar), digitsAccess)
+
+            else:
+                octCode = str(oct(ord(cmdChar)))[2:]
+                for char in octCode:
+                    digitsAccess += '"' + self.genAccessElementStr(self.digitVars[int(char)]) + '"'
+
+                symbolCommandStr += r'{0} "\\{1}"'.format(printfStr, digitsAccess)
+
+            if cmdChar != userCmd[-1]:
+                symbolCommandStr += self.genCommandSeporatorStr()
 
         self.payload = arrayInstantiationStr + printfInstanstiationStr + symbolCommandStr
 
         return self.payload
 
+
+    def genCommandSeporatorStr(self, successfulCmd=True):
+        cmdSeporators = [";"]
+        whitespace = [" ", "\t"]
+
+        #if successfulCmd:
+        #    cmdSeporators.append("&&")
+
+        chosenSeporator = self.randGen.randSelect(cmdSeporators)
+        #whitespaceAmount = self.randGen.randGenNum(0, 3)
+        #randomWhitespace = "".join([self.randGen.randSelect(whitespace) for i in range(whitespaceAmount)])
+
+        return chosenSeporator #+ randomWhitespace
 
     def genSymbolAlphabetStr(self, lowerArrayName, upperArrayName, initialStr):
         invertSyntaxChoices = ["~", "~~"]
@@ -354,6 +423,22 @@ class SpecialCharCommand(TokenObfuscator):
                     symbolStr += "${{{0}[{1}]{2}}}".format(lowerArrayName, indexStr, self.randGen.randSelect(upperSyntaxChoices))
 
         return symbolStr
+
+    def genAccessElementStr(self, keyVar):
+        accessElementStr = '${{{0}["{1}"]}}'.format(self.mainArrayName, keyVar)
+
+        if self.randGen.probibility(50):
+            accessElementStr = accessElementStr.replace('"', "'")
+
+        return accessElementStr
+
+    def genSetElementStr(self, keyVar):
+        setElementStr = '{0}["{1}"]'.format(self.mainArrayName, keyVar)
+
+        if self.randGen.probibility(50):
+            setElementStr = setElementStr.replace('"', "'")
+
+        return setElementStr
 
     def genSymbolVar(self, min=1, max=3, bashBracesVar=False):
         goodVar = False
