@@ -184,7 +184,7 @@ class ObfuscationHandler(object):
             if self.randGen.probibility(50):
                 wrappedPayload = '''eval "$({0})"'''.format(payload)
             else:
-                wrappedPayload = '''printf -- "$({0})"|bash'''.format(payload)
+                wrappedPayload = '''printf %s "$({0})"|bash'''.format(payload)
         else:
             wrappedPayload = payload
         
