@@ -221,7 +221,7 @@ class SpecialCharCommand(TokenObfuscator):
         catVar = catKeyVar
 
         # TODO: find list of symbol vars that break here
-        arrayInitializationStrs.append("{0} '{{ $[{1}]; }} '${2}'>'${3}{4}".format(
+        arrayInitializationStrs.append(": {0} '{{ $[{1}]; }} '${2}'>&'${3}{4}".format(
             self.genAccessElementStr(evalVar), 
             self.genAccessElementStr(tempVar),
             longTwoVar,
