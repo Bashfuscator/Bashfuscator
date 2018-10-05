@@ -2,6 +2,7 @@
 Token Obfuscators used by the framework.
 """
 from binascii import hexlify
+from collections import OrderedDict
 import string
 
 from bashfuscator.common.objects import Mutator
@@ -220,7 +221,7 @@ class SpecialCharCommand(TokenObfuscator):
         arrayInitializationStrs.append("{0}=${1}{2}".format(self.genSetElementStr(catKeyVar), catVar, self.genCommandSeporatorStr()))
         catVar = catKeyVar
 
-        # TODO: find list of symbol vars that break here
+        # TODO: fine-tune debug crash line
         arrayInitializationStrs.append(": {0} '{{ $[{1}]; }} '${2}'>&'${3}{4}".format(
             self.genAccessElementStr(evalVar), 
             self.genAccessElementStr(tempVar),
@@ -318,8 +319,8 @@ class SpecialCharCommand(TokenObfuscator):
 
         #store all the possible variations of generating the string 'printf'
         printfCharsInstatiationStrs = []
-        printfCharVarNames = {}
-        for char in "printf":
+        printfCharVarNames = OrderedDict()
+        for char in "printf ":
             charVars = []
 
             for errMsg, errVar in [(badStubstitutionErrMsg, badStubstitutionErrVar), (noSuchFileOrDirErrMsg, noSuchFileOrDirErrVar), (syntaxErrorMsg, syntaxErrorVar)]:
@@ -347,14 +348,41 @@ class SpecialCharCommand(TokenObfuscator):
         self.randGen.randShuffle(printfCharsInstatiationStrs)
         printfInstanstiationStr += "".join(printfCharsInstatiationStrs)
 
+        instantiationStrPieces = OrderedDict()
+        printfVarsInstatiationStrs = {}
+        printfVars = {}
+
+        for pCharVar in printfCharVarNames["p"]:
+            instantiationStrPieces["p"] = self.genAccessElementStr(pCharVar)
+            for rCharVar in printfCharVarNames["r"]:
+                instantiationStrPieces["r"] = self.genAccessElementStr(rCharVar)
+                for iCharVar in printfCharVarNames["i"]:
+                    instantiationStrPieces["i"] = self.genAccessElementStr(iCharVar)
+                    for nCharVar in printfCharVarNames["n"]:
+                        instantiationStrPieces["n"] = self.genAccessElementStr(nCharVar)
+                        for tCharVar in printfCharVarNames["t"]:
+                            instantiationStrPieces["t"] = self.genAccessElementStr(tCharVar)
+                            for fCharVar in printfCharVarNames["f"]:
+                                instantiationStrPieces["f"] = self.genAccessElementStr(fCharVar)
+
+                                #if (self.randGen.probibility(33)):
+                                #    instantiationStrPieces.append(self.genAccessElementStr(self.randGen.randSelect(printfCharVarNames[" "])))
+
+                                printfVar = self.genSymbolVar()
+                                printfVarsInstatiationStrs[printfVar] = "{0}={1}{2}".format(
+                                    self.genSetElementStr(printfVar), 
+                                    "".join(instantiationStrPieces.values()),
+                                    self.genCommandSeporatorStr()
+                                )
+                                printfVars[printfVar] = False
 
         # build up 'printf' strings that will print the input and allow it to be executed
         symbolCommandStr = ""
+        printfVarsList = list(printfVars.keys())
         for cmdChar in userCmd:
-            printfStr = ""
-
-            for printfChar in "printf":
-                printfStr += self.genAccessElementStr(self.randGen.randSelect(printfCharVarNames[printfChar]))
+            printfVar = self.randGen.randSelect(printfVarsList)
+            printfVars[printfVar] = True
+            printfStr = self.genAccessElementStr(printfVar)
 
             digitsAccess = ""
             # if char's hex representation only contains alpha chars, 1/2 of the time use that for the printf statement
@@ -374,6 +402,11 @@ class SpecialCharCommand(TokenObfuscator):
 
             if cmdChar != userCmd[-1]:
                 symbolCommandStr += self.genCommandSeporatorStr()
+
+        # declare and assign the printf variables that were randomly selected to be used
+        for var, used in printfVars.items():
+            if used:
+                printfInstanstiationStr += printfVarsInstatiationStrs[var]
 
         self.payload = arrayInstantiationStr + printfInstanstiationStr + symbolCommandStr
 
