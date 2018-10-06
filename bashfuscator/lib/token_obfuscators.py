@@ -350,41 +350,54 @@ class SpecialCharCommand(TokenObfuscator):
         self.randGen.randShuffle(printfCharsInstatiationStrs)
         printfInstanstiationStr += "".join(printfCharsInstatiationStrs)
 
-        instantiationStrPieces = OrderedDict()
-        printfVarsInstatiationStrs = {}
-        printfVars = {}
+        # there are roughly 2054 ways to generate the string 'printf' from the error messages that
+        # are stored as variables. If the input exceeds the number of 'printf' vars, pre-assign the
+        # 'printf' vars to make the payload smaller
+        largeCmd = False
+        if len(self.originalCmd) > 2000:
+            largeCmd = True
+            instantiationStrPieces = OrderedDict()
+            printfVarsInstatiationStrs = {}
+            printfVars = {}
 
-        for pCharVar in printfCharVarNames["p"]:
-            instantiationStrPieces["p"] = self.genAccessElementStr(pCharVar)
-            for rCharVar in printfCharVarNames["r"]:
-                instantiationStrPieces["r"] = self.genAccessElementStr(rCharVar)
-                for iCharVar in printfCharVarNames["i"]:
-                    instantiationStrPieces["i"] = self.genAccessElementStr(iCharVar)
-                    for nCharVar in printfCharVarNames["n"]:
-                        instantiationStrPieces["n"] = self.genAccessElementStr(nCharVar)
-                        for tCharVar in printfCharVarNames["t"]:
-                            instantiationStrPieces["t"] = self.genAccessElementStr(tCharVar)
-                            for fCharVar in printfCharVarNames["f"]:
-                                instantiationStrPieces["f"] = self.genAccessElementStr(fCharVar)
+            for pCharVar in printfCharVarNames["p"]:
+                instantiationStrPieces["p"] = self.genAccessElementStr(pCharVar)
+                for rCharVar in printfCharVarNames["r"]:
+                    instantiationStrPieces["r"] = self.genAccessElementStr(rCharVar)
+                    for iCharVar in printfCharVarNames["i"]:
+                        instantiationStrPieces["i"] = self.genAccessElementStr(iCharVar)
+                        for nCharVar in printfCharVarNames["n"]:
+                            instantiationStrPieces["n"] = self.genAccessElementStr(nCharVar)
+                            for tCharVar in printfCharVarNames["t"]:
+                                instantiationStrPieces["t"] = self.genAccessElementStr(tCharVar)
+                                for fCharVar in printfCharVarNames["f"]:
+                                    instantiationStrPieces["f"] = self.genAccessElementStr(fCharVar)
 
-                                #if (self.randGen.probibility(33)):
-                                #    instantiationStrPieces.append(self.genAccessElementStr(self.randGen.randSelect(printfCharVarNames[" "])))
+                                    #if (self.randGen.probibility(33)):
+                                    #    instantiationStrPieces.append(self.genAccessElementStr(self.randGen.randSelect(printfCharVarNames[" "])))
 
-                                printfVar = self.genSymbolVar()
-                                printfVarsInstatiationStrs[printfVar] = "{0}={1}{2}".format(
-                                    self.genSetElementStr(printfVar), 
-                                    "".join(instantiationStrPieces.values()),
-                                    self.genCommandSeporatorStr()
-                                )
-                                printfVars[printfVar] = False
+                                    printfVar = self.genSymbolVar()
+                                    printfVarsInstatiationStrs[printfVar] = "{0}={1}{2}".format(
+                                        self.genSetElementStr(printfVar), 
+                                        "".join(instantiationStrPieces.values()),
+                                        self.genCommandSeporatorStr()
+                                    )
+                                    printfVars[printfVar] = False
+
+            printfVarsList = list(printfVars.keys())
 
         # build up 'printf' strings that will print the input and allow it to be executed
         symbolCommandStr = ""
-        printfVarsList = list(printfVars.keys())
         for cmdChar in userCmd:
-            printfVar = self.randGen.randSelect(printfVarsList)
-            printfVars[printfVar] = True
-            printfStr = self.genAccessElementStr(printfVar)
+            if largeCmd:
+                printfVar = self.randGen.randSelect(printfVarsList)
+                printfVars[printfVar] = True
+                printfStr = self.genAccessElementStr(printfVar)
+
+            else:
+                printfStr = ""
+                for printfChar in "printf":
+                    printfStr += self.genAccessElementStr(self.randGen.randSelect(printfCharVarNames[printfChar]))
 
             digitsAccess = ""
             # if char's hex representation only contains alpha chars, 1/2 of the time use that for the printf statement
@@ -406,9 +419,10 @@ class SpecialCharCommand(TokenObfuscator):
                 symbolCommandStr += self.genCommandSeporatorStr()
 
         # declare and assign the printf variables that were randomly selected to be used
-        for var, used in printfVars.items():
-            if used:
-                printfInstanstiationStr += printfVarsInstatiationStrs[var]
+        if largeCmd:
+            for var, used in printfVars.items():
+                if used:
+                    printfInstanstiationStr += printfVarsInstatiationStrs[var]
 
         self.payload = arrayInstantiationStr + printfInstanstiationStr + symbolCommandStr
 
