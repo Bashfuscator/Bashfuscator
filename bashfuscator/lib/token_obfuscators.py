@@ -46,7 +46,7 @@ class AnsiCQuote(TokenObfuscator):
             description="ANSI-C quotes a string",
             sizeRating=3,
             author="capnspacehook",
-            credits="DissectMalware, https://twitter.com/DissectMalware/status/1023682809368653826"
+            credits=["DissectMalware, https://twitter.com/DissectMalware/status/1023682809368653826"]
         )
 
         self.SUBSTR_QUOTE_PROB = 33
@@ -93,7 +93,8 @@ class SpecialCharCommand(TokenObfuscator):
             description="Converts commands to only use special characters",
             sizeRating=2,
             author="capnspacehook",
-            credits="danielbohannon, https://github.com/danielbohannon/Invoke-Obfuscation"
+            credits=["danielbohannon, https://github.com/danielbohannon/Invoke-Obfuscation",
+                "Digital Trauma, https://codegolf.stackexchange.com/questions/22533/weirdest-obfuscated-hello-world"]
         )
 
     def obfuscate(self, sizePref, userCmd):
@@ -131,6 +132,7 @@ class SpecialCharCommand(TokenObfuscator):
         incrementSyntaxChoices = ["(({0}={1}++)){2}", "{0}=$(({1}++)){2}", "{0}=$[{1}++]{2}"]
         self.digitVars = []
 
+        # build variables that will hold the digits 0-9
         for i in range(0, 10):
             self.digitVars.append(self.randGen.randUniqueStr(4, 24, "_"))
 
@@ -139,11 +141,11 @@ class SpecialCharCommand(TokenObfuscator):
 
             arrayInstantiationStr += incrementStr
 
-        procPIDDirsVar = self.randGen.randUniqueStr(4, 24, "_")
-        arrayInstantiationStr += "{0}=(/????/$$/????){1}".format(procPIDDirsVar, self.genCommandSeporatorStr())
+        procPIDDirsArrayVar = self.randGen.randUniqueStr(4, 24, "_")
+        arrayInstantiationStr += "{0}=(/????/$$/????){1}".format(procPIDDirsArrayVar, self.genCommandSeporatorStr())
 
         procPIDAttrArrayVar = self.randGen.randUniqueStr(4, 24, "_")
-        arrayInstantiationStr += "{0}=${{{1}[${2}]}}{3}".format(procPIDAttrArrayVar, procPIDDirsVar, self.digitVars[0], self.genCommandSeporatorStr())
+        arrayInstantiationStr += "{0}=${{{1}[${2}]}}{3}".format(procPIDAttrArrayVar, procPIDDirsArrayVar, self.digitVars[0], self.genCommandSeporatorStr())
 
         procPathArrayVar = self.randGen.randUniqueStr(4, 24, "_")
         arrayInstantiationStr += "{0}=(${{{1}//\// }}){2}".format(procPathArrayVar, procPIDAttrArrayVar, self.genCommandSeporatorStr())

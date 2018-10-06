@@ -98,7 +98,7 @@ class ForCode(CommandObfuscator):
             timeRating=2,
             reversible=False,
             author="capnspacehook",
-            credits="danielbohannon, https://github.com/danielbohannon/Invoke-DOSfuscation"
+            credits=["danielbohannon, https://github.com/danielbohannon/Invoke-DOSfuscation"]
         )
 
         self.stubs = [
