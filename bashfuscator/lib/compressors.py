@@ -34,10 +34,9 @@ class Compressor(Mutator):
     :type credits: str
     """
 
-    def __init__(self, name, description, sizeRating, timeRating, notes=None, author=None, credits=None):
-        super().__init__(name, "compress", notes, author, credits)
+    def __init__(self, name, description, sizeRating, timeRating, notes=None, author=None, credits=None, evalWrap=True):
+        super().__init__(name, "compress", description, notes, author, credits, evalWrap)
 
-        self.description = description
         self.sizeRating = sizeRating
         self.timeRating = timeRating
         self.originalCmd = ""

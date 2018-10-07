@@ -32,13 +32,15 @@ class Mutator(object):
     :type credits: str
     """
 
-    def __init__(self, name, mutatorType, notes, author, credits):
+    def __init__(self, name, mutatorType, description, notes, author, credits, evalWrap):
         self.name = name
         self.mutatorType = mutatorType
+        self.description = description
         self.longName = self.mutatorType + "/" + self.name.replace(" ", "_").lower()
         self.notes = notes
         self.author = author
         self.credits = credits
+        self.evalWrap = evalWrap
         self.randGen = RandomGen()
 
 

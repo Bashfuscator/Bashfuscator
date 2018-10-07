@@ -31,10 +31,9 @@ class Encoder(Mutator):
     :type credits: str
     """
 
-    def __init__(self, name, description, sizeRating, timeRating, notes=None, author=None, credits=None):
-        super().__init__(name, "encode", notes, author, credits)
+    def __init__(self, name, description, sizeRating, timeRating, notes=None, author=None, credits=None, evalWrap=True):
+        super().__init__(name, "encode", description, notes, author, credits, evalWrap)
 
-        self.description = description
         self.sizeRating = sizeRating
         self.timeRating = timeRating
         self.originalCmd = ""
@@ -67,7 +66,8 @@ class UrlEncode(Encoder):
             description="Url encode command",
             sizeRating=3,
             timeRating=1,
-            author="capnspacehook"
+            author="capnspacehook",
+            evalWrap=False
         )
 
     def encode(self, sizePref, timePref, userCmd):

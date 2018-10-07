@@ -41,10 +41,9 @@ class StringObfuscator(Mutator):
     :type credits: str
     """
 
-    def __init__(self, name, description, sizeRating, timeRating, binariesUsed=[], fileWrite=False, notes=None, author=None, credits=None):
-        super().__init__(name, "string", notes, author, credits)
+    def __init__(self, name, description, sizeRating, timeRating, binariesUsed=[], fileWrite=False, notes=None, author=None, credits=None, evalWrap=True):
+        super().__init__(name, "string", description, notes, author, credits, evalWrap)
 
-        self.description = description
         self.sizeRating = sizeRating
         self.timeRating = timeRating
         self.fileWrite = fileWrite

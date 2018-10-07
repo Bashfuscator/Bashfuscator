@@ -30,8 +30,8 @@ class TokenObfuscator(Mutator):
     :type credits: str
     """
 
-    def __init__(self, name, description, sizeRating, notes=None, author=None, credits=None):
-        super().__init__(name, "token", notes, author, credits)
+    def __init__(self, name, description, sizeRating, notes=None, author=None, credits=None, evalWrap=True):
+        super().__init__(name, "token", description, notes, author, credits, evalWrap)
 
         self.description = description
         self.sizeRating = sizeRating
@@ -94,7 +94,8 @@ class SpecialCharCommand(TokenObfuscator):
             sizeRating=2,
             author="capnspacehook",
             credits=["danielbohannon, https://github.com/danielbohannon/Invoke-Obfuscation",
-                "Digital Trauma, https://codegolf.stackexchange.com/questions/22533/weirdest-obfuscated-hello-world"]
+                "Digital Trauma, https://codegolf.stackexchange.com/questions/22533/weirdest-obfuscated-hello-world"],
+            evalWrap=False
         )
 
     def obfuscate(self, sizePref, userCmd):
