@@ -100,12 +100,14 @@ class SpecialCharCommand(TokenObfuscator):
     def obfuscate(self, sizePref, userCmd):
         self.originalCmd = userCmd
 
+        self.mainArrayName = self.randGen.randUniqueStr(3, 5, "_")
+
         # build list of different commands that will return '0'
         zeroCmdSyntax = [":", "${__}", "_=;", "_=()", "${__[@]}", "${!__[@]}", ":(){ :; };", \
             "_(){ _; };", "_(){ _; };:", "_(){ :; };", "_(){ :; };_", "_(){ :; };:"]
 
-        #self.symbols = [" ", "#", "$", "%", "&", "(", ")", "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "^", "_", "{", "|", "}", "~"]
-        self.symbols = list(string.ascii_letters)
+        self.symbols = [" ", "#", "$", "%", "&", "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "^", "_", "|", "~"]
+        #self.symbols = list(string.ascii_letters)
 
         zeroCmd = self.randGen.randSelect(zeroCmdSyntax)
 
@@ -116,7 +118,7 @@ class SpecialCharCommand(TokenObfuscator):
 
             zeroCmd = "{ " + zeroCmd + " }"
 
-        initialDigitVar = self.randGen.randUniqueStr(4, 24, "_")
+        initialDigitVar = self.randGen.randUniqueStr(3, 26, "_")
 
         if self.randGen.probibility(50):
             if zeroCmd[-1:] != ";":
@@ -135,50 +137,49 @@ class SpecialCharCommand(TokenObfuscator):
 
         # build variables that will hold the digits 0-9
         for i in range(0, 10):
-            self.digitVars.append(self.randGen.randUniqueStr(4, 24, "_"))
+            self.digitVars.append(self.randGen.randUniqueStr(3, 26, "_"))
 
             incrementStr = self.randGen.randSelect(incrementSyntaxChoices)
             incrementStr = incrementStr.format(self.digitVars[i], initialDigitVar, self.genCommandSeporatorStr())
 
             arrayInstantiationStr += incrementStr
 
-        procPIDDirsArrayVar = self.randGen.randUniqueStr(4, 24, "_")
+        procPIDDirsArrayVar = self.randGen.randUniqueStr(3, 26, "_")
         arrayInstantiationStr += "{0}=(/????/$$/????){1}".format(procPIDDirsArrayVar, self.genCommandSeporatorStr())
 
-        procPIDAttrArrayVar = self.randGen.randUniqueStr(4, 24, "_")
+        procPIDAttrArrayVar = self.randGen.randUniqueStr(3, 26, "_")
         arrayInstantiationStr += "{0}=${{{1}[${2}]}}{3}".format(procPIDAttrArrayVar, procPIDDirsArrayVar, self.digitVars[0], self.genCommandSeporatorStr())
 
-        procPathArrayVar = self.randGen.randUniqueStr(4, 24, "_")
+        procPathArrayVar = self.randGen.randUniqueStr(3, 26, "_")
         arrayInstantiationStr += "{0}=(${{{1}//\// }}){2}".format(procPathArrayVar, procPIDAttrArrayVar, self.genCommandSeporatorStr())
 
-        attrVar = self.randGen.randUniqueStr(4, 24, "_")
+        attrVar = self.randGen.randUniqueStr(3, 26, "_")
         arrayInstantiationStr += "{0}=${{{1}[${2}]}}{3}".format(attrVar, procPathArrayVar, self.digitVars[2], self.genCommandSeporatorStr())
 
-        cattrVar = self.randGen.randUniqueStr(4, 24, "_")
+        cattrVar = self.randGen.randUniqueStr(3, 26, "_")
         arrayInstantiationStr += "{0}=${{{1}: -${2}:${2}}}${3}{4}".format(cattrVar, procPathArrayVar, self.digitVars[1], attrVar, self.genCommandSeporatorStr())
 
-        catVar = self.randGen.randUniqueStr(4, 24, "_")
+        catVar = self.randGen.randUniqueStr(3, 26, "_")
         arrayInstantiationStr += "{0}=${{{1}:{2}:{3}}}{4}".format(catVar, cattrVar, self.digitVars[0], self.digitVars[3], self.genCommandSeporatorStr())
 
-        aVar = self.randGen.randUniqueStr(4, 24, "_")
+        aVar = self.randGen.randUniqueStr(3, 26, "_")
         arrayInstantiationStr += "{0}=${{{1}:{2}:{3}}}{4}".format(aVar, attrVar, self.digitVars[0], self.digitVars[1], self.genCommandSeporatorStr())
 
-        AVar = self.randGen.randUniqueStr(4, 24, "_")
+        AVar = self.randGen.randUniqueStr(3, 26, "_")
         arrayInstantiationStr += "{0}=${{{1}^}}{2}".format(AVar, aVar, self.genCommandSeporatorStr())
 
-        fromAtoaVar = self.randGen.randUniqueStr(4, 24, "_")
+        fromAtoaVar = self.randGen.randUniqueStr(3, 26, "_")
         arrayInstantiationStr += r". <(${0}<<<{1}=\({{${2}..${3}}}\)){4}".format(catVar, fromAtoaVar, AVar, aVar, self.genCommandSeporatorStr())
 
-        upperAlphabetVar = self.randGen.randUniqueStr(4, 24, "_")
+        upperAlphabetVar = self.randGen.randUniqueStr(3, 26, "_")
         arrayInstantiationStr += "{0}=(${{{1}[@]:${2}:${3}${4}}}){5}".format(upperAlphabetVar, fromAtoaVar, self.digitVars[0], self.digitVars[2], self.digitVars[6], self.genCommandSeporatorStr())
 
-        lowerAlphabetVar = self.randGen.randUniqueStr(4, 24, "_")
+        lowerAlphabetVar = self.randGen.randUniqueStr(3, 26, "_")
         arrayInstantiationStr += "{0}=(${{{1}[@],,}}){2}".format(lowerAlphabetVar, upperAlphabetVar, self.genCommandSeporatorStr())
 
-        declareVar = self.randGen.randUniqueStr(4, 24, "_")
+        declareVar = self.randGen.randUniqueStr(3, 26, "_")
         arrayInstantiationStr += "{0}={1}{2}".format(declareVar, self.genSymbolAlphabetStr(lowerAlphabetVar, upperAlphabetVar, self.randGen.randSelect(["declare", "typeset"]) + " -A"), self.genCommandSeporatorStr())
 
-        self.mainArrayName = self.randGen.randUniqueStr(3, 5, "_")
         arrayInstantiationStr += "${0} {1}{2}".format(declareVar, self.mainArrayName, self.genCommandSeporatorStr())
 
         arrayInitializationStrs = []
@@ -307,9 +308,9 @@ class SpecialCharCommand(TokenObfuscator):
         )
 
         # get the character 'x' from the 'syntax' error message
-        self.xCharVar = self.genSymbolVar(bashBracesVar=True)
+        xCharVar = self.genSymbolVar(bashBracesVar=True)
         xCharStr = "{0}=${{{1}:{2}{3}:{4}}}{5}".format(
-            self.genSetElementStr(self.xCharVar),
+            self.genSetElementStr(xCharVar),
             self.genSetElementStr(syntaxErrorVar),
             self.genAccessElementStr(self.digitVars[2]),
             self.genAccessElementStr(self.digitVars[3]),
@@ -322,7 +323,7 @@ class SpecialCharCommand(TokenObfuscator):
 
         #store all the characters of 'printf' from the stored error messages
         printfCharsInstatiationStrs = []
-        self.printfCharVarNames = {}
+        printfCharVarNames = {}
         for char in "printf ":
             charVars = []
 
@@ -346,7 +347,7 @@ class SpecialCharCommand(TokenObfuscator):
 
                     charVars.append(charVarName)
 
-            self.printfCharVarNames[char] = charVars
+            printfCharVarNames[char] = charVars
 
         self.randGen.randShuffle(printfCharsInstatiationStrs)
         printfInstanstiationStr += "".join(printfCharsInstatiationStrs)
@@ -359,19 +360,19 @@ class SpecialCharCommand(TokenObfuscator):
             self.largeCmd = True
             instantiationStrPieces = OrderedDict()
             printfVarsInstatiationStrs = {}
-            self.printfVars = {}
+            printfVars = {}
 
-            for pCharVar in self.printfCharVarNames["p"]:
+            for pCharVar in printfCharVarNames["p"]:
                 instantiationStrPieces["p"] = self.genAccessElementStr(pCharVar)
-                for rCharVar in self.printfCharVarNames["r"]:
+                for rCharVar in printfCharVarNames["r"]:
                     instantiationStrPieces["r"] = self.genAccessElementStr(rCharVar)
-                    for iCharVar in self.printfCharVarNames["i"]:
+                    for iCharVar in printfCharVarNames["i"]:
                         instantiationStrPieces["i"] = self.genAccessElementStr(iCharVar)
-                        for nCharVar in self.printfCharVarNames["n"]:
+                        for nCharVar in printfCharVarNames["n"]:
                             instantiationStrPieces["n"] = self.genAccessElementStr(nCharVar)
-                            for tCharVar in self.printfCharVarNames["t"]:
+                            for tCharVar in printfCharVarNames["t"]:
                                 instantiationStrPieces["t"] = self.genAccessElementStr(tCharVar)
-                                for fCharVar in self.printfCharVarNames["f"]:
+                                for fCharVar in printfCharVarNames["f"]:
                                     instantiationStrPieces["f"] = self.genAccessElementStr(fCharVar)
 
                                     #if (self.randGen.probibility(33)):
@@ -383,66 +384,54 @@ class SpecialCharCommand(TokenObfuscator):
                                         "".join(instantiationStrPieces.values()),
                                         self.genCommandSeporatorStr()
                                     )
-                                    self.printfVars[printfVar] = False
+                                    printfVars[printfVar] = False
 
-            self.printfVarsList = list(self.printfVars.keys())
+            printfVarsList = list(printfVars.keys())
 
 
-        # build up 'printf' strings that will print the input and allow it to be executed
-        printfCommandStrVar = self.genSymbolVar()
-        symbolCommandStr = "{0}='".format(self.genSetElementStr(printfCommandStrVar))
         self.printfCmdCounter = 0
+        symbolCommandStr = ""        
+        for cmdChar in userCmd:
+            if self.largeCmd:
+                printfVar = self.randGen.randSelect(printfVarsList)
+                printfVars[printfVar] = True
+                printfStr = self.genAccessElementStr(printfVar)
+
+            else:
+                printfStr = ""
+                for printfChar in "printf":
+                    printfStr += self.genAccessElementStr(self.randGen.randSelect(printfCharVarNames[printfChar]))
+
+            digitsAccess = ""
+            # if char's hex representation only contains alpha chars, 1/2 of the time use that for the printf statement
+            hexCode = str(hex(ord(cmdChar)))[2:]
+            if hexCode.isdigit() and self.randGen.probibility(50):
+                for char in hexCode:
+                    digitsAccess += '"' + self.genAccessElementStr(self.digitVars[int(char)]) + '"'
+
+                symbolCommandStr += r'{0} "\\"{1}"{2}"'.format(printfStr, self.genAccessElementStr(xCharVar), digitsAccess)
+
+            else:
+                octCode = str(oct(ord(cmdChar)))[2:]
+                for char in octCode:
+                    digitsAccess += '"' + self.genAccessElementStr(self.digitVars[int(char)]) + '"'
+
+                symbolCommandStr += r'{0} "\\{1}"'.format(printfStr, digitsAccess)
+
+            symbolCommandStr += self.genCommandSeporatorStr(printfStr=True)
         
-        symbolCommandStr += self.genPrintfCommandStr(self.originalCmd)
-
-        if symbolCommandStr[-1] == ";" and self.randGen.probibility(50):
+        if self.randGen.probibility(50):
             symbolCommandStr = symbolCommandStr[:-1]
-
-        symbolCommandStr += "'{0}".format(self.genCommandSeporatorStr())
 
         # declare and assign the printf variables that were randomly selected to be used
         if self.largeCmd:
             printfInstanstiationStrs = []
-            for var, used in self.printfVars.items():
+            for var, used in printfVars.items():
                 if used:
                     printfInstanstiationStrs.append(printfVarsInstatiationStrs[var])
 
             self.randGen.randShuffle(printfInstanstiationStrs)
             printfInstanstiationStr += "".join(printfInstanstiationStrs)
-        
-
-        # generate placeholder string that will be substituted for '\n' at runtime
-        symbolStrLen = self.randGen.randGenNum(2, 3)
-        symbolsToChoose = self.symbols + ["!", '"', "*"]
-        escapeSymbols = [".", "^", "$", "*", "+", "?", "(", ")", "[", "{", "\\", "|"]
-        badStr = True
-
-        payloadSoFar = arrayInstantiationStr + printfInstanstiationStr + symbolCommandStr
-
-        while badStr:
-            symbolStr = ""
-            escapedSymbolStr = ""
-            for i in range(symbolStrLen):
-                char = self.randGen.randSelect(symbolsToChoose)
-                if char in escapeSymbols:
-                    escapedChar = "\\" + char
-                    escapedSymbolStr += escapedChar
-                else:
-                    escapedSymbolStr += char                
-                
-                symbolStr += char
-
-            if re.match(escapedSymbolStr, payloadSoFar) is None:
-                badStr = False
-
-        symbolCommandStr = symbolCommandStr.replace("0", symbolStr)
-
-        self.printfCmdCounter = 0
-
-        sedCmd = self.genSymbolVar()
-        symbolCommandStr += '{0} "`{1} <<<"{2}"|'.format(self.genAccessElementStr(evalVar), self.genAccessElementStr(catVar), self.genAccessElementStr(printfCommandStrVar))
-        symbolCommandStr += "sed 's/{0}/\\n/g'".format(escapedSymbolStr)
-        symbolCommandStr += '`"'
 
         self.payload = arrayInstantiationStr + printfInstanstiationStr + symbolCommandStr
 
@@ -453,12 +442,12 @@ class SpecialCharCommand(TokenObfuscator):
         if printfStr:
             if self.printfCmdCounter == 0:
                 self.printfCmdCounter += 1
-                self.cmdOffset = self.randGen.randGenNum(500, 1000)
+                self.cmdOffset = self.randGen.randGenNum(1250, 1750)
                 seporator = ";"
             
             elif self.printfCmdCounter == self.cmdOffset:
                 self.printfCmdCounter = 0
-                seporator = "0"
+                seporator = "\n"
 
             else:
                 self.printfCmdCounter += 1
@@ -543,36 +532,4 @@ class SpecialCharCommand(TokenObfuscator):
                     goodVar = True
 
         return symbolVar
-
-    def genPrintfCommandStr(self, inputCmd):
-        cmdStr = ""        
-        for cmdChar in inputCmd:
-            if self.largeCmd:
-                printfVar = self.randGen.randSelect(self.printfVarsList)
-                self.printfVars[printfVar] = True
-                printfStr = self.genAccessElementStr(printfVar)
-
-            else:
-                printfStr = ""
-                for printfChar in "printf":
-                    printfStr += self.genAccessElementStr(self.randGen.randSelect(self.printfCharVarNames[printfChar]))
-
-            digitsAccess = ""
-            # if char's hex representation only contains alpha chars, 1/2 of the time use that for the printf statement
-            hexCode = str(hex(ord(cmdChar)))[2:]
-            if hexCode.isdigit() and self.randGen.probibility(50):
-                for char in hexCode:
-                    digitsAccess += '"' + self.genAccessElementStr(self.digitVars[int(char)]) + '"'
-
-                cmdStr += r'{0} "\\"{1}"{2}"'.format(printfStr, self.genAccessElementStr(self.xCharVar), digitsAccess)
-
-            else:
-                octCode = str(oct(ord(cmdChar)))[2:]
-                for char in octCode:
-                    digitsAccess += '"' + self.genAccessElementStr(self.digitVars[int(char)]) + '"'
-
-                cmdStr += r'{0} "\\{1}"'.format(printfStr, digitsAccess)
-
-            cmdStr += self.genCommandSeporatorStr(printfStr=True)
-        
-        return cmdStr
+ 
