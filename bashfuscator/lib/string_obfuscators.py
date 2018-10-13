@@ -5,6 +5,7 @@ import math
 import hashlib
 import string
 
+from bashfuscator.common.helpers import escape_quotes
 from bashfuscator.common.objects import Mutator
 
 
@@ -74,7 +75,7 @@ class GlobObfuscator(StringObfuscator):
     def generate(self, sizePref, userCmd, writeDir=None):
         self.writeableDir = (writeDir + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
 
-        self.workingDir = self.writeableDir.replace("'", "'\"'\"'")
+        self.workingDir = escape_quotes(self.writeableDir)
 
         cmdChars = [userCmd[i:i + self.sectionSize] for i in range(0, len(userCmd), self.sectionSize)]
         cmdLen = len(cmdChars)
@@ -85,7 +86,7 @@ class GlobObfuscator(StringObfuscator):
         parts = []
         for i in range(cmdLen):
             ch = cmdChars[i]
-            ch = ch.replace("'", "'\"'\"'")
+            ch = escape_quotes(ch)
             parts.append(
                 "printf -- '" + ch + "' > '" + self.workingDir + "/" +
                 format(i, "0" + str(cmdLogLen) + "b").replace("0", "?").replace("1", "\n") + "';"
@@ -154,7 +155,7 @@ class FolderGlob(GlobObfuscator):
 
         self.setSizes(sizePref, userCmd)
         self.writeableDir = (self.writeDir + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
-        self.workingDir = self.writeableDir.replace("'", "'\"'\"'")
+        self.workingDir = escape_quotes(self.writeableDir)
 
         cmdChunks = [userCmd[i:i + self.sectionSize] for i in range(0, len(userCmd), self.sectionSize)]
         parts = []

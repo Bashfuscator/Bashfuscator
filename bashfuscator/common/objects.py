@@ -3,6 +3,7 @@ Base classes used throughout the framework.
 """
 import re
 
+from bashfuscator.common.helpers import escapeQuotes
 from bashfuscator.common.messages import printError
 from bashfuscator.common.random import RandomGen
 
@@ -91,9 +92,9 @@ class Stub(object):
         if self.escapeQuotes:
             if cmplxCmd:
                 for idx, cmd in enumerate(userCmd):
-                    userCmd[idx] = cmd.replace("'", "'\"'\"'")
+                    userCmd[idx] = escapeQuotes(cmd)
             else:
-                userCmd = userCmd.replace("'", "'\"'\"'")
+                userCmd = escapeQuotes(userCmd)
 
         genStub = self.stub
         for var in re.findall(r"VAR\d+", genStub):
