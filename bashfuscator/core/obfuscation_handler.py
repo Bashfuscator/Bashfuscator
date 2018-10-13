@@ -133,6 +133,9 @@ class ObfuscationHandler(object):
 
             elif mutatorType == "compress":
                 selMutator = self.choosePrefMutator(self.compressors, userMutator=userMutator)
+
+            else:
+                printError("ERROR: {0} isn't a valid mutator type".format(mutatorType))
         else:
             # TODO: handle case when no mutators of chosen type are compatible with user's preferences
             obChoice = self.randGen.randChoice(3)
