@@ -45,7 +45,8 @@ class AnsiCQuote(TokenObfuscator):
             description="ANSI-C quotes a string",
             sizeRating=3,
             author="capnspacehook",
-            credits="DissectMalware, https://twitter.com/DissectMalware/status/1023682809368653826"
+            credits="DissectMalware, https://twitter.com/DissectMalware/status/1023682809368653826",
+            notes="Requires Bash 4.2 or above"
         )
 
         self.SUBSTR_QUOTE_PROB = 33
