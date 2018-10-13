@@ -1,6 +1,7 @@
 """
 Command Obfuscators used by the framework.
 """
+from bashfuscator.common.helpers import strToArrayElements
 from bashfuscator.common.objects import Mutator, Stub
 
 
@@ -69,14 +70,6 @@ class CaseSwap(CommandObfuscator):
                 timeRating=1,
                 escapeQuotes=True,
                 stub='''VAR1='CMD';printf %s "${VAR1~~}"'''
-            ),
-            Stub(
-                name="python swapcase",
-                binariesUsed=["python"],
-                sizeRating=2,
-                timeRating=1,
-                escapeQuotes=True,
-                stub="""python -c 'print('"'''"'CMD'"'''"'.swapcase())'"""
             )
         ]
 
@@ -102,7 +95,7 @@ class Reverse(CommandObfuscator):
 
         self.stubs = [
             Stub(
-                name="bash rev",
+                name="printf rev",
                 binariesUsed=["rev"],
                 sizeRating=1,
                 timeRating=1,
@@ -110,20 +103,12 @@ class Reverse(CommandObfuscator):
                 stub="""printf %s 'CMD'|rev"""
             ),
             Stub(
-                name="perl scalar reverse",
-                binariesUsed=["perl"],
+                name="herestring rev",
+                binariesUsed=["rev"],
                 sizeRating=3,
                 timeRating=1,
                 escapeQuotes=True,
-                stub="""perl -e 'print scalar reverse "CMD"'"""
-            ),
-            Stub(
-                name="python list reverse",
-                binariesUsed=["python"],
-                sizeRating=2,
-                timeRating=1,
-                escapeQuotes=True,
-                stub="""python -c 'print("CMD"[::-1])'"""
+                stub="""rev <<<'CMD'"""
             )
         ]
 
