@@ -61,7 +61,7 @@ class GlobObfuscator(StringObfuscator):
             description=description,
             sizeRating=sizeRating,
             timeRating=timeRating,
-            binariesUsed=["cat", "mkdir", "rm"],
+            binariesUsed=["cat", "mkdir", "rm", "rmdir"],
             fileWrite=True,
             author=author
         )
@@ -74,7 +74,6 @@ class GlobObfuscator(StringObfuscator):
 
     def generate(self, sizePref, userCmd, writeDir=None):
         self.writeableDir = (writeDir + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
-
         self.workingDir = escapeQuotes(self.writeableDir)
 
         cmdChars = [userCmd[i:i + self.sectionSize] for i in range(0, len(userCmd), self.sectionSize)]
@@ -136,6 +135,7 @@ class FileGlob(GlobObfuscator):
 
         self.setSizes(sizePref, userCmd)
         self.generate(sizePref, userCmd, self.writeDir)
+        self.payload += "rmdir '" + self.workingDir + "'"
 
         return self.payload
 
@@ -215,6 +215,7 @@ class ForCode(StringObfuscator):
         indexVar = self.randGen.randGenVar(sizePref)
         obCmd += "for {0} in {1}".format(indexVar, cmdIndexes)
 
+        # randomly choose between the two different for loop syntaxes
         if self.randGen.probibility(50):
             obCmd += ';{{ printf %s "${{{0}[${1}]}}"; }}'.format(charArrayVar, indexVar)
         
