@@ -5,7 +5,7 @@ import math
 import hashlib
 import string
 
-from bashfuscator.common.helpers import escapeQuotes
+from bashfuscator.common.helpers import escapeQuotes, strToArrayElements
 from bashfuscator.common.objects import Mutator
 
 
@@ -197,17 +197,7 @@ class ForCode(StringObfuscator):
 
         cmdIndexes = "".join([str(i) + " " for i in ogCmdIdxes])[:-1]
 
-        # escape special chars
-        specialChars = string.punctuation + " "
-        tempStr = shuffledCmd
-        shuffledCmd = ""
-        for char in tempStr:
-            if char in specialChars:
-                char = "\\" + char
-
-            shuffledCmd += char + " "
-
-        shuffledCmd = shuffledCmd[:-1]
+        shuffledCmd = strToArrayElements(shuffledCmd)
 
         charArrayVar = self.randGen.randGenVar(sizePref)
         obCmd = "{0}=({1});".format(charArrayVar, shuffledCmd)
