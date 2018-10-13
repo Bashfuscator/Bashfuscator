@@ -2,5 +2,5 @@
 Helper functions used throughout the framework
 """
 
-def escape_quotes(inCmd):
+def escapeQuotes(inCmd):
     return inCmd.replace("'", "'\"'\"'")

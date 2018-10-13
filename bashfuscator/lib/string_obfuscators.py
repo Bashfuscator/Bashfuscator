@@ -88,7 +88,7 @@ class GlobObfuscator(StringObfuscator):
             ch = cmdChars[i]
             ch = escapeQuotes(ch)
             parts.append(
-                "printf -- '" + ch + "' > '" + self.workingDir + "/" +
+                "printf %s '" + ch + "' > '" + self.workingDir + "/" +
                 format(i, "0" + str(cmdLogLen) + "b").replace("0", "?").replace("1", "\n") + "';"
             )
         self.randGen.randShuffle(parts)
@@ -170,6 +170,62 @@ class FolderGlob(GlobObfuscator):
         return self.payload
 
 
+class ForCode(StringObfuscator):
+    def __init__(self):
+        super().__init__(
+            name="ForCode",
+            description="Shuffle command and reassemble it in a for loop",
+            sizeRating=2,
+            timeRating=3,
+            author="capnspacehook",
+            credits="danielbohannon, https://github.com/danielbohannon/Invoke-DOSfuscation"
+        )
+
+    def mutate(self, sizePref, timePref, userCmd):
+        self.originalCmd = userCmd
+
+        # get a set of unique chars in original command
+        shuffledCmd = list(set(userCmd))
+        self.randGen.randShuffle(shuffledCmd)
+        shuffledCmd = "".join(shuffledCmd)
+
+        # build a list of the indexes of where each char in the original command
+        # is in the array that holds the individual chars
+        ogCmdIdxes = []
+        for char in userCmd:
+            ogCmdIdxes.append(shuffledCmd.find(char))
+
+        cmdIndexes = "".join([str(i) + " " for i in ogCmdIdxes])[:-1]
+
+        # escape special chars
+        specialChars = string.punctuation + " "
+        tempStr = shuffledCmd
+        shuffledCmd = ""
+        for char in tempStr:
+            if char in specialChars:
+                char = "\\" + char
+
+            shuffledCmd += char + " "
+
+        shuffledCmd = shuffledCmd[:-1]
+
+        charArrayVar = self.randGen.randGenVar(sizePref)
+        obCmd = "{0}=({1});".format(charArrayVar, shuffledCmd)
+
+        indexVar = self.randGen.randGenVar(sizePref)
+        obCmd += "for {0} in {1}".format(indexVar, cmdIndexes)
+
+        if self.randGen.probibility(50):
+            obCmd += ';{{ printf %s "${{{0}[${1}]}}"; }}'.format(charArrayVar, indexVar)
+        
+        else:
+            obCmd += ';do printf %s "${{{0}[${1}]}}";done'.format(charArrayVar, indexVar)
+
+        self.payload = obCmd
+
+        return self.payload
+
+
 class HexHash(StringObfuscator):
     def __init__(self):
         super().__init__(
@@ -196,7 +252,7 @@ class HexHash(StringObfuscator):
                 randomhash = m.digest().hex()
 
             index = randomhash.find(hexchar)
-            obCmd += 'printf "\\x$(printf -- \'' + randomString + "\'|md5sum|cut -b" + str(index + 1) + "-" + str(index + 2) + ')";'
+            obCmd += 'printf "\\x$(printf \'' + randomString + "\'|md5sum|cut -b" + str(index + 1) + "-" + str(index + 2) + ')";'
 
         self.payload = obCmd
 

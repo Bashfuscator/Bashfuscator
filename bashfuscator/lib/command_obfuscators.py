@@ -68,7 +68,7 @@ class CaseSwap(CommandObfuscator):
                 sizeRating=1,
                 timeRating=1,
                 escapeQuotes=True,
-                stub='''VAR1='CMD';printf -- "${VAR1~~}"'''
+                stub='''VAR1='CMD';printf %s "${VAR1~~}"'''
             ),
             Stub(
                 name="python swapcase",
@@ -84,47 +84,6 @@ class CaseSwap(CommandObfuscator):
         self.originalCmd = userCmd
 
         obCmd = self.originalCmd.swapcase()
-        self.payload = self.deobStub.genStub(sizePref, obCmd)
-
-        return self.payload
-
-
-class ForCode(CommandObfuscator):
-    def __init__(self):
-        super().__init__(
-            name="ForCode",
-            description="Shuffle command and reassemble it in a for loop",
-            sizeRating=3,
-            timeRating=2,
-            reversible=False,
-            author="capnspacehook",
-            credits="danielbohannon, https://github.com/danielbohannon/Invoke-DOSfuscation"
-        )
-
-        self.stubs = [
-            Stub(
-                name="python for loop",
-                binariesUsed=["python"],
-                sizeRating=3,
-                timeRating=2,
-                escapeQuotes=True,
-                stub="""python -c 'VAR1="CMD1";print("".join([VAR1[int(VAR2)] for VAR2 in "CMD2".split(",")]))'"""
-            )
-        ]
-
-    def mutate(self, sizePref, timePref, userCmd):
-        self.originalCmd = userCmd
-
-        shuffledCmd = list(set(userCmd))
-        self.randGen.randShuffle(shuffledCmd)
-        shuffledCmd = "".join(shuffledCmd)
-
-        ogCmdIdxes = []
-        for char in userCmd:
-            ogCmdIdxes.append(shuffledCmd.find(char))
-
-        obCmd = [shuffledCmd, "".join([str(i) + "," for i in ogCmdIdxes])[:-1]]
-
         self.payload = self.deobStub.genStub(sizePref, obCmd)
 
         return self.payload
@@ -148,7 +107,7 @@ class Reverse(CommandObfuscator):
                 sizeRating=1,
                 timeRating=1,
                 escapeQuotes=True,
-                stub="""printf "CMD"|rev"""
+                stub="""printf %s 'CMD'|rev"""
             ),
             Stub(
                 name="perl scalar reverse",
