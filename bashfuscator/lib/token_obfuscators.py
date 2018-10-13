@@ -53,7 +53,7 @@ class AnsiCQuote(TokenObfuscator):
     def mutate(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
-        obCmd = "printf -- $'\\"
+        obCmd = "printf %s $'\\"
 
         if sizePref < 2:
             maxChoice = 2
