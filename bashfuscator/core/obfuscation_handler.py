@@ -2,6 +2,7 @@
 Defines ObufscationHandler, which manages the obfuscation process.
 """
 from bashfuscator.common.messages import printError, printWarning
+from bashfuscator.core.mutator_list import commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors
 from bashfuscator.common.random import RandomGen
 
 
@@ -11,57 +12,68 @@ class ObfuscationHandler(object):
     user options and preferences. This class is the heart of the
     framework.
 
-    :param cmdObfuscators: all CommandObfuscators contained by the
-        framework
+    :param cmdObfuscators: CommandObfuscators useable during execution
     :type cmdObfuscators: list of
         :class:`bashfuscator.lib.command_mutators.CommandObfuscator`
-    :param strObfuscators: all StringObfuscators contained by the
-        framework
+    :param strObfuscators: StringObfuscators useable during execution
     :type strObfuscators: list of
         :class:`bashfuscator.lib.string_mutators.StringObfuscator`
-    :param tokObfuscators: all TokenObfuscators contained by the
-        framework
+    :param tokObfuscators: TokenObfuscators useable during execution
     :type tokObfuscators: list of
         :class:`bashfuscator.lib.token_mutators.TokenObfuscator`
-    :param encoders: all Encoders contained by the
-        framework
+    :param encoders: Encoders useable during execution
     :type encoders: list of
         :class:`bashfuscator.lib.encoders.Encoder`
-    :param compressors: all Compressors contained by the
-        framework
+    :param compressors: Compressors useable during execution
     :type compressors: list of
         :class:`bashfuscator.lib.compressors.Compressor`
-    :param args: arguments specified on the command line
+    :param args: arguments specified on the command line. If this
+        parameter is not supplied, default values will be set for
+        ObfuscationHandler's attributes.
     :type args: arguments parsed from
-        :py:meth:`argparse.ArgumentParser.parse_args`
+        :py:meth:`argparse.ArgumentParser.parse_args` in
+        :mod:`bashfuscator.bin.bashfuscator`
+
+    .. note::
+        If not set, the cmdObfuscators, cmdObfuscators, tokObfuscators,
+        encoders, and compressors arguments will default to all of the
+        respective Mutator Types contained by the framework.
     """
 
-    def __init__(self, cmdObfuscators, strObfuscators, tokObfuscators, encoders, compressors, args):
+    def __init__(self, cmdObfuscators=commandObfuscators, strObfuscators=stringObfuscators, tokObfuscators=tokenObfuscators, encoders=encoders, compressors=compressors, args=None):
         self.cmdObfuscators = cmdObfuscators
         self.strObfuscators = strObfuscators
         self.tokObfuscators = tokObfuscators
         self.encoders = encoders
         self.compressors = compressors
-        
-        self.layers = args.layers
-        self.sizePref = args.payload_size
-        self.timePref = args.execution_time
-        self.binaryPref = args.binaryPref
-        self.filePref = args.no_file_write
-        self.writeDir = args.write_dir
-        self.originalCmd = args.command
-        self.prevCmdOb = None
-        self.randGen = RandomGen()
 
-        if args.choose_mutators:
-            self.userMutators = args.choose_mutators
-        elif args.choose_all:
-            self.userMutators = args.choose_all
+        if args:
+            self.layers = args.layers
+            self.sizePref = args.payload_size
+            self.timePref = args.execution_time
+            self.binaryPref = args.binaryPref
+            self.filePref = args.no_file_write
+            self.writeDir = args.write_dir
+            self.originalCmd = args.command
+            self.prevCmdOb = None
+            self.randGen = RandomGen()
+
+            if args.choose_mutators:
+                self.userMutators = args.choose_mutators
+            elif args.choose_all:
+                self.userMutators = args.choose_all
+            else:
+                self.userMutators = None
+
+            if args.full_ascii_strings:
+                self.randGen.setFullAsciiStrings()
+
         else:
-            self.userMutators = None
-
-        if args.full_ascii_strings:
-            self.randGen.setFullAsciiStrings()
+            self.sizePref = 2
+            self.timePref = 2
+            self.binaryPref = None
+            self.filePref = False
+            self.writeDir = "/tmp/"
 
     def generatePayload(self):
         """
@@ -92,13 +104,19 @@ class ObfuscationHandler(object):
 
         return payload
 
-    def genObfuscationLayer(self, payload, userMutator=None, userStub=None):
+    def genObfuscationLayer(self, payload, userMutator=None, userStub=None, sizePref=None, timePref=None, binaryPref=None, filePref=None, writeDir=None):
         """
         Generate one layer of obfuscation. If called with the
         userMutator or userStub parameters, the Mutator and/or Stub
         specified by userMutator and/or userStub will be used to mutate
         the payload. If those parameters are not used, a Mutator and
         Stub (if appropriate) will be chosen automatically.
+
+        .. note::
+            If not set, the sizePref, timePref, binaryPref, filePref, 
+            and writeDir parameters will be set to the coresponding 
+            attributes of the ObfuscationHandler object being called 
+            from.
 
         :param payload: input command(s) to obfuscate
         :type payload: str
@@ -108,25 +126,45 @@ class ObfuscationHandler(object):
         :param userStub: the `longName` attribute of a
             :class:`bashfuscator.common.objects.Stub`
         :type userStub: lowercase str
+        :param sizePref: payload size user preference
+        :type sizePref: int
+        :param timePref: execution time user preference
+        :type timePref: int 
+        :param binaryPref: list of binaries that the chosen Mutator
+            should or should not use
+        :type binaryPref: tuple containing a list of strs, and a bool
+        :param filePref: file write user preference
+        :type filePref: bool
         :returns: a str containing the 'payload' argument obfuscated by
             a single Mutator
         """
+        if not sizePref:
+            sizePref = self.sizePref
+        if not timePref:
+            timePref = self.timePref
+        if not binaryPref:
+            binaryPref = self.binaryPref
+        if not filePref:
+            filePref = self.filePref
+        if not writeDir:
+            writeDir = self.writeDir
+
         selMutator = None
 
         if userMutator is not None:
             mutatorType = userMutator.split("/")[0]
 
             if mutatorType == "command":
-                selMutator = self.choosePrefMutator(self.cmdObfuscators, self.sizePref, self.timePref, 
-                    self.binaryPref, self.filePref, self.prevCmdOb, userMutator, userStub)
+                selMutator = self.choosePrefMutator(self.cmdObfuscators, sizePref, timePref, 
+                    binaryPref, filePref, self.prevCmdOb, userMutator, userStub)
                 self.prevCmdOb = selMutator
 
             elif mutatorType == "string":
-                selMutator = self.choosePrefMutator(self.strObfuscators, self.sizePref, self.timePref, 
-                    self.binaryPref, self.filePref, userMutator=userMutator)
-                    
+                selMutator = self.choosePrefMutator(self.strObfuscators, sizePref, timePref, 
+                    binaryPref, filePref, userMutator=userMutator)
+
             elif mutatorType == "token":
-                selMutator = self.choosePrefMutator(self.tokObfuscators, self.sizePref, userMutator=userMutator)
+                selMutator = self.choosePrefMutator(self.tokObfuscators, sizePref, userMutator=userMutator)
 
             elif mutatorType == "encode":
                 selMutator = self.choosePrefMutator(self.encoders, userMutator=userMutator)
@@ -141,20 +179,20 @@ class ObfuscationHandler(object):
             obChoice = self.randGen.randChoice(3)
 
             if obChoice == 0:
-                selMutator = self.choosePrefMutator(self.cmdObfuscators, self.sizePref, self.timePref, 
-                    self.binaryPref, self.filePref, self.prevCmdOb)
+                selMutator = self.choosePrefMutator(self.cmdObfuscators, sizePref, timePref, 
+                    binaryPref, filePref, self.prevCmdOb)
                 self.prevCmdOb = selMutator
 
             elif obChoice == 1:
-                selMutator = self.choosePrefMutator(self.strObfuscators, self.sizePref, self.timePref, 
-                    self.binaryPref, self.filePref)
+                selMutator = self.choosePrefMutator(self.strObfuscators, sizePref, timePref, 
+                    binaryPref, filePref)
 
             else:
-                selMutator = self.choosePrefMutator(self.tokObfuscators, self.sizePref)
-           
-        selMutator.writeDir = self.writeDir
-        payload = selMutator.mutate(self.sizePref, self.timePref, payload)
-        
+                selMutator = self.choosePrefMutator(self.tokObfuscators, sizePref)
+
+        selMutator.writeDir = writeDir
+        payload = selMutator.mutate(sizePref, timePref, payload)
+
         self.randGen.forgetUniqueStrs()
         payload = self.evalWrap(payload, selMutator)
 
