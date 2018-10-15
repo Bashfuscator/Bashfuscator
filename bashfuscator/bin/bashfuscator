@@ -184,7 +184,7 @@ if __name__ == "__main__":
     if args.write_dir[-1:] != "/":
         args.write_dir += "/"
 
-    obHandler = ObfuscationHandler(commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors, args)
+    obHandler = ObfuscationHandler(args=args)
     payload = obHandler.generatePayload()
 
     if args.outfile:
