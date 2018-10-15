@@ -54,6 +54,50 @@ class StringObfuscator(Mutator):
         self.payload = ""
 
 
+class ArrayExpand(StringObfuscator):
+    def __init__(self):
+        super().__init__(
+            name="Array Expand",
+            description="Uses parameter expansions to build the original command",
+            sizeRating=3,
+            timeRating=3,
+            author="capnspachook",
+            credits="DisectMalware, https://twitter.com/DissectMalware/status/1024075907013795840"
+        )
+
+    def mutate(self, sizePref, timePref, userCmd):
+        self.originalCmd = userCmd
+
+        alphabetArray = self.randGen.randGenVar(sizePref)
+        digitArray = self.randGen.randGenVar(sizePref)
+        arrayInstantiationStatements = ["{0}=({{A..z}});".format(alphabetArray), "{0}=({{0..9}});".format(digitArray)]
+        self.randGen.randShuffle(arrayInstantiationStatements)
+
+        obCmd = "".join(arrayInstantiationStatements)
+        obCmd += 'printf %s "'
+
+        for char in userCmd:
+            if char in string.ascii_letters:
+                if char in string.ascii_lowercase:
+                    index = (ord(char) - 97) + 32
+                elif char in string.ascii_uppercase:
+                    index = ord(char) - 65
+
+                obCmd += "${{{0}[@]:{1}:1}}".format(alphabetArray, index)
+            
+            elif char in string.digits:
+                index = 
+
+            else:
+                obCmd += char
+
+        obCmd += '"'
+
+        self.payload = obCmd
+
+        return self.payload
+
+
 class GlobObfuscator(StringObfuscator):
     def __init__(self, name, description, sizeRating, timeRating, author):
         super().__init__(
