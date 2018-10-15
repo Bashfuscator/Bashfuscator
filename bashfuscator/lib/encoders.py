@@ -1,6 +1,7 @@
 """
 Encoders used by the framework.
 """
+from base64 import b64encode
 from urllib.parse import quote_plus
 
 from bashfuscator.common.objects import Mutator
@@ -54,8 +55,9 @@ class Base64(Encoder):
     def mutate(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
-        self.payload = userCmd.encode("base64").replace("\n", "")
-        self.payload = '''eval "$(printf {0}|base64 -d)"'''.format(self.payload)
+        b64EncodedBlob = b64encode(userCmd.encode("utf-8"))
+        b64EncodedBlob = b64EncodedBlob.decode("utf-8").replace("\n", "")
+        self.payload = "printf {0}|base64 -d".format(b64EncodedBlob)
 
         return self.payload
 
