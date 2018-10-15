@@ -11,39 +11,8 @@ import pyperclip
 
 from bashfuscator.common.colors import bold
 from bashfuscator.common.messages import activateQuietMode, printInfo
+from bashfuscator.core.mutator_list import commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors
 from bashfuscator.core.obfuscation_handler import ObfuscationHandler
-from bashfuscator.lib.command_obfuscators import *
-from bashfuscator.lib.string_obfuscators import *
-from bashfuscator.lib.token_obfuscators import *
-from bashfuscator.lib.encoders import *
-from bashfuscator.lib.compressors import *
-
-
-commandObfuscators = [
-    CaseSwap(),
-    Reverse(),
-]
-
-stringObfuscators = [
-    FileGlob(),
-    FolderGlob(),
-    ForCode(),
-    HexHash(),
-]
-
-tokenObfuscators = [
-    AnsiCQuote(),
-]
-
-encoders = [
-    Base64(),
-    UrlEncode(),
-]
-
-compressors = [
-    Bzip2(),
-    Gzip(),
-]
 
 
 def check_positive(value):
