@@ -87,19 +87,19 @@ class AnsiCQuote(TokenObfuscator):
         return self.payload
 
 
-class SpecialCharCommand(TokenObfuscator):
+class SpecialCharOnly(TokenObfuscator):
     def __init__(self):
         super().__init__(
-            name="Special Char Command",
+            name="Special Char Only",
             description="Converts commands to only use special characters",
-            sizeRating=2,
+            sizeRating=4,
             author="capnspacehook",
             credits=["danielbohannon, https://github.com/danielbohannon/Invoke-Obfuscation",
                 "Digital Trauma, https://codegolf.stackexchange.com/questions/22533/weirdest-obfuscated-hello-world"],
             evalWrap=False
         )
 
-    def obfuscate(self, sizePref, userCmd):
+    def mutate(self, sizePref, timePref, userCmd):
         self.originalCmd = userCmd
 
         self.indexCounter = 0
