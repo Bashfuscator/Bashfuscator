@@ -94,7 +94,8 @@ class SpecialCharCommand(TokenObfuscator):
             sizeRating=2,
             author="capnspacehook",
             credits=["danielbohannon, https://github.com/danielbohannon/Invoke-Obfuscation",
-                "Digital Trauma, https://codegolf.stackexchange.com/questions/22533/weirdest-obfuscated-hello-world"]
+                "Digital Trauma, https://codegolf.stackexchange.com/questions/22533/weirdest-obfuscated-hello-world"],
+            evalWrap=False
         )
 
     def obfuscate(self, sizePref, userCmd):
@@ -378,7 +379,7 @@ class SpecialCharCommand(TokenObfuscator):
 
 
         self.printfCmdCounter = 0
-        symbolCommandStr = ""
+        symbolCommandStr = '{0} "$('.format(self.genAccessElementStr(evalVar))
         for cmdChar in userCmd:
             if self.largeCmd:
                 printfVar = self.randGen.randSelect(printfVarsList)
@@ -411,7 +412,7 @@ class SpecialCharCommand(TokenObfuscator):
         if self.randGen.probibility(50):
             symbolCommandStr = symbolCommandStr[:-1]
 
-        #symbolCommandStr += '`'
+        symbolCommandStr += ')"'
 
         # declare and assign the printf variables that were randomly selected to be used
         if self.largeCmd:
