@@ -25,6 +25,7 @@ commandObfuscators = [
 ]
 
 stringObfuscators = [
+    ArrayExpand(),
     FileGlob(),
     FolderGlob(),
     ForCode(),

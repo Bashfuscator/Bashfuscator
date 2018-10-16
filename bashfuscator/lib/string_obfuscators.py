@@ -5,7 +5,7 @@ import math
 import hashlib
 import string
 
-from bashfuscator.common.helpers import escapeQuotes, strToArrayElements
+from bashfuscator.common.helpers import escapeQuotes, getArrayIndexSyntax, strToArrayElements
 from bashfuscator.common.objects import Mutator
 
 
@@ -83,10 +83,10 @@ class ArrayExpand(StringObfuscator):
                 elif char in string.ascii_uppercase:
                     index = ord(char) - 65
 
-                obCmd += "${{{0}[@]:{1}:1}}".format(alphabetArray, index)
+                obCmd += getArrayIndexSyntax(alphabetArray, 58, index, 1)
             
             elif char in string.digits:
-                index = 
+                index = getArrayIndexSyntax(digitArray, 10, int(char), 1)
 
             else:
                 obCmd += char
