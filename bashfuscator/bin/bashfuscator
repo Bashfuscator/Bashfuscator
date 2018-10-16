@@ -78,7 +78,14 @@ def listMutatorType(mutators):
         if mutator.mutatorType != "token": print("Time Rating: {0}".format(mutator.timeRating))
         if mutator.notes is not None: print("Notes: {0}".format(mutator.notes))
         if mutator.author is not None: print("Author: {0}".format(mutator.author))
-        if mutator.credits is not None: print("Credits: {0}".format(mutator.credits))
+        if mutator.credits is not None: 
+            print("Credits: ", end="")
+
+            for idx, credit in enumerate(mutator.credits):
+                if idx == 0:
+                    print(credit)
+                else:
+                    print(" "*9 + credit)
 
         if mutator.mutatorType == "command":
             print("\nStubs:")
@@ -215,6 +222,6 @@ if __name__ == "__main__":
             stdout, __ = proc.communicate()
             print(stdout)
         else:
-            proc = Popen(payload, executable="/bin/bash", stdout=PIPE, stderr=STDOUT, shell=True, universal_newlines=True)
+            proc = Popen(payload, executable="bash", stdout=PIPE, stderr=STDOUT, shell=True, universal_newlines=True)
             stdout, __ = proc.communicate()
             print(stdout)  

@@ -213,7 +213,7 @@ class ObfuscationHandler(object):
         :type selMutator: :class:`bashfuscator.common.objects.Mutator`
         :returns: a str containing the wrapped payload, if appropriate
         """
-        if selMutator.longName != "encode/urlencode":
+        if selMutator.evalWrap:
             if self.randGen.probibility(50):
                 wrappedPayload = '''eval "$({0})"'''.format(payload)
             else:
