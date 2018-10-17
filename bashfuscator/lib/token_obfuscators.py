@@ -34,12 +34,13 @@ class TokenObfuscator(Mutator):
     :type credits: str
     """
 
-    def __init__(self, name, description, sizeRating, fileWrite=False, notes=None, author=None, credits=None, evalWrap=True):
+    def __init__(self, name, description, sizeRating, timeRating, binariesUsed=[], fileWrite=False, notes=None, author=None, credits=None, evalWrap=True):
         super().__init__(name, "token", description, notes, author, credits, evalWrap)
 
         self.sizeRating = sizeRating
+        self.timeRating = timeRating
         self.fileWrite = fileWrite
-        self.binariesUsed = []
+        self.binariesUsed = binariesUsed
         self.originalCmd = ""
         self.payload = ""
 
@@ -50,6 +51,7 @@ class AnsiCQuote(TokenObfuscator):
             name="ANSI-C Quote",
             description="ANSI-C quotes a string",
             sizeRating=3,
+            timeRating=1,
             author="capnspacehook",
             credits=["DissectMalware, https://twitter.com/DissectMalware/status/1023682809368653826"],
             notes="Requires Bash 4.2 or above"
@@ -98,6 +100,8 @@ class SpecialCharOnly(TokenObfuscator):
             name="Special Char Only",
             description="Converts commands to only use special characters",
             sizeRating=4,
+            timeRating=2,
+            binariesUsed=["cat"],
             author="capnspacehook",
             credits=["danielbohannon, https://github.com/danielbohannon/Invoke-Obfuscation",
                 "Digital Trauma, https://codegolf.stackexchange.com/questions/22533/weirdest-obfuscated-hello-world"],

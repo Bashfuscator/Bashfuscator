@@ -75,7 +75,7 @@ def listMutatorType(mutators):
         print(bold("\nName: {0}".format(mutator.name)))
         print("Description: {0}".format(mutator.description))
         print("Size Rating: {0}".format(mutator.sizeRating))
-        if mutator.mutatorType != "token": print("Time Rating: {0}".format(mutator.timeRating))
+        print("Time Rating: {0}".format(mutator.timeRating))
         if mutator.mutatorType != "command":
             if mutator.binariesUsed:
                     binariesUsedString = "".join(b + ", " for b in mutator.binariesUsed)[:-2]

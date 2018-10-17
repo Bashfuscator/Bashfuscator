@@ -151,7 +151,7 @@ class ObfuscationHandler(object):
 
         selMutator = None
 
-        if userMutator is not None:
+        if userMutator:
             mutatorType = userMutator.split("/")[0]
 
             if mutatorType == "command":
@@ -160,17 +160,16 @@ class ObfuscationHandler(object):
                 self.prevCmdOb = selMutator
 
             elif mutatorType == "string":
-                selMutator = self.choosePrefMutator(self.strObfuscators, sizePref, timePref, 
-                    binaryPref, filePref, userMutator=userMutator)
+                selMutator = self.choosePrefMutator(self.strObfuscators, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
 
             elif mutatorType == "token":
-                selMutator = self.choosePrefMutator(self.tokObfuscators, sizePref, userMutator=userMutator)
+                selMutator = self.choosePrefMutator(self.tokObfuscators, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
 
             elif mutatorType == "encode":
-                selMutator = self.choosePrefMutator(self.encoders, userMutator=userMutator)
+                selMutator = self.choosePrefMutator(self.encoders, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
 
             elif mutatorType == "compress":
-                selMutator = self.choosePrefMutator(self.compressors, userMutator=userMutator)
+                selMutator = self.choosePrefMutator(self.compressors, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
 
             else:
                 printError("ERROR: {0} isn't a valid mutator type".format(mutatorType))
@@ -188,7 +187,7 @@ class ObfuscationHandler(object):
                     binaryPref, filePref)
 
             else:
-                selMutator = self.choosePrefMutator(self.tokObfuscators, sizePref)
+                selMutator = self.choosePrefMutator(self.tokObfuscators, sizePref, timePref)
 
         selMutator.writeDir = writeDir
         payload = selMutator.mutate(sizePref, timePref, payload)
@@ -257,8 +256,8 @@ class ObfuscationHandler(object):
         """
         selMutator = None
 
-        if userMutator is not None:
-            if binaryPref is not None:
+        if userMutator:
+            if binaryPref:
                 binList = binaryPref[0]
                 includeBinary = binaryPref[1]
 
@@ -267,7 +266,7 @@ class ObfuscationHandler(object):
                     if filePref and mutator.fileWrite == filePref:
                         printWarning("'{0}' mutator preforms file writes".format(userMutator))
 
-                    elif binaryPref is not None and mutator.mutatorType == "string":
+                    elif binaryPref:
                         for binary in mutator.binariesUsed:
                             if (binary in binList) != includeBinary:
                                 printWarning("'{0}' mutator contains an unwanted binary".format(userMutator))
@@ -340,7 +339,7 @@ class ObfuscationHandler(object):
 
             # TODO: decide if TokenObfuscators should be allowed if the user chooses to only use certain binaries,
             # TokenObfuscators don't use any binaries 
-            elif mutator.mutatorType == "string" and binaryPref:
+            elif binaryPref:
                 badBinary = False
                 for binary in mutator.binariesUsed:
                     if (binary in binList) != includeBinary:
@@ -450,10 +449,8 @@ class ObfuscationHandler(object):
         :type timePref: int
         :returns: a list of Mutators or Stubs
         """
-        minSize, maxSize = self.getPrefRange(sizePref)
-        
-        if timePref is not None:
-            minTime, maxTime = self.getPrefRange(timePref)
+        minSize, maxSize = self.getPrefRange(sizePref)        
+        minTime, maxTime = self.getPrefRange(timePref)
 
         foundItem = False
         prefItems = []
