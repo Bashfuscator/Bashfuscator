@@ -52,9 +52,9 @@ class AnsiCQuote(TokenObfuscator):
             description="ANSI-C quotes a string",
             sizeRating=3,
             timeRating=1,
+            notes="Requires Bash 4.2 or above",
             author="capnspacehook",
-            credits=["DissectMalware, https://twitter.com/DissectMalware/status/1023682809368653826"],
-            notes="Requires Bash 4.2 or above"
+            credits=["DissectMalware, https://twitter.com/DissectMalware/status/1023682809368653826"]
         )
 
         self.SUBSTR_QUOTE_PROB = 33
@@ -102,6 +102,7 @@ class SpecialCharOnly(TokenObfuscator):
             sizeRating=4,
             timeRating=2,
             binariesUsed=["cat"],
+            notes="Will break when run in Bash's debug mode. Also compresses extremely well",
             author="capnspacehook",
             credits=["danielbohannon, https://github.com/danielbohannon/Invoke-Obfuscation",
                 "Digital Trauma, https://codegolf.stackexchange.com/questions/22533/weirdest-obfuscated-hello-world"],
