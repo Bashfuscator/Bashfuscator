@@ -80,8 +80,6 @@ ratings, descriptions, and more.
             Digital Trauma, https://codegolf.stackexchange.com/questions/22533/weirdest-obfuscated-hello-world
     [snip]
 
-
-
 When you're ready to start obfuscating, use the `-c` or `-f` options to specify a one-liner or script file to 
 obfuscate, and Bashfuscator will take care of the rest, randomly choosing Mutators to obfuscate the input with.
 Bashfuscator only requires one of those two options, although many more are available to fine-tune the obfuscation.
@@ -139,19 +137,6 @@ is 2 layers. This is useful to control the amount of obfuscation applied to the 
 The `--full-ascii-strings` option is an interesting one. When used, the full ASCII character set is used when randomly
 generating strings to be used within the final payload. This means non-printable characters can possibly exist within
 the obfuscated payload, potentially (hopefully) messing with tools and regex used to examine your payload.
-
-.. code-block:: bash
-    $ bashfuscator -c "cat /etc/passwd" --choose-mutators string/file_glob --full-ascii-strings -s3
-    [+] Payload:
-
-    eval "$(mkdir -p '/tmp/0fmdLZ}Bw7V	iY:_V';printf %s ' /e' > '/tmp/0fmdLZ}Bw7V	iY:_V/??
-    ';printf %s 'tc/' > '/tmp/0fmdLZ}Bw7V	iY:_V/?
-    ?';printf %s 'pas' > '/tmp/0fmdLZ}Bw7V	iY:_V/?
-
-    ';printf %s 'cat' > '/tmp/0fmdLZ}Bw7V	iY:_V/???';printf %s 'swd' > '/tmp/0fmdLZ}Bw7V	iY:_V/
-    ??';cat '/tmp/0fmdLZ}Bw7V	iY:_V'/???;rm '/tmp/0fmdLZ}Bw7V	iY:_V'/???;rmdir '/tmp/0fmdLZ}Bw7V	iY:_V')"
-
-    [+] Payload size: 437 characters
 
 You can further fine-tune the obfuscation process by using the `--choose-mutators` option. This option allows
 you to manually select which Mutators Bashfuscator will use, and in what order. You can create some pretty creative 
