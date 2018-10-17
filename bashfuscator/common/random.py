@@ -83,7 +83,7 @@ class RandomGen(object):
         :param seq: sequence to randomly select from
         :type seq: list
         :returns: element from seq if seq is a list, a key if seq
-        is a dict, or None if seq is empty
+            is a dict, or None if seq is empty
         """
         if isinstance(seq, dict):
             selection = RandomGen.randGen.choice(list(seq.keys()))
