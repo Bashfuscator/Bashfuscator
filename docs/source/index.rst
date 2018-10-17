@@ -11,7 +11,8 @@ Contents:
 .. toctree::
 
    Installation
-   Quick Start
+   Introduction
+   Usage
    Module Documentation/index
 
 

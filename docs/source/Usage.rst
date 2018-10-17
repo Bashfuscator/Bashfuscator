@@ -1,33 +1,5 @@
-Quick Start
-===========
-
-Introduction
-------------
-
-Bashfuscator is built to be a modular, flexible Bash obfuscation framework. It achieves this by organizing
-different obfuscation techniques and methods into modules within the framework, called Mutators. 
-Different obfuscation 'recipes' can be created by stacking different Mutators.
-
-There are 5 types of Mutators:
-
-#. Command Obfuscators
-    * Simple obfuscators that leverage behavior of commands or binaries present in a Linux environment
-    * Obfuscates entire input in one chunk
-
-#. String Obfuscators
-    * Obfuscators that use more advanced features/binaries
-    * Breaks input into chunks, obfuscates those chunks, then builds up input by concatenating standard output of all of the different obfuscated chunks
-
-#. Token Obfuscators
-    * Leverages Bash functionality or behavior to obfuscate commands
-    * Typically don't use any external binaries
-    * Obfuscates entire input in one chunk
-
-#. Encoders
-    * Encodes the entire input and decodes it using a stub.
-
-#. Compressors
-    * Compresses the input and decompresses it using a stub, using various compressors typically available in a Linux environment
+Usage
+=====
 
 Basic CLI Usage
 ---------------
@@ -129,7 +101,8 @@ an output file to write to, the output file will be run after the payload is wri
 Advanced CLI Usage
 ------------------
 
-All options are tab-completable! This makes CLI usage sooo much easier.
+.. note::
+    All options are tab-completable! This makes CLI usage sooo much easier, especially when using long options.
 
 The `--layers` option will control the amount of obfuscation layers Bashfuscator will apply to the input. The default
 is 2 layers. This is useful to control the amount of obfuscation applied to the input.
