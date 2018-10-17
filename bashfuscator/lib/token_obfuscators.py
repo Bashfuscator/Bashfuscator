@@ -23,6 +23,9 @@ class TokenObfuscator(Mutator):
     :param sizeRating: rating from 1 to 5 of how much the 
         TokenObfuscator increases the size of the overall payload
     :type sizeRating: int
+    :param fileWrite: True if the Token Obfuscator requires 
+        creating/writing to files, False otherwise
+    :type fileWrite: bool
     :param notes: see :class:`bashfuscator.common.objects.Mutator`
     :type notes: str
     :param author: see :class:`bashfuscator.common.objects.Mutator`
@@ -31,10 +34,12 @@ class TokenObfuscator(Mutator):
     :type credits: str
     """
 
-    def __init__(self, name, description, sizeRating, notes=None, author=None, credits=None, evalWrap=True):
+    def __init__(self, name, description, sizeRating, fileWrite=False, notes=None, author=None, credits=None, evalWrap=True):
         super().__init__(name, "token", description, notes, author, credits, evalWrap)
 
         self.sizeRating = sizeRating
+        self.fileWrite = fileWrite
+        self.binariesUsed = []
         self.originalCmd = ""
         self.payload = ""
 
@@ -46,7 +51,7 @@ class AnsiCQuote(TokenObfuscator):
             description="ANSI-C quotes a string",
             sizeRating=3,
             author="capnspacehook",
-            credits="DissectMalware, https://twitter.com/DissectMalware/status/1023682809368653826",
+            credits=["DissectMalware, https://twitter.com/DissectMalware/status/1023682809368653826"],
             notes="Requires Bash 4.2 or above"
         )
 

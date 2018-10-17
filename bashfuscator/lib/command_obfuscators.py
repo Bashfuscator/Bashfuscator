@@ -64,7 +64,7 @@ class CaseSwap(CommandObfuscator):
         self.stubs = [
             Stub(
                 name="bash case swap expansion",
-                binariesUsed=["bash"],
+                binariesUsed=[],
                 sizeRating=1,
                 timeRating=1,
                 escapeQuotes=True,

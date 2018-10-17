@@ -177,7 +177,8 @@ class ForCode(StringObfuscator):
             sizeRating=2,
             timeRating=3,
             author="capnspacehook",
-            credits="danielbohannon, https://github.com/danielbohannon/Invoke-DOSfuscation"
+            credits=["danielbohannon, https://github.com/danielbohannon/Invoke-DOSfuscation",
+                "DisectMalare, https://twitter.com/DissectMalware/status/1029629127727431680"]
         )
 
     def mutate(self, sizePref, timePref, userCmd):

@@ -24,6 +24,11 @@ class Encoder(Mutator):
         Encoder increases the execution time of the overall
         payload
     :type timeRating: int
+    :param binariesUsed: list of all the binaries the Encoder uses
+    :type binariesUsed: list of strs
+    :param fileWrite: True if the Encoder requires 
+        creating/writing to files, False otherwise
+    :type fileWrite: bool
     :param notes: see :class:`bashfuscator.common.objects.Mutator`
     :type notes: str
     :param author: see :class:`bashfuscator.common.objects.Mutator`
@@ -32,11 +37,13 @@ class Encoder(Mutator):
     :type credits: str
     """
 
-    def __init__(self, name, description, sizeRating, timeRating, notes=None, author=None, credits=None, evalWrap=True):
+    def __init__(self, name, description, sizeRating, timeRating, binariesUsed=[], fileWrite=False, notes=None, author=None, credits=None, evalWrap=True):
         super().__init__(name, "encode", description, notes, author, credits, evalWrap)
 
         self.sizeRating = sizeRating
         self.timeRating = timeRating
+        self.binariesUsed = binariesUsed
+        self.fileWrite = fileWrite
         self.originalCmd = ""
         self.payload = ""
 
@@ -48,6 +55,7 @@ class Base64(Encoder):
             description="Base64 encode command",
             sizeRating=2,
             timeRating=1,
+            binariesUsed=["base64"],
             author="capnspacehook"
         )
 
