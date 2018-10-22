@@ -46,8 +46,6 @@ class CommandObfuscator(Mutator):
         self.fileWrite = fileWrite
         self.stubs = []
         self.deobStub = None
-        self.originalCmd = ""
-        self.payload = ""
 
 
 class CaseSwap(CommandObfuscator):

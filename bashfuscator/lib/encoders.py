@@ -44,8 +44,6 @@ class Encoder(Mutator):
         self.timeRating = timeRating
         self.binariesUsed = binariesUsed
         self.fileWrite = fileWrite
-        self.originalCmd = ""
-        self.payload = ""
 
 
 class Base64(Encoder):
@@ -60,13 +58,12 @@ class Base64(Encoder):
         )
 
     def mutate(self, sizePref, timePref, userCmd):
-        self.originalCmd = userCmd
 
         b64EncodedBlob = b64encode(userCmd.encode("utf-8"))
         b64EncodedBlob = b64EncodedBlob.decode("utf-8").replace("\n", "")
-        self.payload = "printf {0}|base64 -d".format(b64EncodedBlob)
+        self.mangler.addPayloadLine("* *:printf:^ ^{0}? ?|* *:base64:^ ^-d* *".format(b64EncodedBlob))
 
-        return self.payload
+        return self.mangler.getFinalPayload()
 
 
 class UrlEncode(Encoder):

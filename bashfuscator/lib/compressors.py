@@ -46,8 +46,6 @@ class Compressor(Mutator):
         self.timeRating = timeRating
         self.binariesUsed = binariesUsed
         self.fileWrite = fileWrite
-        self.originalCmd = ""
-        self.payload = ""
 
 
 class Bzip2(Compressor):

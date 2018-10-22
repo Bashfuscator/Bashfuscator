@@ -41,8 +41,6 @@ class TokenObfuscator(Mutator):
         self.timeRating = timeRating
         self.fileWrite = fileWrite
         self.binariesUsed = binariesUsed
-        self.originalCmd = ""
-        self.payload = ""
 
 
 class AnsiCQuote(TokenObfuscator):

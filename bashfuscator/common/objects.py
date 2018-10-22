@@ -6,6 +6,7 @@ import re
 from bashfuscator.common.helpers import escapeQuotes
 from bashfuscator.common.messages import printError
 from bashfuscator.common.random import RandomGen
+from bashfuscator.core.mangler import Mangler
 
 
 class Mutator(object):
@@ -42,7 +43,12 @@ class Mutator(object):
         self.author = author
         self.credits = credits
         self.evalWrap = evalWrap
+
+        self._originalCmd = ""
+        self._obfuscatedCmd = ""
+
         self.randGen = RandomGen()
+        self.mangler = Mangler()
 
 
 class Stub(object):

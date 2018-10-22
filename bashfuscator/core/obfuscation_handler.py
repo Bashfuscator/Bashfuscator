@@ -4,6 +4,7 @@ Defines ObufscationHandler, which manages the obfuscation process.
 from bashfuscator.common.messages import printError, printWarning
 from bashfuscator.core.mutator_list import commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors
 from bashfuscator.common.random import RandomGen
+from bashfuscator.core.mangler import Mangler
 
 
 class ObfuscationHandler(object):
@@ -57,6 +58,7 @@ class ObfuscationHandler(object):
             self.originalCmd = args.command
             self.prevCmdOb = None
             self.randGen = RandomGen()
+            self.mangler = Mangler()
 
             if args.choose_mutators:
                 self.userMutators = args.choose_mutators
@@ -190,7 +192,9 @@ class ObfuscationHandler(object):
                 selMutator = self.choosePrefMutator(self.tokObfuscators, sizePref, timePref)
 
         selMutator.writeDir = writeDir
+        selMutator._originalCmd = payload
         payload = selMutator.mutate(sizePref, timePref, payload)
+        selMutator._obfuscatedCmd = payload
 
         self.randGen.forgetUniqueStrs()
         payload = self.evalWrap(payload, selMutator)
@@ -214,12 +218,12 @@ class ObfuscationHandler(object):
         """
         if selMutator.evalWrap:
             if self.randGen.probibility(50):
-                wrappedPayload = '''eval "$({0})"'''.format(payload)
+                wrappedPayload = self.mangler.mangleLine('* *:eval:^ ^"? ?$(? ?{0}? ?)? ?"* *'.format(payload))
             else:
-                wrappedPayload = '''printf %s "$({0})"|bash'''.format(payload)
+                wrappedPayload = self.mangler.mangleLine('* *:printf:^ ^%s^ ^"? ?$(? ?{0}? ?)? ?"* *|* *bash* *'.format(payload))
         else:
             wrappedPayload = payload
-        
+
         return wrappedPayload
 
     def choosePrefMutator(self, mutators, sizePref=None, timePref=None, binaryPref=None, filePref=None, prevCmdOb=None, userMutator=None, userStub=None):
