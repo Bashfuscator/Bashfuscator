@@ -22,7 +22,8 @@ class RandomGen(object):
     randGen = random.SystemRandom()
     _generatedVars = set()
     _uniqueRandStrs = set()
-    _randStrCharList = string.ascii_letters + string.digits
+    _randStrCharList = [c for c in string.ascii_letters + string.digits + string.punctuation]
+    _randStrCharList.remove("/")
     _reservedVars = {"auto_resume", "BASH", "BASH_ENV", "BASH_VERSINFO", "BASH_VERSION", "CDPATH", "COLUMNS", "COMP_CWORD", "COMP_LINE", "COMP_POINT", "COMPREPLY", "COMP_WORDS", "DIRSTACK", "EUID", "FCEDIT", "FIGNORE", "FUNCNAME", "GLOBIGNORE", "GROUPS", "histchars", "HISTCMD", "HISTCONTROL", "HISTFILE", "HISTFILESIZE", "HISTIGNORE", "HISTSIZE", "HOME", "HOSTFILE", "HOSTNAME", "HOSTTYPE", "IFS", "IGNOREEOF", "INPUTRC", "LANG", "LC_ALL", "LC_COLLATE", "LC_CTYPE", "LC_MESSAGES", "LC_NUMERIC", "LINENO", "LINES", "MACHTYPE", "MAIL", "MAILCHECK", "MAILPATH", "OLDPWD", "OPTARG", "OPTERR", "OPTIND", "OSTYPE", "PATH", "PIPESTATUS", "POSIXLY_CORRECT", "PPID", "PROMPT_COMMAND", "PS1", "PS2", "PS3", "PS4", "PWD", "RANDOM", "REPLY", "SECONDS", "SHELLOPTS", "SHLVL", "TIMEFORMAT", "TMOUT", "UID"}
     _reservedVars.add("DATA")
 
@@ -146,7 +147,7 @@ class RandomGen(object):
         return randomVar
 
     # TODO: make sure random strings don't contain BOBL seqences
-    def randUniqueStr(self, minStrLen=None, maxStrLen=None, charList=None):
+    def randUniqueStr(self, minStrLen=None, maxStrLen=None, charList=None, escapeChars="`'" + '"'):
         """
         Generate a random string that is guaranteed to be unique.
 
@@ -190,7 +191,7 @@ class RandomGen(object):
 
         return randStr
 
-    def randGenStr(self, minStrLen=None, maxStrLen=None, charList=None):
+    def randGenStr(self, minStrLen=None, maxStrLen=None, charList=None, escapeChars="`'" + '"'):
         """
         Generate a random string. Functions the same as
         :meth:`~RandomGen.randUniqueStr`, the only difference being
@@ -203,6 +204,9 @@ class RandomGen(object):
 
         randStrLen = RandomGen.randGen.randint(minStrLen, maxStrLen)
         randStr = "".join(self.randSelect(charList) for x in range(randStrLen))
+
+        for char in escapeChars:
+            randStr = re.sub(r"(?!\\)" + re.escape(char), "\\" + char, randStr)
 
         return randStr
 
