@@ -62,6 +62,7 @@ setup(
     install_requires=[
         "argcomplete",
         "pyperclip",
+		"plotly",
     ],
     cmdclass={"install":CustomInstall}
 )
