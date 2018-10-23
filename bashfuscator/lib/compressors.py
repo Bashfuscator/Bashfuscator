@@ -64,9 +64,9 @@ class Bzip2(Compressor):
 
         compressedCmd = bz2.compress(userCmd.encode("utf-8"))
         compressedCmd = b64encode(compressedCmd).decode("utf-8")
-        self.payload = '''printf {0}|base64 -d|bunzip2 -c'''.format(compressedCmd)
+        self.mangler.addPayloadLine('''* *:printf:^ ^{0}* *|* *:base64:^ ^-d* *|* *:bunzip2:^ ^-c* *'''.format(compressedCmd))
 
-        return self.payload
+        return self.mangler.getFinalPayload()
 
 
 class Gzip(Compressor):
@@ -85,6 +85,6 @@ class Gzip(Compressor):
 
         compressedCmd = gzip.compress(userCmd.encode("utf-8"))
         compressedCmd = b64encode(compressedCmd).decode("utf-8")
-        self.payload = '''printf {0}|base64 -d|gunzip -c'''.format(compressedCmd)
+        self.mangler.addPayloadLine('''* *:printf:^ ^{0}* *|* *:base64:^ ^-d* *|* *:gunzip:^ ^-c* *'''.format(compressedCmd))
 
-        return self.payload
+        return self.mangler.getFinalPayload()
