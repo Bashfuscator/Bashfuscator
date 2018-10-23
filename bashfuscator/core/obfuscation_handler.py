@@ -46,6 +46,7 @@ class ObfuscationHandler(object):
         self.tokObfuscators = tokObfuscators
         self.encoders = encoders
         self.compressors = compressors
+        self.randGen = RandomGen()
 
         if args:
             self.layers = args.layers
@@ -56,7 +57,6 @@ class ObfuscationHandler(object):
             self.writeDir = args.write_dir
             self.originalCmd = args.command
             self.prevCmdOb = None
-            self.randGen = RandomGen()
 
             if args.choose_mutators:
                 self.userMutators = args.choose_mutators
