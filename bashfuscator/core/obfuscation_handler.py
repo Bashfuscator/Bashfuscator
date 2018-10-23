@@ -57,8 +57,6 @@ class ObfuscationHandler(object):
             self.writeDir = args.write_dir
             self.originalCmd = args.command
             self.prevCmdOb = None
-            self.randGen = RandomGen()
-            self.mangler = Mangler()
 
             if args.choose_mutators:
                 self.userMutators = args.choose_mutators
@@ -67,15 +65,18 @@ class ObfuscationHandler(object):
             else:
                 self.userMutators = None
 
-            if args.full_ascii_strings:
-                self.randGen.setFullAsciiStrings()
-
         else:
             self.sizePref = 2
             self.timePref = 2
             self.binaryPref = None
             self.filePref = False
             self.writeDir = "/tmp/"
+
+        self.randGen = RandomGen(self.sizePref)
+        self.mangler = Mangler()
+
+        if args and args.full_ascii_strings:
+            self.randGen.setFullAsciiStrings()
 
     def generatePayload(self):
         """
@@ -193,6 +194,7 @@ class ObfuscationHandler(object):
 
         selMutator.writeDir = writeDir
         selMutator._originalCmd = payload
+        selMutator.setSizePref(sizePref)
         payload = selMutator.mutate(sizePref, timePref, payload)
         selMutator._obfuscatedCmd = payload
 
@@ -218,9 +220,9 @@ class ObfuscationHandler(object):
         """
         if selMutator.evalWrap:
             if self.randGen.probibility(50):
-                wrappedPayload = self.mangler.mangleLine('* *:eval:^ ^"? ?$(? ?{0}? ?)? ?"* *'.format(payload))
+                wrappedPayload = self.mangler.mangleLine('* *:eval:^ ^"$(? ?{0}? ?)"* *'.format(payload))
             else:
-                wrappedPayload = self.mangler.mangleLine('* *:printf:^ ^%s^ ^"? ?$(? ?{0}? ?)? ?"* *|* *bash* *'.format(payload))
+                wrappedPayload = self.mangler.mangleLine('* *:printf:^ ^%s^ ^"$(? ?{0}? ?)"* *|* *:bash:* *'.format(payload))
         else:
             wrappedPayload = payload
 

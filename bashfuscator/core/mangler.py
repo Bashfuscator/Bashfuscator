@@ -24,6 +24,7 @@ class Mangler(object):
         optionalWhitespaceAndRandCharsRegexStr
     ))
 
+
     def __init__(self):
         self.mangleBinaries = True
         self.manglePercent = None
@@ -76,8 +77,15 @@ class Mangler(object):
         binaryStr = payloadLine[binaryMatch.start() + 1:binaryMatch.end() - 1]
 
         for char in binaryStr:
+            if self.randGen.probibility(50):
+                if self.randGen.probibility(50):
+                    mangledBinary += "\\" + char
+
+                else:
+                    mangledBinary += self.getRandChars() + char
             
-            mangledBinary += "\\" + char
+            else:
+                mangledBinary += char
 
         mangledPayloadLine = payloadLine[:binaryMatch.start()] + mangledBinary + payloadLine[binaryMatch.end():]
 
@@ -85,24 +93,59 @@ class Mangler(object):
 
     def insertWhitespaceAndRandChars(self, whitespaceMatch, payloadLine, whitespaceRequired, insertRandChars):
         if self.randWhitespace:
-            if whitespaceRequired and self.randWhitespaceRange[0] == 0:
-                minSpace = 1
-            else:
-                minSpace = self.randWhitespaceRange[0]
+            mangledWhitespace = self.getRandWhitespace(whitespaceRequired)
 
-            whitespaceAmount = self.randGen.randGenNum(minSpace, self.randWhitespaceRange[1])
-            mangledWhitespace = " "*whitespaceAmount
+        if insertRandChars and self.insertChars:
+            whitespaceStr = mangledWhitespace
+            mangledWhitespace = ""
 
-        #if insertRandChars and self.insertChars:
-
+            for char in whitespaceStr:
+                if self.randGen.probibility(50):
+                    mangledWhitespace += self.getRandChars()
 
         mangledPayloadLine = payloadLine[:whitespaceMatch.start()] + mangledWhitespace + payloadLine[whitespaceMatch.end():]
 
         return mangledPayloadLine
 
+    def getRandWhitespace(self, whitespaceRequired):
+        if whitespaceRequired and self.randWhitespaceRange[0] == 0:
+            minSpace = 1
+        else:
+            minSpace = self.randWhitespaceRange[0]
+
+        whitespaceAmount = self.randGen.randGenNum(minSpace, self.randWhitespaceRange[1])
+        
+        return " "*whitespaceAmount
+
+    def getRandChars(self):
+        randChars = ""
+        quoted = False
+
+        varSymbol = self.randGen.randSelect(["@", "*"])
+        choice = self.randGen.randChoice(4)
+
+        if self.randGen.probibility(50):
+            randChars = '"'
+            quoted = True
+
+        if choice == 0:
+            randChars += "$" + varSymbol
+
+        elif choice == 1:
+            randChars += "${{{0}{1}}}".format(self.randGen.randSelect(["!", ""]), varSymbol)
+
+        elif choice == 2:
+            randChars += "${{{0}{1}{2}}}".format(varSymbol, self.randGen.randSelect(["^", "^^", ",", ",,", "~", "~~"]), self.getRandWhitespace(False))
+
+        elif choice == 3:
+            randChars += "${{{0}{1}{2}{3}}}".format(varSymbol, self.randGen.randSelect(["#", "##", "%", "%%"]), self.randGen.randGenStr().replace("}", "\\}"),
+                self.getRandWhitespace(False))
+
+        if quoted:
+            randChars += '"'
+
+        return randChars
+
+
     def getFinalPayload(self):
         return "".join(self.payloadLines)
-        
-
-#mangler = Mangler()
-#mangler.addPayloadLine("* *:printf:^ ^%s^ ^'Hello World'* *;")

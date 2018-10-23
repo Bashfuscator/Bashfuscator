@@ -50,6 +50,10 @@ class Mutator(object):
         self.randGen = RandomGen()
         self.mangler = Mangler()
 
+    def setSizePref(self, sizePref):
+        self.randGen.sizePref = sizePref
+        self.mangler.randGen.sizePref = sizePref
+
 
 class Stub(object):
     """
