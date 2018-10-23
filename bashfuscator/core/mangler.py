@@ -27,12 +27,12 @@ class Mangler(object):
 
     def __init__(self):
         self.mangleBinaries = True
-        self.manglePercent = None
+        self.manglePercent = 50
         self.mangleLayers = None
         self.randWhitespace = True
         self.randWhitespaceRange = (0, 5)
         self.insertChars = True
-        self.insertCharsRange = None
+        self.insertCharsRange = (0, 3)
         self.insertMisleadingCmds = None
         self.insertMisleadingCmdsRange = None
 
@@ -77,10 +77,15 @@ class Mangler(object):
         binaryStr = payloadLine[binaryMatch.start() + 1:binaryMatch.end() - 1]
 
         for char in binaryStr:
-            if self.randGen.probibility(50):
+            if self.randGen.probibility(self.manglePercent/2):
+                if self.randGen.probibility(50):
+                    mangledBinary += '""'
+                else:
+                    mangledBinary += "''"
+            
+            if self.randGen.probibility(self.manglePercent):
                 if self.randGen.probibility(50):
                     mangledBinary += "\\" + char
-
                 else:
                     mangledBinary += self.getRandChars() + char
             
@@ -92,16 +97,19 @@ class Mangler(object):
         return mangledPayloadLine
 
     def insertWhitespaceAndRandChars(self, whitespaceMatch, payloadLine, whitespaceRequired, insertRandChars):
-        if self.randWhitespace:
+        mangledWhitespace = ""
+        
+        if self.randWhitespace and not (insertRandChars and self.insertChars):
             mangledWhitespace = self.getRandWhitespace(whitespaceRequired)
 
-        if insertRandChars and self.insertChars:
-            whitespaceStr = mangledWhitespace
-            mangledWhitespace = ""
+        elif insertRandChars and self.insertChars:
+            charsInsertNum = self.randGen.randGenNum(self.insertCharsRange[0], self.insertCharsRange[1])
 
-            for char in whitespaceStr:
-                if self.randGen.probibility(50):
-                    mangledWhitespace += self.getRandChars()
+            for i in range(charsInsertNum):
+                if self.randWhitespace:
+                    mangledWhitespace += self.getRandWhitespace(whitespaceRequired)
+
+                mangledWhitespace += self.getRandChars()
 
         mangledPayloadLine = payloadLine[:whitespaceMatch.start()] + mangledWhitespace + payloadLine[whitespaceMatch.end():]
 
@@ -120,11 +128,12 @@ class Mangler(object):
     def getRandChars(self):
         randChars = ""
         quoted = False
+        charsToEscape = "[!(){}'`" + '"'
 
         varSymbol = self.randGen.randSelect(["@", "*"])
-        choice = self.randGen.randChoice(4)
+        choice = self.randGen.randChoice(17)
 
-        if self.randGen.probibility(50):
+        if varSymbol == "@" and choice != 2 and self.randGen.probibility(50):
             randChars = '"'
             quoted = True
 
@@ -132,14 +141,32 @@ class Mangler(object):
             randChars += "$" + varSymbol
 
         elif choice == 1:
-            randChars += "${{{0}{1}}}".format(self.randGen.randSelect(["!", ""]), varSymbol)
+            randChars += "${{{0}}}".format(varSymbol)
 
         elif choice == 2:
+            randChars += "${{!{0}}}".format(varSymbol)
+
+        elif choice > 2 and choice <= 8:
             randChars += "${{{0}{1}{2}}}".format(varSymbol, self.randGen.randSelect(["^", "^^", ",", ",,", "~", "~~"]), self.getRandWhitespace(False))
 
-        elif choice == 3:
-            randChars += "${{{0}{1}{2}{3}}}".format(varSymbol, self.randGen.randSelect(["#", "##", "%", "%%"]), self.randGen.randGenStr().replace("}", "\\}"),
-                self.getRandWhitespace(False))
+        elif choice > 8 and choice <= 14:
+            randStr = self.randGen.randGenStr(escapeChars=charsToEscape)
+            
+            if randStr[-1:] == "\\":
+                randStr += "\\"
+
+            randChars += "${{{0}{1}{2}{3}}}".format(varSymbol, self.randGen.randSelect(["#", "##", "%", "%%", "/", "//"]), randStr, self.getRandWhitespace(False))
+
+        elif choice > 14 and choice <= 16:
+            randStr = self.randGen.randGenStr(escapeChars=charsToEscape)
+            randStr2 = self.randGen.randGenStr(escapeChars=charsToEscape)
+            
+            if randStr[-1:] == "\\":
+                randStr += "\\"
+            if randStr2[-1:] == "\\":
+                randStr += "\\"
+
+            randChars += "${{{0}{1}{2}/{3}{4}}}".format(varSymbol, self.randGen.randSelect(["/", "//"]), randStr, randStr2, self.getRandWhitespace(False))
 
         if quoted:
             randChars += '"'

@@ -61,7 +61,7 @@ class Base64(Encoder):
 
         b64EncodedBlob = b64encode(userCmd.encode("utf-8"))
         b64EncodedBlob = b64EncodedBlob.decode("utf-8").replace("\n", "")
-        self.mangler.addPayloadLine("* *:printf:^ ^{0}? ?|* *:base64:^ ^-d* *".format(b64EncodedBlob))
+        self.mangler.addPayloadLine('* *:printf:^ ^"{0}"* *|* *:base64:^ ^-d* *'.format(b64EncodedBlob))
 
         return self.mangler.getFinalPayload()
 
