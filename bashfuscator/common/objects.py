@@ -47,12 +47,8 @@ class Mutator(object):
         self._originalCmd = ""
         self._obfuscatedCmd = ""
 
-        self.randGen = RandomGen()
         self.mangler = Mangler()
-
-    def setSizePref(self, sizePref):
-        self.randGen.sizePref = sizePref
-        self.mangler.randGen.sizePref = sizePref
+        self.randGen = self.mangler.randGen
 
 
 class Stub(object):

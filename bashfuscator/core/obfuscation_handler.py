@@ -194,7 +194,7 @@ class ObfuscationHandler(object):
 
         selMutator.writeDir = writeDir
         selMutator._originalCmd = payload
-        selMutator.setSizePref(sizePref)
+        selMutator.randGen.sizePref = sizePref
         payload = selMutator.mutate(sizePref, timePref, payload)
         selMutator._obfuscatedCmd = payload
 
