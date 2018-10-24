@@ -3,7 +3,7 @@
 from argparse import ArgumentTypeError, ArgumentParser, FileType
 from collections import OrderedDict
 from subprocess import STDOUT, PIPE, Popen
-from sys import exit
+from sys import exit, stdin
 import re
 
 from argcomplete import autocomplete
@@ -117,8 +117,7 @@ if __name__ == "__main__":
     inptOpts = progOpts.add_mutually_exclusive_group()
     progOpts.add_argument("-l", "--list", action="store_true", help="List all the availible obfuscators, compressors, encoders, and encryptors")
     inptOpts.add_argument("-c", "--command", type=str, help="Command to obfuscate")
-    inptOpts.add_argument("-f", "--file", type=str, help="Name of the script to obfuscate")
-    #inptOpts.add_argument("--stdin", action="store_true", help="Receive command to obfuscate from stdin")
+    inptOpts.add_argument("-f", "--file", type=str, help="Name of the script to obfuscate. Use '-' if you want to obfuscate stdin")
     progOpts.add_argument("-o", "--outfile", type=str, help="File to write payload to")
     progOpts.add_argument("-q", "--quiet", action="store_true", help="Print only the payload")
 
@@ -143,7 +142,6 @@ if __name__ == "__main__":
     advancedOpts.add_argument("--full-ascii-strings", action="store_true", help="Use the full ASCII character set (with a few exceptions) when generating random strings")
     advancedOpts.add_argument("--write-dir", default="/tmp/", type=str, help="Directory to use if Mutators need to write to or create files")
     advancedOpts.add_argument("--no-file-write", action="store_true", help="Don't use obfuscators that require writing to files")
-    #advancedOpts.add_argument("--no-minify", action="store_true", help="Don't minify script or command entered before obfuscation")
     advancedOpts = parser.add_argument("--test", action="store_true", help="Test the payload after running it. Not compatible with -q")
 
     misc = parser.add_argument_group("Misc Options")
@@ -194,14 +192,17 @@ if __name__ == "__main__":
     
     shebang = ""
     if args.file:
-        with open(args.file, "rb") as infile:
-            firstLine = infile.readline().decode("utf-8")
-            if re.match(r"\s*#!", firstLine) is not None:
-                shebang = firstLine
-            else:
-                infile.seek(0)
+        if args.file == "-":
+            args.command = stdin.read()
+        else:
+            with open(args.file, "rb") as infile:
+                firstLine = infile.readline().decode("utf-8")
+                if re.match(r"\s*#!", firstLine) is not None:
+                    shebang = firstLine
+                else:
+                    infile.seek(0)
 
-            args.command = infile.read().decode("utf-8")
+                args.command = infile.read().decode("utf-8")
 
     if args.write_dir[-1:] != "/":
         args.write_dir += "/"
