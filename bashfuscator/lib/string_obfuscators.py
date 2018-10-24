@@ -227,22 +227,17 @@ class HexHash(StringObfuscator):
         )
 
     def mutate(self, sizePref, timePref, userCmd):
-        self.originalCmd = userCmd
-
-        obCmd = ""
         for ch in userCmd:
             hexchar = str(bytes(ch, "utf-8").hex())
             randomhash = ""
 
             while not hexchar in randomhash:
                 m = hashlib.md5()
-                randomString = self.randGen.randGenStr(1, 3)
+                randomString = self.randGen.randGenStr()
                 m.update(bytes(randomString, "utf-8"))
-                randomhash = m.digest().hex()
+                randomhash = m.hexdigest()
 
             index = randomhash.find(hexchar)
-            obCmd += 'printf "\\x$(printf \'' + randomString + "\'|md5sum|cut -b" + str(index + 1) + "-" + str(index + 2) + ')";'
+            self.mangler.addPayloadLine('* *:printf:^ ^"\\x$(:printf:^ ^%s^ ^\'' + randomString + "\'* *|* *:md5sum:* *|* *:cut:^ ^-b^ ^" + str(index + 1) + "-" + str(index + 2) + '* *)"* *;* *')
 
-        self.payload = obCmd
-
-        return self.payload
+        return self.mangler.getFinalPayload()
