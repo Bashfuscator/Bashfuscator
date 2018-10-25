@@ -68,14 +68,14 @@ class ObfuscationHandler(object):
             self.sizePref = 2
             self.timePref = 2
             self.binaryPref = None
-            self.filePref = False
+            self.filePref = True
             self.writeDir = "/tmp/"
             self.userMutators = None
 
         self.prevCmdOb = None
 
         if args.no_mangle_binaries:
-            self.mangleBinaries = not args.no_mangle_binaries
+            self.mangleBinaries = args.no_mangle_binaries
         else:
             self.mangleBinaries = None
 
@@ -85,7 +85,7 @@ class ObfuscationHandler(object):
             self.binaryManglePercent = None
 
         if args.no_random_whitespace:
-            self.randWhitespace = not args.no_random_whitespace
+            self.randWhitespace = args.no_random_whitespace
         else:
             self.randWhitespace = None
 
@@ -95,7 +95,7 @@ class ObfuscationHandler(object):
             self.randWhitespaceRange = None
 
         if args.no_insert_chars:
-            self.insertChars = not args.no_insert_chars
+            self.insertChars = args.no_insert_chars
         else:
             self.insertChars = None
 
@@ -105,7 +105,7 @@ class ObfuscationHandler(object):
             self.insertCharsRange = None
 
         if args.no_misleading_commands:
-            self.misleadingCmds = not args.no_misleading_commands
+            self.misleadingCmds = args.no_misleading_commands
         else:
             self.misleadingCmds = None
 
@@ -330,7 +330,7 @@ class ObfuscationHandler(object):
 
             for mutator in mutators:
                 if mutator.longName == userMutator:
-                    if filePref and mutator.fileWrite == filePref:
+                    if not filePref and mutator.fileWrite != filePref:
                         printWarning("'{0}' mutator preforms file writes".format(userMutator))
 
                     elif binaryPref:
@@ -390,7 +390,7 @@ class ObfuscationHandler(object):
 
         prefMutators = []
         for mutator in goodMutators:
-            if filePref and mutator.fileWrite == filePref:
+            if not filePref and mutator.fileWrite != filePref:
                 continue
 
             elif mutator.mutatorType == "command":
