@@ -56,7 +56,6 @@ class ObfuscationHandler(object):
             self.filePref = args.no_file_write
             self.writeDir = args.write_dir
             self.originalCmd = args.command
-            self.prevCmdOb = None
 
             if args.choose_mutators:
                 self.userMutators = args.choose_mutators
@@ -71,9 +70,54 @@ class ObfuscationHandler(object):
             self.binaryPref = None
             self.filePref = False
             self.writeDir = "/tmp/"
+            self.userMutators = None
 
-        self.randGen = RandomGen(self.sizePref)
+        self.prevCmdOb = None
+
+        if args.no_mangle_binaries:
+            self.mangleBinaries = not args.no_mangle_binaries
+        else:
+            self.mangleBinaries = None
+
+        if args.binary_mangle_percent:
+            self.binaryMandlePercent = args.binary_mangle_percent
+        else:
+            self.binaryMandlePercent = None
+
+        if args.no_random_whitespace:
+            self.randomWhitespace = not args.no_random_whitespace
+        else:
+            self.randomWhitespace = None
+
+        if args.random_whitespace_range:
+            self.randomWhitespaceRange = args.random_whitespace_range
+        else:
+            self.randomWhitespaceRange = None
+
+        if args.no_insert_chars:
+            self.insertChars = not args.no_insert_chars
+        else:
+            self.insertChars = None
+
+        if args.insert_chars_range:
+            self.insertCharsRange = args.insert_chars_range
+        else:
+            self.insertCharsRange = None
+
+        if args.no_misleading_commands:
+            self.misleadingCommands = not args.no_misleading_commands
+        else:
+            self.misleadingCommands = None
+
+        if args.misleading_commands_range:
+            self.misleadingCommandsRange = args.misleading_commands_range
+        else:
+            self.misleadingCommandsRange = None
+
         self.mangler = Mangler()
+        self.randGen = self.mangler.randGen
+
+        self.mangler.initialize(self.sizePref, self.mangleBinaries, self.binaryMandlePercent, self.randomWhitespace, self.randomWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCommands, self.misleadingCommandsRange)
 
         if args and args.full_ascii_strings:
             self.randGen.setFullAsciiStrings()
@@ -194,7 +238,7 @@ class ObfuscationHandler(object):
 
         selMutator.writeDir = writeDir
         selMutator._originalCmd = payload
-        selMutator.randGen.sizePref = sizePref
+        selMutator.mangler.initialize(self.sizePref, self.mangleBinaries, self.binaryMandlePercent, self.randomWhitespace, self.randomWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCommands, self.misleadingCommandsRange)
         payload = selMutator.mutate(sizePref, timePref, payload)
         selMutator._obfuscatedCmd = payload
 

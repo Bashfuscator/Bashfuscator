@@ -26,20 +26,85 @@ class Mangler(object):
 
 
     def __init__(self):
-        self.mangleBinaries = True
-        self.manglePercent = 50
-        self.mangleLayers = None
-        self.randWhitespace = True
-        self.randWhitespaceRange = (0, 5)
-        self.insertChars = True
-        self.insertCharsRange = (0, 3)
-        self.insertMisleadingCmds = None
-        self.insertMisleadingCmdsRange = None
+        self.sizePref = None
+        self.mangleBinaries = None
+        self.binaryManglePercent = None
+        self.randWhitespace = None
+        self.randWhitespaceRange = None
+        self.insertChars = None
+        self.insertCharsRange = None
+        self.misleadingCmds = None
+        self.misleadingCmdsRange = None
 
         self.quoted = False
         self.payloadLines = []
 
         self.randGen = RandomGen()
+
+
+    def initialize(self, sizePref, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange):
+        self.sizePref = sizePref
+        self.randGen.sizePref = self.sizePref
+        
+        if mangleBinaries is not None:
+            self.mangleBinaries = mangleBinaries
+        else:
+            self.mangleBinaries = True
+
+        if binaryManglePercent:
+            self.binaryManglePercent = binaryManglePercent
+        else:
+            if self.sizePref == 1:
+                self.binaryManglePercent = 35
+            elif self.sizePref == 2:
+                self.binaryManglePercent = 50
+            else:
+                self.binaryManglePercent = 75
+
+        if randWhitespace is not None:
+            self.randWhitespace = randWhitespace
+        else:
+            self.randWhitespace = True
+
+        if randWhitespaceRange:
+            self.randWhitespaceRange = randWhitespaceRange
+        else:
+            if self.sizePref == 1:
+                self.randWhitespaceRange = (0, 2)
+            elif self.sizePref == 2:
+                self.randWhitespaceRange = (1, 3)
+            else:
+                self.randWhitespaceRange = (2, 5)
+
+        if insertChars is not None:
+            self.insertChars = insertChars
+        else:
+            self.insertChars = True
+
+        if insertCharsRange:
+            self.insertCharsRange = insertCharsRange
+        else:
+            if self.sizePref == 1:
+                self.insertCharsRange = (0, 1)
+            elif self.sizePref == 2:
+                self.insertCharsRange = (1, 2)
+            else:
+                self.insertCharsRange = (1, 3)
+
+        if misleadingCmds is not None:
+            self.misleadingCmds = misleadingCmds
+        else:
+            self.misleadingCmds = True
+
+        if misleadingCmdsRange:
+            self.misleadingCmdsRange = misleadingCmdsRange
+        else:
+            if self.sizePref == 1:
+                self.misleadingCmdsRange = (0, 1)
+            elif self.sizePref == 2:
+                self.misleadingCmdsRange = (1, 2)
+            else:
+                self.misleadingCmdsRange = (1, 3)
 
     def addPayloadLine(self, payloadLine, inputChunk=None):
         mangledPayloadLine = self.mangleLine(payloadLine, inputChunk)
@@ -79,13 +144,13 @@ class Mangler(object):
 
         if self.mangleBinaries:
             for char in binaryStr:
-                if self.randGen.probibility(self.manglePercent/2):
+                if self.randGen.probibility(self.binaryManglePercent/2):
                     if self.randGen.probibility(50):
                         mangledBinary += '""'
                     else:
                         mangledBinary += "''"
 
-                if self.randGen.probibility(self.manglePercent):
+                if self.randGen.probibility(self.binaryManglePercent):
                     if self.randGen.probibility(50):
                         mangledBinary += "\\" + char
                     else:
