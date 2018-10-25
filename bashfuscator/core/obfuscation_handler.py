@@ -74,7 +74,7 @@ class ObfuscationHandler(object):
 
         self.prevCmdOb = None
 
-        if args.no_mangle_binaries:
+        if args.no_mangle_binaries is not None:
             self.mangleBinaries = args.no_mangle_binaries
         else:
             self.mangleBinaries = None
@@ -84,7 +84,7 @@ class ObfuscationHandler(object):
         else:
             self.binaryManglePercent = None
 
-        if args.no_random_whitespace:
+        if args.no_random_whitespace is not None:
             self.randWhitespace = args.no_random_whitespace
         else:
             self.randWhitespace = None
@@ -94,7 +94,7 @@ class ObfuscationHandler(object):
         else:
             self.randWhitespaceRange = None
 
-        if args.no_insert_chars:
+        if args.no_insert_chars is not None:
             self.insertChars = args.no_insert_chars
         else:
             self.insertChars = None
@@ -104,7 +104,7 @@ class ObfuscationHandler(object):
         else:
             self.insertCharsRange = None
 
-        if args.no_misleading_commands:
+        if args.no_misleading_commands is not None:
             self.misleadingCmds = args.no_misleading_commands
         else:
             self.misleadingCmds = None
@@ -186,31 +186,31 @@ class ObfuscationHandler(object):
         :returns: a str containing the 'payload' argument obfuscated by
             a single Mutator
         """
-        if not sizePref:
+        if sizePref is None:
             sizePref = self.sizePref
-        if not timePref:
+        if timePref is None:
             timePref = self.timePref
-        if not binaryPref:
+        if binaryPref is None:
             binaryPref = self.binaryPref
-        if not filePref:
+        if filePref is None:
             filePref = self.filePref
-        if not mangleBinaries:
+        if mangleBinaries is None:
             mangleBinaries = self.mangleBinaries
-        if not binaryManglePercent:
+        if binaryManglePercent is None:
             binaryManglePercent = self.binaryManglePercent
-        if not randWhitespace:
+        if randWhitespace is None:
             randWhitespace = self.randWhitespace
-        if not randWhitespaceRange:
+        if randWhitespaceRange is None:
             randWhitespaceRange = self.randWhitespaceRange
-        if not insertChars:
+        if insertChars is None:
             insertChars = self.insertChars
-        if not insertCharsRange:
+        if insertCharsRange is None:
             insertCharsRange = self.insertCharsRange
-        if not misleadingCmds:
+        if misleadingCmds is None:
             misleadingCmds = self.misleadingCmds
-        if not misleadingCmdsRange:
+        if misleadingCmdsRange is None:
             misleadingCmdsRange = self.misleadingCmdsRange
-        if not writeDir:
+        if writeDir is None:
             writeDir = self.writeDir
 
         selMutator = None
@@ -330,7 +330,7 @@ class ObfuscationHandler(object):
 
             for mutator in mutators:
                 if mutator.longName == userMutator:
-                    if not filePref and mutator.fileWrite != filePref:
+                    if filePref is False and mutator.fileWrite != filePref:
                         printWarning("'{0}' mutator preforms file writes".format(userMutator))
 
                     elif binaryPref:
@@ -390,7 +390,7 @@ class ObfuscationHandler(object):
 
         prefMutators = []
         for mutator in goodMutators:
-            if not filePref and mutator.fileWrite != filePref:
+            if filePref is False and mutator.fileWrite != filePref:
                 continue
 
             elif mutator.mutatorType == "command":
