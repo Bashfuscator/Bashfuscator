@@ -106,6 +106,8 @@ class Mangler(object):
             else:
                 self.misleadingCmdsRange = (1, 3)
 
+        self.payloadLines.clear()
+
     def addPayloadLine(self, payloadLine, inputChunk=None):
         mangledPayloadLine = self.mangleLine(payloadLine, inputChunk)
 

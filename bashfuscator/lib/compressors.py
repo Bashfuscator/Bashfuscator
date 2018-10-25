@@ -60,8 +60,6 @@ class Bzip2(Compressor):
         )
 
     def mutate(self, sizePref, timePref, userCmd):
-        self.originalCmd = userCmd
-
         compressedCmd = bz2.compress(userCmd.encode("utf-8"))
         compressedCmd = b64encode(compressedCmd).decode("utf-8")
         self.mangler.addPayloadLine('''* *:printf:^ ^{0}* *|* *:base64:^ ^-d* *|* *:bunzip2:^ ^-c* *'''.format(compressedCmd))
@@ -81,8 +79,6 @@ class Gzip(Compressor):
         )
 
     def mutate(self, sizePref, timePref, userCmd):
-        self.originalCmd = userCmd
-
         compressedCmd = gzip.compress(userCmd.encode("utf-8"))
         compressedCmd = b64encode(compressedCmd).decode("utf-8")
         self.mangler.addPayloadLine('''* *:printf:^ ^{0}* *|* *:base64:^ ^-d* *|* *:gunzip:^ ^-c* *'''.format(compressedCmd))
