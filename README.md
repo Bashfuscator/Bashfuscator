@@ -1,5 +1,7 @@
 # Bashfuscator
 
+![Bashfuscator logo](img/bashfuscator_logo.svg)
+
 Bashfuscator is a modular and fully configurable Bash obfuscator. It is currently in heavy
 development and extremely alpha, be aware of that if you decide to test it. If you do want
 to test it, or want to help with development, head on over to the [documentation](https://bashfuscator.readthedocs.io/en/latest/index.html).
