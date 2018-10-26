@@ -1,50 +1,29 @@
 """
-
-Install bashfuscator to PATH and enable auto-completion. Auto-completion activation code
-borrowed from https://github.com/0x00-0x00/Shellpop
-
+Get dependencies, install bashfuscator to PATH and enable auto-completion
 """
 from setuptools import setup, find_packages
 from setuptools.command.install import install
-from subprocess import Popen, PIPE
+from subprocess import call, Popen, PIPE
+from sys import exit
 import os
 
 
-def applyChanges():
-    proc = Popen("source ~/.bashrc", stdout=PIPE, stderr=PIPE, shell=True)
-    __, __ = proc.communicate()
-    return None
+def findArgcompletePath(command):
+    proc = Popen("which " + command, stdout=PIPE, stderr=PIPE, shell=True, universal_newlines=True)
+    command1Path, __ = proc.communicate()
 
+    proc = Popen("which " + command + "3", stdout=PIPE, stderr=PIPE, shell=True, universal_newlines=True)
+    command2Path, __ = proc.communicate()
 
-def activateTabComplete():
-    proc = Popen("activate-global-python-argcomplete3", stdout=PIPE, stderr=PIPE, shell=True)
-    __, __ = proc.communicate()
-    return True if proc.poll() is 0 else False
+    if command1Path:
+        finalCommandPath = command1Path
+    elif command2Path:
+        finalCommandPath = command2Path
+    else:
+        print("ERROR: python3-argcomplete is not installed, install it with your package manager to activate autocompletion")
+        exit(1)
 
-
-def autoComplete():
-    proc = Popen("register-python-argcomplete3 bashfuscator", stdout=PIPE, stderr=PIPE, shell=True, universal_newlines=True)
-    stdout, __ = proc.communicate()
-    return stdout
-
-
-class CustomInstall(install):
-    def run(self):
-        install.run(self)
-        bashrc_file = os.environ["HOME"] + os.sep + ".bashrc"
-        if not os.path.exists(bashrc_file):
-            return None
-        with open(bashrc_file, "r") as f:
-            bashrc_content = f.read()
-        if "bashfuscator" not in bashrc_content:
-            print("Registering bashfuscator in .bashrc for auto-completion ...")
-            activateTabComplete() # this will enable auto-complete feature.
-
-            # This will write the configuration needed in .bashrc file
-            with open(bashrc_file, "a") as f:
-                f.write("\n{0}\n".format(autoComplete()))
-            print("Auto-completion has been installed.")
-            applyChanges()
+    return finalCommandPath[:-1]
 
 
 with open("README.md") as f:
@@ -53,7 +32,7 @@ with open("README.md") as f:
 setup(
     name="bashfuscator",
     version="0.0.1",
-    description="Configurable and extendable bash obfuscator",
+    description="Configurable and extendable Bash obfuscation framework",
     license="MIT",
     long_description=longDescription,
     author="Andrew LeFevre",
@@ -62,6 +41,28 @@ setup(
     install_requires=[
         "argcomplete",
         "pyperclip",
-    ],
-    cmdclass={"install":CustomInstall}
+    ]
 )
+
+# activate autocompletion for bashfuscator
+bashrcFile = os.environ["HOME"] + os.sep + ".bashrc"
+
+if os.path.exists(bashrcFile):
+    with open(bashrcFile, "r") as f:
+        bashrcContent = f.read()
+
+    if "bashfuscator" not in bashrcContent:
+        print("\nRegistering bashfuscator in .bashrc for auto-completion ...")
+
+        proc = call(findArgcompletePath("activate-global-python-argcomplete") + " --user", shell=True)
+
+        argcompleteComment = "# Enables autocompletion of options for bashfuscator"
+        with open(bashrcFile, "a") as f:
+            f.write("\n\n{0}\n".format(argcompleteComment))
+            f.write('eval "$({0})"\n'.format(findArgcompletePath("register-python-argcomplete") + " bashfuscator"))
+
+        print("Auto-completion has been installed.")
+        proc = call("source " + bashrcFile, executable="/bin/bash", shell=True)
+
+else:
+    print("ERROR: could not find your .bashrc file, autocompletion will not enabled")
