@@ -63,5 +63,10 @@ setup(
         "argcomplete",
         "pyperclip",
     ],
+    extras_require={
+        "dev": [
+            "pytest",
+        ]
+    },
     cmdclass={"install":CustomInstall}
 )
