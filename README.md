@@ -53,6 +53,8 @@ For more detailed usage and examples, please refer to the [documentation](https:
 ## Authors and Contributers
 
 - Andrew LeFevre ([capnspacehook](https://github.com/capnspacehook)): project head
+- Charity Barker ([cpbarker](https://github.com/cpbarker)): team member
+- Nathaniel Hatfield ([343iChurch](https://github.com/343iChurch)): team member
 - Elijah Barker ([elijah-barker](https://github.com/elijah-barker)): writing the Hex Hash, Folder and File Glob Mutators
 - Sam Kreischer: the awesome logo
 
@@ -60,6 +62,7 @@ For more detailed usage and examples, please refer to the [documentation](https:
 
 - [danielbohannon](https://github.com/danielbohannon), whose excellent [Invoke-Obfuscation](https://github.com/danielbohannon/Invoke-Obfuscation) and [Invoke-DOSfuscation](https://github.com/danielbohannon/Invoke-DOSfuscation) projects gave [capnspacehook](https://github.com/capnspacehook) the idea to start writing Bashfuscator, and insight on how to write robust obfuscation methods.
 - [DissectMalware](https://github.com/DissectMalware), whose tweets on Bash obfuscation formed the backbone of some Mutators, and provided ideas for other obfuscation techniques.
+- [ConsciousHacker](https://github.com/ConsciousHacker) for testing and advice
 - Bash logo originally from https://github.com/odb/official-bash-logo
 
 ## Disclaimer
