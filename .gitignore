@@ -109,3 +109,6 @@ venv.bak/
 
 # bash scripts
 *.sh
+
+# failing output
+test/failing/

@@ -10,7 +10,7 @@ from bashfuscator.core.obfuscation_handler import ObfuscationHandler
 inputCommand = "echo 'It works!'"
 expectedOutput = "It works!\n"
 
-commandObNames = [c.longName for c in commandObfuscators]
+commandObNames = [c.longName + "/" + s.longName for c in commandObfuscators for s in c.stubs]
 stringObNames = [s.longName for s in stringObfuscators]
 tokenObNames = [t.longName for t in tokenObfuscators]
 encoderObNames = [e.longName for e in encoders if not e.postEncoder]
