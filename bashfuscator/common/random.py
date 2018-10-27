@@ -208,8 +208,10 @@ class RandomGen(object):
         randStrLen = RandomGen.randGen.randint(minStrLen, maxStrLen)
         randStr = "".join(self.randSelect(charList) for x in range(randStrLen))
 
+        # escape 'escapeChars', making sure that an already escaped char isn't
+        # accidentally un-escaped by adding an extra '\'
         for char in escapeChars:
-            randStr = re.sub(r"(?<!\\)" + re.escape(char), "\\" + char, randStr)
+            randStr = re.sub(r"(\\{2})*" + re.escape(char), "\g<1>\\" + char, randStr)
 
         return randStr
 
