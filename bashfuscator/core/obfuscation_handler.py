@@ -64,6 +64,46 @@ class ObfuscationHandler(object):
             else:
                 self.userMutators = None
 
+            if args.no_mangle_binaries is not None:
+                self.mangleBinaries = args.no_mangle_binaries
+            else:
+                self.mangleBinaries = None
+
+            if args.binary_mangle_percent:
+                self.binaryManglePercent = args.binary_mangle_percent
+            else:
+                self.binaryManglePercent = None
+
+            if args.no_random_whitespace is not None:
+                self.randWhitespace = args.no_random_whitespace
+            else:
+                self.randWhitespace = None
+
+            if args.random_whitespace_range:
+                self.randWhitespaceRange = args.random_whitespace_range
+            else:
+                self.randWhitespaceRange = None
+
+            if args.no_insert_chars is not None:
+                self.insertChars = args.no_insert_chars
+            else:
+                self.insertChars = None
+
+            if args.insert_chars_range:
+                self.insertCharsRange = args.insert_chars_range
+            else:
+                self.insertCharsRange = None
+
+            if args.no_misleading_commands is not None:
+                self.misleadingCmds = args.no_misleading_commands
+            else:
+                self.misleadingCmds = None
+
+            if args.misleading_commands_range:
+                self.misleadingCmdsRange = args.misleading_commands_range
+            else:
+                self.misleadingCmdsRange = None
+
         else:
             self.sizePref = 2
             self.timePref = 2
@@ -71,48 +111,17 @@ class ObfuscationHandler(object):
             self.filePref = True
             self.writeDir = "/tmp/"
             self.userMutators = None
-
+        
+        self.mangleBinaries = None
+        self.binaryManglePercent = None
+        self.randWhitespace = None
+        self.randWhitespaceRange = None
+        self.insertChars = None
+        self.insertCharsRange = None
+        self.misleadingCmds = None
+        self.misleadingCmdsRange = None
+        
         self.prevCmdOb = None
-
-        if args.no_mangle_binaries is not None:
-            self.mangleBinaries = args.no_mangle_binaries
-        else:
-            self.mangleBinaries = None
-
-        if args.binary_mangle_percent:
-            self.binaryManglePercent = args.binary_mangle_percent
-        else:
-            self.binaryManglePercent = None
-
-        if args.no_random_whitespace is not None:
-            self.randWhitespace = args.no_random_whitespace
-        else:
-            self.randWhitespace = None
-
-        if args.random_whitespace_range:
-            self.randWhitespaceRange = args.random_whitespace_range
-        else:
-            self.randWhitespaceRange = None
-
-        if args.no_insert_chars is not None:
-            self.insertChars = args.no_insert_chars
-        else:
-            self.insertChars = None
-
-        if args.insert_chars_range:
-            self.insertCharsRange = args.insert_chars_range
-        else:
-            self.insertCharsRange = None
-
-        if args.no_misleading_commands is not None:
-            self.misleadingCmds = args.no_misleading_commands
-        else:
-            self.misleadingCmds = None
-
-        if args.misleading_commands_range:
-            self.misleadingCmdsRange = args.misleading_commands_range
-        else:
-            self.misleadingCmdsRange = None
 
         self.mangler = Mangler()
         self.randGen = self.mangler.randGen
@@ -328,6 +337,8 @@ class ObfuscationHandler(object):
                 binList = binaryPref[0]
                 includeBinary = binaryPref[1]
 
+            # TODO: warn user when using a reversible CommandObfuscator back to back
+            # TODO: warn when user uses a post Encoder as anything but the final layer
             for mutator in mutators:
                 if mutator.longName == userMutator:
                     if filePref is False and mutator.fileWrite != filePref:
@@ -337,7 +348,7 @@ class ObfuscationHandler(object):
                         for binary in mutator.binariesUsed:
                             if (binary in binList) != includeBinary:
                                 printWarning("'{0}' mutator contains an unwanted binary".format(userMutator))
-                    
+
                     selMutator = mutator
                     if selMutator.mutatorType == "command":
                         selMutator.prefStubs = selMutator.stubs
@@ -390,10 +401,7 @@ class ObfuscationHandler(object):
 
         prefMutators = []
         for mutator in goodMutators:
-            if filePref is False and mutator.fileWrite != filePref:
-                continue
-
-            elif mutator.mutatorType == "command":
+            if mutator.mutatorType == "command":
                 if prevCmdOb and prevCmdOb.reversible and prevCmdOb.name == mutator.name:
                     continue
 
@@ -403,6 +411,10 @@ class ObfuscationHandler(object):
                     mutator.prefStubs = prefStubs
                 else:
                     continue
+
+            # don't choose special encoders that produce output that Bash can't parse
+            elif mutator.mutatorType == "encode" and mutator.postEncoder:
+                continue
 
             # TODO: decide if TokenObfuscators should be allowed if the user chooses to only use certain binaries,
             # TokenObfuscators don't use any binaries 
@@ -415,6 +427,9 @@ class ObfuscationHandler(object):
                 
                 if badBinary:
                     continue
+
+            elif filePref is False and mutator.fileWrite != filePref:
+                continue
             
             prefMutators.append(mutator)
 
