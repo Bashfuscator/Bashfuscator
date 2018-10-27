@@ -10,7 +10,6 @@ Contents:
 
 .. toctree::
 
-   Installation
    Introduction
    Usage
    Module Documentation/index
