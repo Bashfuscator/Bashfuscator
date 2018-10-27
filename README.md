@@ -1,7 +1,6 @@
 ![Bashfuscator logo](img/bashfuscator_logo.png)
 
 # Bashfuscator
-> A fully configurable Bash obfuscation framework
 
 [Documentation](https://bashfuscator.readthedocs.io/en/latest/index.html)
 
@@ -59,7 +58,7 @@ For more detailed usage and examples, please refer to the [documentation](https:
 
 ## Credits
 
-- ([danielbohannon](https://github.com/danielbohannon)), whose excellent [Invoke-Obfuscation](https://github.com/danielbohannon/Invoke-Obfuscation) and [Invoke-DOSfuscation](https://github.com/danielbohannon/Invoke-DOSfuscation) projects gave [capnspacehook](https://github.com/capnspacehook) the idea to start writing Bashfuscator, and insight on how to write robust obfuscation methods.
+- [danielbohannon](https://github.com/danielbohannon), whose excellent [Invoke-Obfuscation](https://github.com/danielbohannon/Invoke-Obfuscation) and [Invoke-DOSfuscation](https://github.com/danielbohannon/Invoke-DOSfuscation) projects gave [capnspacehook](https://github.com/capnspacehook) the idea to start writing Bashfuscator, and insight on how to write robust obfuscation methods.
 - [DissectMalware](https://github.com/DissectMalware), whose tweets on Bash obfuscation formed the backbone of some Mutators, and provided ideas for other obfuscation techniques.
 - Bash logo originally from https://github.com/odb/official-bash-logo
 
