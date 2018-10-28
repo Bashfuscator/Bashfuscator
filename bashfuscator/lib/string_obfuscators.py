@@ -79,22 +79,20 @@ class GlobObfuscator(StringObfuscator):
         if cmdLogLen <= 0:
             cmdLogLen = 1
 
-        parts = []
+        printLines = {}
         for i in range(cmdLen):
-            ch = cmdChars[i]
-            ch = escapeQuotes(ch)
-            parts.append(
-                "printf %s '" + ch + "' > '" + self.workingDir + "/" +
-                format(i, "0" + str(cmdLogLen) + "b").replace("0", "?").replace("1", "\n") + "';"
-            )
-        self.randGen.randShuffle(parts)
+            cmdCharsSection = cmdChars[i]
+            cmdCharsSection = escapeQuotes(cmdCharsSection)
+            printLines.update({
+                "* *:printf:^ ^%s^ ^'DATA'^ ^>^ ^'" + self.workingDir + "/" +
+                format(i, "0" + str(cmdLogLen) + "b").replace("0", "?").replace("1", "\n") + "'* *END": cmdCharsSection
+            })
 
         # TODO: randomize ordering of 'rm' statements
-        self.payload = ""
-        self.payload += "mkdir -p '" + self.workingDir + "';"
-        self.payload += "".join(parts)
-        self.payload += "cat '" + self.workingDir + "'/" + "?" * cmdLogLen + ";"
-        self.payload += "rm '" + self.workingDir + "'/" + "?" * cmdLogLen + ";"
+        self.mangler.addPayloadLine("* *:mkdir:^ ^-p^ ^'" + self.workingDir + "'* *END")
+        self.mangler.addLinesInRandomOrder(printLines)
+        self.mangler.addPayloadLine("* *:cat:^ ^'" + self.workingDir + "'/" + "?" * cmdLogLen + "? ?END")
+        self.mangler.addPayloadLine("* *:rm:^ ^'" + self.workingDir + "'/" + "?" * cmdLogLen + "? ?END")
 
     def setSizes(self, sizePref, userCmd):
         if sizePref == 0:
@@ -132,9 +130,9 @@ class FileGlob(GlobObfuscator):
 
         self.setSizes(sizePref, userCmd)
         self.generate(sizePref, userCmd, self.writeDir)
-        self.payload += "rmdir '" + self.workingDir + "'"
+        self.mangler.addPayloadLine(":rmdir:^ ^'" + self.workingDir + "'* *")
 
-        return self.payload
+        return self.mangler.getFinalPayload()
 
 
 class FolderGlob(GlobObfuscator):
@@ -155,16 +153,12 @@ class FolderGlob(GlobObfuscator):
         self.workingDir = escapeQuotes(self.writeableDir)
 
         cmdChunks = [userCmd[i:i + self.sectionSize] for i in range(0, len(userCmd), self.sectionSize)]
-        parts = []
 
         # TODO: remove created folders
         for chunk in cmdChunks:
             self.generate(sizePref, chunk, self.writeableDir + "/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
-            parts.append(self.payload)
 
-        self.payload = "".join(parts)
-
-        return self.payload
+        return self.mangler.getFinalPayload()
 
 
 class ForCode(StringObfuscator):
