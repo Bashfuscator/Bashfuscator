@@ -7,11 +7,11 @@
 ## What is Bashfuscator?
 
 Bashfuscator is a Bash obfuscation framework. It provides numerous different ways of making Bash one-liners or scripts more difficult to understand.
-It does this by mutating or obscuring the input Bash code, then generating Bash code that will decode the obscured input so Bash can execute it.
+It does this by mutating or obscuring the input Bash code, then generating Bash code that will decode the obscured input so Bash can execute it. Bashfuscator makes generating highly obfuscated Bash commands and scripts easy, both from the command line or in your code as a library.
 
 The purpose of this project to give Red Team the ability to bypass static detections on a Linux system, and the knowledge and tools to write better Bash obfuscation techniques.
 
-This framework was also developed with Blue Team in mind. With this framework, Blue Team can easily generate thousands of unique obfuscated scripts or commands to create robust Bash obfuscation detections.
+This framework was also developed with Blue Team in mind. With this framework, Blue Team can easily generate thousands of unique obfuscated scripts or commands to help create and test detections of Bash obfuscation.
 
 ## Installation
 
@@ -52,7 +52,7 @@ For more detailed usage and examples, please refer to the [documentation](https:
 
 ## Authors and Contributers
 
-- Andrew LeFevre ([capnspacehook](https://github.com/capnspacehook)): project head
+- Andrew LeFevre ([capnspacehook](https://github.com/capnspacehook)): project lead and creator
 - Charity Barker ([cpbarker](https://github.com/cpbarker)): team member
 - Nathaniel Hatfield ([343iChurch](https://github.com/343iChurch)): team member
 - Elijah Barker ([elijah-barker](https://github.com/elijah-barker)): writing the Hex Hash, Folder and File Glob Mutators
