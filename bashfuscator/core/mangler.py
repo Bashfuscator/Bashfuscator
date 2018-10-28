@@ -38,6 +38,7 @@ class Mangler(object):
 
         self.quoted = False
         self.payloadLines = []
+        self.finalPayload = ""
 
         self.randGen = RandomGen()
 
@@ -107,6 +108,7 @@ class Mangler(object):
                 self.misleadingCmdsRange = (1, 3)
 
         self.payloadLines.clear()
+        self.finalPayload = ""
 
     def addPayloadLine(self, payloadLine, inputChunk=None):
         mangledPayloadLine = self.mangleLine(payloadLine, inputChunk)
@@ -140,6 +142,9 @@ class Mangler(object):
 
         return mangledPayloadLine
 
+    def addJunk(self):
+        self.finalPayload += self.getWhitespaceAndRandChars(False, True)
+
     def mangleBinary(self, binaryMatch, payloadLine):
         mangledBinary = ""
         binaryStr = payloadLine[binaryMatch.start() + 1:binaryMatch.end() - 1]
@@ -169,23 +174,28 @@ class Mangler(object):
         return mangledPayloadLine
 
     def insertWhitespaceAndRandChars(self, whitespaceMatch, payloadLine, whitespaceRequired, insertRandChars):
-        mangledWhitespace = ""
+        randCharsAndWhitespace = self.getWhitespaceAndRandChars(whitespaceRequired, insertRandChars)
+
+        mangledPayloadLine = payloadLine[:whitespaceMatch.start()] + randCharsAndWhitespace + payloadLine[whitespaceMatch.end():]
+
+        return mangledPayloadLine
+
+    def getWhitespaceAndRandChars(self, whitespaceRequired, insertRandChars):
+        randCharsAndWhitespace = ""
         
         if not (insertRandChars and self.insertChars):
-            mangledWhitespace = self.getRandWhitespace(whitespaceRequired)
+            randCharsAndWhitespace = self.getRandWhitespace(whitespaceRequired)
 
         elif insertRandChars and self.insertChars:
             charsInsertNum = self.randGen.randGenNum(self.insertCharsRange[0], self.insertCharsRange[1])
 
             for i in range(charsInsertNum):
                 if self.randWhitespace:
-                    mangledWhitespace += self.getRandWhitespace(whitespaceRequired)
+                    randCharsAndWhitespace += self.getRandWhitespace(whitespaceRequired)
 
-                mangledWhitespace += self.getRandChars()
+                randCharsAndWhitespace += self.getRandChars()
 
-        mangledPayloadLine = payloadLine[:whitespaceMatch.start()] + mangledWhitespace + payloadLine[whitespaceMatch.end():]
-
-        return mangledPayloadLine
+        return randCharsAndWhitespace
 
     def getRandWhitespace(self, whitespaceRequired):
         if not self.randWhitespace:
@@ -256,6 +266,7 @@ class Mangler(object):
 
         return randChars
 
-
     def getFinalPayload(self):
-        return "".join(self.payloadLines)
+        self.finalPayload += "".join(self.payloadLines)
+
+        return self.finalPayload
