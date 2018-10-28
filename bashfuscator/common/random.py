@@ -211,7 +211,7 @@ class RandomGen(object):
         # escape 'escapeChars', making sure that an already escaped char isn't
         # accidentally un-escaped by adding an extra '\'
         for char in escapeChars:
-            randStr = re.sub(r"(\\{2})*" + re.escape(char), "\g<1>\\" + char, randStr)
+            randStr = re.sub(r"(?<!\\)(\\{2})*(?!\\)" + re.escape(char), "\g<1>\\" + char, randStr)
 
         return randStr
 
