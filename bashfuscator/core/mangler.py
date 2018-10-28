@@ -113,6 +113,20 @@ class Mangler(object):
         self.payloadLines.clear()
         self.finalPayload = ""
 
+    def addLinesInRandomOrder(self, payloadLines):
+        if isinstance(payloadLines, list):
+            self.randGen.randShuffle(payloadLines)
+
+            for line in payloadLines:
+                self.addPayloadLine(line)
+
+        elif isinstance(payloadLines, dict):
+            keys = list(payloadLines.keys())
+            self.randGen.randShuffle(keys)
+            
+            for line in keys:
+                self.addPayloadLine(line, payloadLines[line])
+
     def addPayloadLine(self, payloadLine, inputChunk=None):
         mangledPayloadLine = self.mangleLine(payloadLine, inputChunk)
 
