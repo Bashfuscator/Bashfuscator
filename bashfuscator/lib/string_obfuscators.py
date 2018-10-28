@@ -180,8 +180,6 @@ class ForCode(StringObfuscator):
         )
 
     def mutate(self, sizePref, timePref, userCmd):
-        self.originalCmd = userCmd
-
         # get a set of unique chars in original command
         shuffledCmd = list(set(userCmd))
         self.randGen.randShuffle(shuffledCmd)
@@ -198,21 +196,19 @@ class ForCode(StringObfuscator):
         shuffledCmd = strToArrayElements(shuffledCmd)
 
         charArrayVar = self.randGen.randGenVar(sizePref)
-        obCmd = "{0}=({1});".format(charArrayVar, shuffledCmd)
+        self.mangler.addPayloadLine("^ ^{0}=({1})* *;".format(charArrayVar, shuffledCmd))
 
         indexVar = self.randGen.randGenVar(sizePref)
-        obCmd += "for {0} in {1}".format(indexVar, cmdIndexes)
+        self.mangler.addPayloadLine("^ ^for^ ^{0}^ ^in^ ^{1}* *;".format(indexVar, cmdIndexes))
 
         # randomly choose between the two different for loop syntaxes
         if self.randGen.probibility(50):
-            obCmd += ';{{ printf %s "${{{0}[${1}]}}"; }}'.format(charArrayVar, indexVar)
+            self.mangler.addPayloadLine('? ?{{^ ^:printf:^ ^%s^ ^"${{{0}[${1}]}}"* *;? ?}}? ?'.format(charArrayVar, indexVar))
         
         else:
-            obCmd += ';do printf %s "${{{0}[${1}]}}";done'.format(charArrayVar, indexVar)
+            self.mangler.addPayloadLine('? ?do^ ^:printf:^ ^%s^ ^"${{{0}[${1}]}}"* *;? ?done? ?'.format(charArrayVar, indexVar))
 
-        self.payload = obCmd
-
-        return self.payload
+        return self.mangler.getFinalPayload()
 
 
 class HexHash(StringObfuscator):
@@ -238,6 +234,8 @@ class HexHash(StringObfuscator):
                 randomhash = m.hexdigest()
 
             index = randomhash.find(hexchar)
-            self.mangler.addPayloadLine('* *:printf:^ ^"\\x$(:printf:^ ^%s^ ^\'' + randomString + "\'* *|* *:md5sum:* *|* *:cut:^ ^-b^ ^" + str(index + 1) + "-" + str(index + 2) + '* *)"* *;* *')
+            self.mangler.addPayloadLine('* *:printf:^ ^"\\x$(:printf:^ ^%s^ ^\'' + randomString + "\'* *|* *:md5sum:* *|* *:cut:^ ^-b^ ^" + str(index + 1) + "-" + str(index + 2) + '* *)"* *;')
+
+        self.mangler.addJunk()
 
         return self.mangler.getFinalPayload()
