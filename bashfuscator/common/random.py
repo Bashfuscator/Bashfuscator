@@ -28,11 +28,12 @@ class RandomGen(object):
     _randStrCharList.remove("/")
     
     _reservedVars = {"auto_resume", "BASH", "BASH_ENV", "BASH_VERSINFO", "BASH_VERSION", "CDPATH", "COLUMNS", "COMP_CWORD", "COMP_LINE", "COMP_POINT", "COMPREPLY", "COMP_WORDS", "DIRSTACK", "EUID", "FCEDIT", "FIGNORE", "FUNCNAME", "GLOBIGNORE", "GROUPS", "histchars", "HISTCMD", "HISTCONTROL", "HISTFILE", "HISTFILESIZE", "HISTIGNORE", "HISTSIZE", "HOME", "HOSTFILE", "HOSTNAME", "HOSTTYPE", "IFS", "IGNOREEOF", "INPUTRC", "LANG", "LC_ALL", "LC_COLLATE", "LC_CTYPE", "LC_MESSAGES", "LC_NUMERIC", "LINENO", "LINES", "MACHTYPE", "MAIL", "MAILCHECK", "MAILPATH", "OLDPWD", "OPTARG", "OPTERR", "OPTIND", "OSTYPE", "PATH", "PIPESTATUS", "POSIXLY_CORRECT", "PPID", "PROMPT_COMMAND", "PS1", "PS2", "PS3", "PS4", "PWD", "RANDOM", "REPLY", "SECONDS", "SHELLOPTS", "SHLVL", "TIMEFORMAT", "TMOUT", "UID"}
-    _reservedVars.add("DATA")
+    _boblReservedStrsRegex = re.compile("DATA|END")
+
+    _boblSyntaxRegex = re.compile(r":\w+:" + "|" + r"\^ \^" + "|" + r"\? \?" + "|" + "% %" + "|" + r"\* \*" + "|" + "DATA" + "|" + "END")
 
     def __init__(self):
         self.sizePref = None
-
 
     def setFullAsciiStrings(self):
         """
@@ -142,6 +143,9 @@ class RandomGen(object):
             if len(randomVar) == 1 and randomVar.isdigit():
                 continue
 
+            if RandomGen._boblReservedStrsRegex.search(randomVar):
+                continue
+
             if randomVar not in RandomGen._generatedVars and randomVar not in RandomGen._reservedVars:
                 break
 
@@ -207,6 +211,9 @@ class RandomGen(object):
 
         randStrLen = RandomGen.randGen.randint(minStrLen, maxStrLen)
         randStr = "".join(self.randSelect(charList) for x in range(randStrLen))
+
+        while RandomGen._boblSyntaxRegex.search(randStr):
+            randStr = "".join(self.randSelect(charList) for x in range(randStrLen))
 
         # escape 'escapeChars', making sure that an already escaped char isn't
         # accidentally un-escaped by adding an extra '\'
