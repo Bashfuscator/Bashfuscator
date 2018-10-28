@@ -55,7 +55,7 @@ class Bzip2(Compressor):
             description="Compress command with bzip2",
             sizeRating=3,
             timeRating=3,
-            binariesUsed=["base64, bunzip2"],
+            binariesUsed=["base64", "bunzip2"],
             author="capnspacehook"
         )
 
@@ -74,7 +74,7 @@ class Gzip(Compressor):
             description="Compress command with gzip",
             sizeRating=3,
             timeRating=3,
-            binariesUsed=["base64, gunzip"],
+            binariesUsed=["base64", "gunzip"],
             author="capnspacehook"
         )
 
