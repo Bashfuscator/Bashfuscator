@@ -157,7 +157,7 @@ if __name__ == "__main__":
     chooseOpts = advancedOpts.add_mutually_exclusive_group()
     chooseOpts.add_argument("--choose-mutators", nargs="+", metavar="MUTATOR", help="Manually choose what mutators are used in what order").completer = getMutators
     chooseOpts.add_argument("--choose-all", nargs="+", metavar="MUTATOR", help="Manually choose what mutators and their stubs if applicable").completer = getMutatorsAndStubs
-    advancedOpts.add_argument("--no-mangle-binaries", action="store_false", help="Don't obfuscate binary/builtin names")
+    advancedOpts.add_argument("--no-binary-mangling", action="store_false", help="Don't obfuscate binary/builtin names")
     advancedOpts.add_argument("--binary-mangle-percent", type=int, choices=range(1, 101), metavar="{1..100}", help="Percentage of chars of binary/builtin names to mangle")
     advancedOpts.add_argument("--no-random-whitespace", action="store_false", help="Don't randomly add whitespace")
     advancedOpts.add_argument("--random-whitespace-range", type=str, metavar="NUM,NUM", help="The range of random whitespace to add")

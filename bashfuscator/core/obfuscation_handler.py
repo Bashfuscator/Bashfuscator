@@ -64,8 +64,8 @@ class ObfuscationHandler(object):
             else:
                 self.userMutators = None
 
-            if args.no_mangle_binaries is not None:
-                self.mangleBinaries = args.no_mangle_binaries
+            if args.no_binary_mangling is not None:
+                self.mangleBinaries = args.no_binary_mangling
             else:
                 self.mangleBinaries = None
 
@@ -112,14 +112,14 @@ class ObfuscationHandler(object):
             self.writeDir = "/tmp/"
             self.userMutators = None
         
-        self.mangleBinaries = None
-        self.binaryManglePercent = None
-        self.randWhitespace = None
-        self.randWhitespaceRange = None
-        self.insertChars = None
-        self.insertCharsRange = None
-        self.misleadingCmds = None
-        self.misleadingCmdsRange = None
+            self.mangleBinaries = None
+            self.binaryManglePercent = None
+            self.randWhitespace = None
+            self.randWhitespaceRange = None
+            self.insertChars = None
+            self.insertCharsRange = None
+            self.misleadingCmds = None
+            self.misleadingCmdsRange = None
         
         self.prevCmdOb = None
 

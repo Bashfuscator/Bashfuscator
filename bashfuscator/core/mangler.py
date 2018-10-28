@@ -201,6 +201,8 @@ class Mangler(object):
 
                 randCharsAndWhitespace += self.getRandChars()
 
+            randCharsAndWhitespace += self.getRandWhitespace(whitespaceRequired)
+
         return randCharsAndWhitespace
 
     def getRandWhitespace(self, whitespaceRequired):
