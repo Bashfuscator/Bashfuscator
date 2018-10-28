@@ -9,19 +9,22 @@ class Mangler(object):
     optionalWhitespaceRegexStr = r"\? \?"
     requiredWhitespaceAndRandCharsRegexStr = "% %"
     optionalWhitespaceAndRandCharsRegexStr = r"\* \*"
+    commandEndRegexStr = "END"
     
     binaryRegex = re.compile(binaryRegexStr)
     requiredWhitespaceRegex = re.compile(requiredWhitespaceRegexStr)
     optionalWhitespaceRegex = re.compile(optionalWhitespaceRegexStr)
     requiredWhitespaceAndRandCharsRegex = re.compile(requiredWhitespaceAndRandCharsRegexStr)
     optionalWhitespaceAndRandCharsRegex = re.compile(optionalWhitespaceAndRandCharsRegexStr)
+    commandEndRegex = re.compile(commandEndRegexStr)
 
-    boblRegex = re.compile("{0}|{1}|{2}|{3}|{4}".format(
+    boblRegex = re.compile("{0}|{1}|{2}|{3}|{4}|{5}".format(
         binaryRegexStr,
         requiredWhitespaceRegexStr,
         optionalWhitespaceRegexStr,
         requiredWhitespaceAndRandCharsRegexStr,
-        optionalWhitespaceAndRandCharsRegexStr
+        optionalWhitespaceAndRandCharsRegexStr,
+        commandEndRegexStr
     ))
 
 
@@ -134,6 +137,9 @@ class Mangler(object):
 
             elif Mangler.optionalWhitespaceAndRandCharsRegex.match(boblSyntaxMatch.group()):
                 mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, True)
+
+            elif Mangler.commandEndRegex.match(boblSyntaxMatch.group()):
+                mangledPayloadLine = self.getCommandTerminator(boblSyntaxMatch, mangledPayloadLine)
 
             boblSyntaxMatch = Mangler.boblRegex.search(mangledPayloadLine, pos=boblSyntaxMatch.start())
 
@@ -265,6 +271,18 @@ class Mangler(object):
             randChars += '"'
 
         return randChars
+
+    def getCommandTerminator(self, terminatorMatch, payloadLine):
+        if len(payloadLine) != terminatorMatch.end() and payloadLine[terminatorMatch.end() + 1] == "1":
+            cmdReturnsError = True
+        else:
+            cmdReturnsError = False
+        
+        cmdTerminator = ";"
+        
+        mangledPayloadLine = payloadLine[:terminatorMatch.start()] + cmdTerminator + payloadLine[terminatorMatch.end():]
+
+        return mangledPayloadLine
 
     def getFinalPayload(self):
         self.finalPayload += "".join(self.payloadLines)

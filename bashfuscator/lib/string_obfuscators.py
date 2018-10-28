@@ -196,10 +196,10 @@ class ForCode(StringObfuscator):
         shuffledCmd = strToArrayElements(shuffledCmd)
 
         charArrayVar = self.randGen.randGenVar(sizePref)
-        self.mangler.addPayloadLine("^ ^{0}=({1})* *;".format(charArrayVar, shuffledCmd))
+        self.mangler.addPayloadLine("^ ^{0}=({1})* *END".format(charArrayVar, shuffledCmd))
 
         indexVar = self.randGen.randGenVar(sizePref)
-        self.mangler.addPayloadLine("^ ^for^ ^{0}^ ^in^ ^{1}* *;".format(indexVar, cmdIndexes))
+        self.mangler.addPayloadLine("^ ^for^ ^{0}^ ^in^ ^{1}* *END".format(indexVar, cmdIndexes))
 
         # randomly choose between the two different for loop syntaxes
         if self.randGen.probibility(50):
@@ -234,7 +234,7 @@ class HexHash(StringObfuscator):
                 randomhash = m.hexdigest()
 
             index = randomhash.find(hexchar)
-            self.mangler.addPayloadLine('* *:printf:^ ^"\\x$(:printf:^ ^%s^ ^\'' + randomString + "\'* *|* *:md5sum:* *|* *:cut:^ ^-b^ ^" + str(index + 1) + "-" + str(index + 2) + '* *)"* *;')
+            self.mangler.addPayloadLine('* *:printf:^ ^"\\x$(:printf:^ ^%s^ ^\'' + randomString + "\'* *|* *:md5sum:* *|* *:cut:^ ^-b^ ^" + str(index + 1) + "-" + str(index + 2) + '* *)"* *END')
 
         self.mangler.addJunk()
 
