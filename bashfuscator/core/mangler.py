@@ -40,6 +40,7 @@ class Mangler(object):
         self.misleadingCmdsRange = None
 
         self.quoted = False
+        self.terminatedCmdLast = False
         self.payloadLines = []
         self.finalPayload = ""
 
@@ -140,6 +141,8 @@ class Mangler(object):
 
         boblSyntaxMatch = Mangler.boblRegex.search(mangledPayloadLine)
         while boblSyntaxMatch:
+            self.terminatedCmdLast = False
+
             if Mangler.binaryRegex.match(boblSyntaxMatch.group()):
                 mangledPayloadLine = self.mangleBinary(boblSyntaxMatch, mangledPayloadLine)
 
@@ -156,6 +159,7 @@ class Mangler(object):
                 mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, True)
 
             elif Mangler.commandEndRegex.match(boblSyntaxMatch.group()):
+                self.terminatedCmdLast = True
                 mangledPayloadLine = self.getCommandTerminator(boblSyntaxMatch, mangledPayloadLine)
 
             boblSyntaxMatch = Mangler.boblRegex.search(mangledPayloadLine, pos=boblSyntaxMatch.start())
@@ -297,13 +301,36 @@ class Mangler(object):
         else:
             cmdReturnsError = False
         
-        cmdTerminator = ";"
+        if self.randGen.probibility(50):
+            self.booleanCmdTerminator = True
+            
+            if cmdReturnsError:
+                cmdTerminator = "||"
+            else:
+                cmdTerminator = "&&"
+        else:
+            self.booleanCmdTerminator = False
+            cmdTerminator = ";"
         
+        self.cmdTerminatorPos = terminatorMatch.start()
+
         mangledPayloadLine = payloadLine[:terminatorMatch.start()] + cmdTerminator + payloadLine[terminatorMatch.end():]
 
         return mangledPayloadLine
 
     def getFinalPayload(self):
+        # if the final chars of the payload are '&&' or '||', bash will throw errors
+        if self.terminatedCmdLast and self.booleanCmdTerminator:
+            self.payloadLines[-1] = self.payloadLines[-1][:self.cmdTerminatorPos]
+
+            # randomly replace '&&' or '||' with ';'
+            if self.randGen.probibility(50):
+                self.payloadLines[-1] += ";"
+        
+        # randomly remove the final command terminator
+        elif self.randGen.probibility(50):
+            self.payloadLines[-1] = self.payloadLines[-1][:self.cmdTerminatorPos]
+
         self.finalPayload += "".join(self.payloadLines)
 
         return self.finalPayload
