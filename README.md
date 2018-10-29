@@ -6,8 +6,7 @@
 
 ## What is Bashfuscator?
 
-Bashfuscator is a Bash obfuscation framework. It provides numerous different ways of making Bash one-liners or scripts more difficult to understand.
-It does this by mutating or obscuring the input Bash code, then generating Bash code that will decode the obscured input so Bash can execute it. Bashfuscator makes generating highly obfuscated Bash commands and scripts easy, both from the command line or in your code as a library.
+Bashfuscator is a modular and extendable Bash obfuscation framework. It provides numerous different ways of making Bash one-liners or scripts more difficult to understand. It does this by mutating or obscuring the input Bash code, then generating Bash code that will decode the obscured input so Bash can execute it. Bashfuscator makes generating highly obfuscated Bash commands and scripts easy, both from the command line and as a Python library.
 
 The purpose of this project to give Red Team the ability to bypass static detections on a Linux system, and the knowledge and tools to write better Bash obfuscation techniques.
 
@@ -15,15 +14,15 @@ This framework was also developed with Blue Team in mind. With this framework, B
 
 ## Installation
 
-On a Debian-based distro, run this:
+On a Debian-based distro, run this command to install dependencies:
 
 `sudo apt-get update && sudo apt-get install python3 python3-pip python3-argcomplete xclip`
 
-On a RHEL-based distro, run this:
+On a RHEL-based distro, run this command to install dependencies:
 
 `sudo dnf update && sudo dnf install python3 python3-pip python3-argcomplete xclip`
 
-Then, run these commands to finish installing Bashfuscator:
+Then, run these commands to clone and install Bashfuscator:
 
 ```bash
 git clone https://github.com/Bashfuscator/Bashfuscator
@@ -50,6 +49,10 @@ You can copy the obfuscated payload to your clipboard with `--clip`, or write it
 
 For more detailed usage and examples, please refer to the [documentation](https://bashfuscator.readthedocs.io/en/latest/Usage.html).
 
+## Extending the Framework
+
+Adding new obfuscation methods to the framework is simple, as Bashfuscator was built to be a modular and extendable framework. Bashfuscator's backend does all the heavy lifting so you can focus on writing robust obfuscation methods (documentation on adding modules coming soon).
+
 ## Authors and Contributers
 
 - Andrew LeFevre ([capnspacehook](https://github.com/capnspacehook)): project lead and creator
@@ -62,8 +65,8 @@ For more detailed usage and examples, please refer to the [documentation](https:
 
 - [danielbohannon](https://github.com/danielbohannon), whose excellent [Invoke-Obfuscation](https://github.com/danielbohannon/Invoke-Obfuscation) and [Invoke-DOSfuscation](https://github.com/danielbohannon/Invoke-DOSfuscation) projects gave [capnspacehook](https://github.com/capnspacehook) the idea to start writing Bashfuscator, and insight on how to write robust obfuscation methods.
 - [DissectMalware](https://github.com/DissectMalware), whose tweets on Bash obfuscation formed the backbone of some Mutators, and provided ideas for other obfuscation techniques.
-- [ConsciousHacker](https://github.com/ConsciousHacker) for testing and advice
-- Bash logo originally from https://github.com/odb/official-bash-logo
+- [ConsciousHacker](https://github.com/ConsciousHacker), whose insight and advice has helped the team greatly.
+- Bash logo was originally  from https://github.com/odb/official-bash-logo.
 
 ## Disclaimer
 
