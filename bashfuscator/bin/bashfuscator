@@ -197,6 +197,7 @@ if __name__ == "__main__":
     else:
         args.binaryPref = None
     
+    shebang = "#!/usr/bin/env bash\n"
     if args.file:
         if args.file == "-":
             args.command = stdin.read()
@@ -207,7 +208,6 @@ if __name__ == "__main__":
                     shebang = firstLine
                 else:
                     infile.seek(0)
-                    shebang = "#!/usr/bin/env bashS"
 
                 args.command = infile.read().decode("utf-8")
 

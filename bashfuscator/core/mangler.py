@@ -39,6 +39,8 @@ class Mangler(object):
         self.misleadingCmds = None
         self.misleadingCmdsRange = None
 
+        self.cmdCounter = 0
+        self.cmdBufferOffset = None
         self.quoted = False
         self.terminatedCmdLast = False
         self.payloadLines = []
@@ -296,22 +298,32 @@ class Mangler(object):
         return randChars
 
     def getCommandTerminator(self, terminatorMatch, payloadLine):
-        if len(payloadLine) != terminatorMatch.end() and payloadLine[terminatorMatch.end() + 1] == "1":
-            cmdReturnsError = True
-        else:
-            cmdReturnsError = False
+        if self.cmdCounter == 0:
+            self.cmdBufferOffset = self.randGen.randGenNum(1250, 1750)
         
-        if self.randGen.probibility(50):
-            self.booleanCmdTerminator = True
-            
-            if cmdReturnsError:
-                cmdTerminator = "||"
+        if self.cmdCounter == self.cmdBufferOffset:
+            self.cmdCounter = 0
+            cmdTerminator = "\n"
+
+        else:
+            if len(payloadLine) != terminatorMatch.end() and payloadLine[terminatorMatch.end() + 1] == "1":
+                cmdReturnsError = True
             else:
-                cmdTerminator = "&&"
-        else:
-            self.booleanCmdTerminator = False
-            cmdTerminator = ";"
-        
+                cmdReturnsError = False
+
+            if self.randGen.probibility(50):
+                self.booleanCmdTerminator = True
+                
+                if cmdReturnsError:
+                    cmdTerminator = "||"
+                else:
+                    cmdTerminator = "&&"
+
+            else:
+                self.booleanCmdTerminator = False
+                cmdTerminator = ";"
+
+        self.cmdCounter += 1
         self.cmdTerminatorPos = terminatorMatch.start()
 
         mangledPayloadLine = payloadLine[:terminatorMatch.start()] + cmdTerminator + payloadLine[terminatorMatch.end():]
