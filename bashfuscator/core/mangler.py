@@ -46,10 +46,16 @@ class Mangler(object):
         self.randGen = RandomGen()
 
 
-    def initialize(self, sizePref, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange):
+    def initialize(self, sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange):
         self.sizePref = sizePref
         self.randGen.sizePref = self.sizePref
+
+        self.payloadLines.clear()
+        self.finalPayload = ""
         
+        if enableMangling is False:
+            return
+
         if mangleBinaries is not None:
             self.mangleBinaries = mangleBinaries
         else:
@@ -109,9 +115,6 @@ class Mangler(object):
                 self.misleadingCmdsRange = (1, 2)
             else:
                 self.misleadingCmdsRange = (1, 3)
-
-        self.payloadLines.clear()
-        self.finalPayload = ""
 
     def addLinesInRandomOrder(self, payloadLines):
         if isinstance(payloadLines, list):

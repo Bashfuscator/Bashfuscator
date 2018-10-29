@@ -10,7 +10,7 @@ from argcomplete import autocomplete
 import pyperclip
 
 from bashfuscator.common.colors import bold
-from bashfuscator.common.messages import activateQuietMode, printInfo, printError
+from bashfuscator.common.messages import activateQuietMode, printInfo, printWarning, printError
 from bashfuscator.core.mutator_list import commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors
 from bashfuscator.core.obfuscation_handler import ObfuscationHandler
 
@@ -110,18 +110,21 @@ def listMutatorType(mutators):
                 print("\tSize Rating: {0}".format(stub.sizeRating))
                 print("\tTime Rating: {0}".format(stub.timeRating))
 
+def printArgError(errorMsg):
+    print("bashfuscator: error: " + errorMsg)
+    exit(1)
 
 def checkRangeArgs(argName, argValue):
     if argValue.find(",") == -1:
-        printError("Invalid value for {0} option: format is NUM,NUM".format(argName))
+        printArgError("Invalid value for {0} option: format is NUM,NUM".format(argName))
     
     rangeValues = *(int(x) for x in argValue.split(",")),
 
     if rangeValues[0] < 0 or rangeValues[1] < 0:
-        printError("Invalid value for {0} option: range values must be positive".format(argName))
+        printArgError("Invalid value for {0} option: range values must be positive".format(argName))
 
     if rangeValues[0] > rangeValues[1]:
-        printError("Invalid value for {0} option: invalid range".format(argName))
+        printArgError("Invalid value for {0} option: invalid range".format(argName))
 
     return rangeValues
 
@@ -151,6 +154,7 @@ if __name__ == "__main__":
     chooseOpts = advancedOpts.add_mutually_exclusive_group()
     chooseOpts.add_argument("--choose-mutators", nargs="+", metavar="MUTATOR", help="Manually choose what mutators are used in what order").completer = getMutators
     chooseOpts.add_argument("--choose-all", nargs="+", metavar="MUTATOR", help="Manually choose what mutators and their stubs if applicable").completer = getMutatorsAndStubs
+    advancedOpts.add_argument("--no-mangling", action="store_false", help="Don't preform binary mangling and don't insert random whitespace and characters")
     advancedOpts.add_argument("--no-binary-mangling", action="store_false", help="Don't obfuscate binary/builtin names")
     advancedOpts.add_argument("--binary-mangle-percent", type=int, choices=range(1, 101), metavar="{1..100}", help="Percentage of chars of binary/builtin names to mangle")
     advancedOpts.add_argument("--no-random-whitespace", action="store_false", help="Don't randomly add whitespace")
@@ -171,13 +175,11 @@ if __name__ == "__main__":
 
     if not args.command and not args.file:
         parser.print_usage()
-        print("bashfuscator: error: one of the arguments -c/--command -f/--file is required")
-        exit(1)
+        printArgError("one of the arguments -c/--command -f/--file is required")
 
     if args.quiet and args.test:
         parser.print_usage()
-        print("bashfuscator: error: argument --test: not allowed with argument -q/--quiet")
-        exit(1)
+        printArgError("--test is not allowed with -q/--quiet")
 
     if args.quiet:
         activateQuietMode()
@@ -208,6 +210,14 @@ if __name__ == "__main__":
                     shebang = "#!/usr/bin/env bashS"
 
                 args.command = infile.read().decode("utf-8")
+
+    if not args.no_mangling:
+        if not args.no_binary_mangling:
+            printWarning("--no-mangling implies --no-binary-mangling")
+        elif not args.no_random_whitespace:
+            printWarning("--no-mangling implies --no-random-whitespace")
+        elif not args.no_insert_chars:
+            printWarning("--no-mangling impiles --no-insert-chars")
 
     if args.random_whitespace_range:
         args.random_whitespace_range = checkRangeArgs("--random-whitespace-range", args.random_whitespace_range)
