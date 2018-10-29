@@ -219,12 +219,27 @@ if __name__ == "__main__":
         elif not args.no_insert_chars:
             printWarning("--no-mangling impiles --no-insert-chars")
 
+    if args.binary_mangle_percent:
+        if not args.no_mangling or not args.no_binary_mangling:
+            printWarning("binary mangling is disabled, --binary-mangle-percent argument will not take effect")
+
     if args.random_whitespace_range:
-        args.random_whitespace_range = checkRangeArgs("--random-whitespace-range", args.random_whitespace_range)
+        if not args.no_mangling or not args.no_random_whitespace:
+            printWarning("random whitespace is disabled, --random-whitespace-range argument will not take effect")
+        else:
+            args.random_whitespace_range = checkRangeArgs("--random-whitespace-range", args.random_whitespace_range)
+
     if args.insert_chars_range:
-        args.insert_chars_range = checkRangeArgs("--insert_chars_range", args.insert_chars_range)
+        if not args.no_mangling or not args.no_insert_chars:
+            printWarning("random character insertion is disabled, --insert-char-range argument will not take effect")
+        else:
+            args.insert_chars_range = checkRangeArgs("--insert_chars_range", args.insert_chars_range)
+
     if args.misleading_commands_range:
-        args.misleading_commands_range = checkRangeArgs("--misleading_commands_range", args.misleading_commands_range)
+        if not args.no_mangling or not args.no_misleading_commands:
+            printWarning("misleading command insertion is disabled --misleading-commands-range argument will not take effect")
+        else:
+            args.misleading_commands_range = checkRangeArgs("--misleading_commands_range", args.misleading_commands_range)
 
     if args.write_dir[-1:] != "/":
         args.write_dir += "/"
