@@ -95,10 +95,7 @@ class GlobObfuscator(StringObfuscator):
         self.mangler.addPayloadLine("* *:rm:^ ^'" + self.workingDir + "'/" + "?" * cmdLogLen + "? ?END")
 
     def setSizes(self, sizePref, userCmd):
-        if sizePref == 0:
-            self.minDirLen = self.maxDirLen = 1
-            self.sectionSize = int(len(userCmd) / 3 + 1)
-        elif sizePref == 1:
+        if sizePref == 1:
             self.minDirLen = 1
             self.maxDirLen = 3
             self.sectionSize = int(len(userCmd) / 10 + 1)
@@ -110,9 +107,6 @@ class GlobObfuscator(StringObfuscator):
             self.minDirLen = 12
             self.maxDirLen = 24
             self.sectionSize = 3
-        elif sizePref == 4:
-            self.minDirLen = self.maxDirLen = 32
-            self.sectionSize = 1
 
 
 class FileGlob(GlobObfuscator):

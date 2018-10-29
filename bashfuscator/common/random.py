@@ -224,10 +224,8 @@ class RandomGen(object):
 
     def _getSizes(self, minLen, maxLen):
         if minLen is None or maxLen is None:
-            if self.sizePref == 0:
+            if self.sizePref == 1:
                 defaultMinLen = 1
-            elif self.sizePref == 1:
-                defaultMinLen = 2
             elif self.sizePref == 2:
                 defaultMinLen = 4
             else:

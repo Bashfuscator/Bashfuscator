@@ -139,14 +139,8 @@ if __name__ == "__main__":
     progOpts.add_argument("--test", action="store_true", help="Test the payload after running it. Not compatible with -q")
 
     obOpts = parser.add_argument_group("Obfuscation Options")
-    sizeOpts = obOpts.add_mutually_exclusive_group()
-    sizeOpts.add_argument("-s", "--payload-size", default=2, type=int, choices=range(1, 4), help="Desired size of the payload. Default: 2")
-    sizeOpts.add_argument("-sm", "--min-payload-size", action="store_true", help="Generate the smallest payload possible")
-    sizeOpts.add_argument("-sM", "--max-payload-size", action="store_true", help="Generate the largest payload possible")
-    timeOpts = obOpts.add_mutually_exclusive_group()
-    timeOpts.add_argument("-t", "--execution-time", default=2, type=int, choices=range(1, 4), help="Desired speed of the payload. Default: 2")
-    timeOpts.add_argument("-tm", "--min-execution-time", action="store_true", help="Generate the fastest payload possible")
-    timeOpts.add_argument("-tM", "--max-execution-time", action="store_true", help="Generate the slowest payload possible")
+    obOpts.add_argument("-s", "--payload-size", default=2, type=int, choices=range(1, 4), help="Desired size of the payload. Default: 2")
+    obOpts.add_argument("-t", "--execution-time", default=2, type=int, choices=range(1, 4), help="Desired speed of the payload. Default: 2")
     obOpts.add_argument("--layers", type=check_positive, help="Number of layers of obfuscation to apply. Default is 1 when --choose-mutators is used, otherwise: 2")
     binOpts = obOpts.add_mutually_exclusive_group()
     binOpts.add_argument("--include-binaries", nargs="+", type=str, metavar="BINARIES", help="Binaries you exclusively want used in the generated payload")
@@ -188,16 +182,6 @@ if __name__ == "__main__":
     if args.quiet:
         activateQuietMode()
 
-    if args.min_payload_size:
-        args.payload_size = 0
-    elif args.max_payload_size:
-        args.payload_size = 4
-
-    if args.min_execution_time:
-        args.execution_time = 0
-    elif args.max_execution_time:
-        args.execution_time = 4
-
     if args.layers is None:
         if args.choose_mutators is not None or args.choose_all is not None:
             args.layers = 1
@@ -211,7 +195,6 @@ if __name__ == "__main__":
     else:
         args.binaryPref = None
     
-    shebang = ""
     if args.file:
         if args.file == "-":
             args.command = stdin.read()
@@ -222,6 +205,7 @@ if __name__ == "__main__":
                     shebang = firstLine
                 else:
                     infile.seek(0)
+                    shebang = "#!/usr/bin/env bashS"
 
                 args.command = infile.read().decode("utf-8")
 
@@ -240,9 +224,7 @@ if __name__ == "__main__":
 
     if args.outfile:
         with open(args.outfile, "wb") as outfile:
-            if shebang != "":
-                outfile.write(shebang.encode("utf-8"))
-            
+            outfile.write(shebang.encode("utf-8"))
             outfile.write(payload.encode("utf-8"))
 
         printInfo("Payload written to {0}".format(args.outfile))

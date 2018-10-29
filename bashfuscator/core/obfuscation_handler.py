@@ -567,18 +567,11 @@ class ObfuscationHandler(object):
         :param pref: sizePref or timePref options
         :returns: tuple of minimum and maximum ratings
         """
-        if pref == 0:
-            minRating = maxRating = 1
-        elif pref == 1:
-            minRating = 1
+        if pref == 1:
             maxRating = 2
         elif pref == 2:
-            minRating = 1
             maxRating = 3
         elif pref == 3:
-            minRating = 1
             maxRating = 5
-        else:
-            minRating = maxRating = 5
 
-        return (minRating, maxRating)
+        return (1, maxRating)
