@@ -184,17 +184,17 @@ class ForCode(StringObfuscator):
         shuffledCmd = strToArrayElements(shuffledCmd)
 
         charArrayVar = self.randGen.randGenVar(sizePref)
-        self.mangler.addPayloadLine("^ ^{0}=({1})* *END".format(charArrayVar, shuffledCmd))
+        self.mangler.addPayloadLine("? ?{0}=({1})* *END".format(charArrayVar, shuffledCmd))
 
         indexVar = self.randGen.randGenVar(sizePref)
-        self.mangler.addPayloadLine("^ ^for^ ^{0}^ ^in^ ^{1}* *END".format(indexVar, cmdIndexes))
+        self.mangler.addPayloadLine("^ ^for^ ^{0}^ ^in^ ^{1}* *END0".format(indexVar, cmdIndexes))
 
         # randomly choose between the two different for loop syntaxes
         if self.randGen.probibility(50):
-            self.mangler.addPayloadLine('? ?{{^ ^:printf:^ ^%s^ ^"${{{0}[${1}]}}"* *;? ?}}? ?'.format(charArrayVar, indexVar))
-        
+            self.mangler.addPayloadLine('? ?{{^ ^:printf:^ ^%s^ ^"${{{0}[${1}]}}"* *;? ?}}? ?END0* *'.format(charArrayVar, indexVar))
+
         else:
-            self.mangler.addPayloadLine('? ?do^ ^:printf:^ ^%s^ ^"${{{0}[${1}]}}"* *;? ?done? ?'.format(charArrayVar, indexVar))
+            self.mangler.addPayloadLine('? ?do^ ^:printf:^ ^%s^ ^"${{{0}[${1}]}}"* *;? ?done? ?END0* *'.format(charArrayVar, indexVar))
 
         return self.mangler.getFinalPayload()
 

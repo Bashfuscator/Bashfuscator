@@ -39,6 +39,10 @@ class Mangler(object):
         self.misleadingCmds = None
         self.misleadingCmdsRange = None
 
+        self.cmdTerminatorPos = 0
+        self.booleanCmdTerminator = False
+        self.nonBinaryCmdTerminator = False
+
         self.cmdCounter = 0
         self.cmdBufferOffset = None
         self.quoted = False
@@ -143,8 +147,6 @@ class Mangler(object):
 
         boblSyntaxMatch = Mangler.boblRegex.search(mangledPayloadLine)
         while boblSyntaxMatch:
-            self.terminatedCmdLast = False
-
             if Mangler.binaryRegex.match(boblSyntaxMatch.group()):
                 mangledPayloadLine = self.mangleBinary(boblSyntaxMatch, mangledPayloadLine)
 
@@ -161,7 +163,6 @@ class Mangler(object):
                 mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, True)
 
             elif Mangler.commandEndRegex.match(boblSyntaxMatch.group()):
-                self.terminatedCmdLast = True
                 mangledPayloadLine = self.getCommandTerminator(boblSyntaxMatch, mangledPayloadLine)
 
             boblSyntaxMatch = Mangler.boblRegex.search(mangledPayloadLine, pos=boblSyntaxMatch.start())
@@ -298,6 +299,9 @@ class Mangler(object):
         return randChars
 
     def getCommandTerminator(self, terminatorMatch, payloadLine):
+        endDigit = False
+        self.nonBinaryCmdTerminator = False
+        
         if self.cmdCounter == 0:
             self.cmdBufferOffset = self.randGen.randGenNum(1250, 1750)
         
@@ -306,12 +310,18 @@ class Mangler(object):
             cmdTerminator = "\n"
 
         else:
-            if len(payloadLine) != terminatorMatch.end() and payloadLine[terminatorMatch.end() + 1] == "1":
-                cmdReturnsError = True
-            else:
-                cmdReturnsError = False
+            cmdReturnsError = False
 
-            if self.randGen.probibility(50):
+            if len(payloadLine) > terminatorMatch.end():
+                if payloadLine[terminatorMatch.end()] == "0":
+                    self.nonBinaryCmdTerminator = True
+                    endDigit = True
+
+                if payloadLine[terminatorMatch.end()] == "1":
+                    cmdReturnsError = True
+                    endDigit = True
+
+            if not self.nonBinaryCmdTerminator and self.randGen.probibility(50):
                 self.booleanCmdTerminator = True
                 
                 if cmdReturnsError:
@@ -326,22 +336,37 @@ class Mangler(object):
         self.cmdCounter += 1
         self.cmdTerminatorPos = terminatorMatch.start()
 
-        mangledPayloadLine = payloadLine[:terminatorMatch.start()] + cmdTerminator + payloadLine[terminatorMatch.end():]
+        if endDigit:
+            terminatorMatchEndPos = terminatorMatch.end() + 1
+        else:
+            terminatorMatchEndPos = terminatorMatch.end()
+
+        mangledPayloadLine = payloadLine[:terminatorMatch.start()] + cmdTerminator + payloadLine[terminatorMatchEndPos:]
 
         return mangledPayloadLine
 
     def getFinalPayload(self):
-        # if the final chars of the payload are '&&' or '||', bash will throw errors
-        if self.terminatedCmdLast and self.booleanCmdTerminator:
+        finalJunk = ""
+
+        # if the final cmd terminator of the payload is '&&' or '||', bash will throw errors
+        if self.booleanCmdTerminator:
+            if len(self.payloadLines[-1]) > self.cmdTerminatorPos + 2:
+                finalJunk = self.payloadLines[-1][self.cmdTerminatorPos + 2:]
+
             self.payloadLines[-1] = self.payloadLines[-1][:self.cmdTerminatorPos]
 
             # randomly replace '&&' or '||' with ';'
             if self.randGen.probibility(50):
                 self.payloadLines[-1] += ";"
-        
+
+            self.payloadLines[-1] += finalJunk
+
         # randomly remove the final command terminator
-        elif self.randGen.probibility(50):
-            self.payloadLines[-1] = self.payloadLines[-1][:self.cmdTerminatorPos]
+        elif not self.nonBinaryCmdTerminator and self.cmdTerminatorPos != 0 and self.randGen.probibility(50):
+            if len(self.payloadLines[-1]) > self.cmdTerminatorPos + 1:
+                finalJunk = self.payloadLines[-1][self.cmdTerminatorPos + 1:]
+
+            self.payloadLines[-1] = self.payloadLines[-1][:self.cmdTerminatorPos] + finalJunk
 
         self.finalPayload += "".join(self.payloadLines)
 
