@@ -124,7 +124,7 @@ class FileGlob(GlobObfuscator):
 
         self.setSizes(sizePref, userCmd)
         self.generate(sizePref, userCmd, self.writeDir)
-        self.mangler.addPayloadLine(":rmdir:^ ^'" + self.workingDir + "'* *")
+        self.mangler.addPayloadLine("* *:rmdir:^ ^'" + self.workingDir + "'END* *")
 
         return self.mangler.getFinalPayload()
 
@@ -151,6 +151,8 @@ class FolderGlob(GlobObfuscator):
         # TODO: remove created folders
         for chunk in cmdChunks:
             self.generate(sizePref, chunk, self.writeableDir + "/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
+
+        self.mangler.addJunk()
 
         return self.mangler.getFinalPayload()
 

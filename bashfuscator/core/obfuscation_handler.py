@@ -298,9 +298,9 @@ class ObfuscationHandler(object):
         """
         if selMutator.evalWrap:
             if self.randGen.probibility(50):
-                wrappedPayload = self.mangler.mangleLine('* *:eval:^ ^"$(? ?{0}? ?)"* *'.format(payload))
+                wrappedPayload = self.mangler.mangleLine('* *:eval:^ ^"$(? ?DATA? ?)"* *', payload)
             else:
-                wrappedPayload = self.mangler.mangleLine('* *:printf:^ ^%s^ ^"$(? ?{0}? ?)"* *|* *:bash:* *'.format(payload))
+                wrappedPayload = self.mangler.mangleLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
         else:
             wrappedPayload = payload
 
