@@ -153,8 +153,7 @@ class RandomGen(object):
 
         return randomVar
 
-    # TODO: make sure random strings don't contain BOBL seqences
-    def randUniqueStr(self, minStrLen=None, maxStrLen=None, charList=None, escapeChars="`'" + '"'):
+    def randUniqueStr(self, minStrLen=None, maxStrLen=None, charList=None, escapeChars=""):
         """
         Generate a random string that is guaranteed to be unique.
 

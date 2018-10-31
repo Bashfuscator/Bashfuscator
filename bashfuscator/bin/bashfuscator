@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from argparse import ArgumentTypeError, ArgumentParser, FileType
+from argparse import ArgumentTypeError, ArgumentParser
 from collections import OrderedDict
 from subprocess import STDOUT, PIPE, Popen
 from sys import exit, stdin
