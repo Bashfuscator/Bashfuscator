@@ -298,9 +298,9 @@ class ObfuscationHandler(object):
         """
         if selMutator.evalWrap:
             if self.randGen.probibility(50):
-                wrappedPayload = self.mangler.mangleLine('* *:eval:^ ^"$(? ?DATA? ?)"* *', payload)
+                wrappedPayload = self.mangler.getMangledLine('* *:eval:^ ^"$(? ?DATA? ?)"* *', payload)
             else:
-                wrappedPayload = self.mangler.mangleLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
+                wrappedPayload = self.mangler.getMangledLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
         else:
             wrappedPayload = payload
 
@@ -372,6 +372,8 @@ class ObfuscationHandler(object):
 
         if selMutator is not None and selMutator.mutatorType == "command":
             selMutator.deobStub = self.choosePrefStub(selMutator.prefStubs, sizePref, timePref, binaryPref, userStub)
+            selMutator.deobStub.mangler = selMutator.mangler
+            selMutator.deobStub.randGen = selMutator.mangler.randGen
 
         return selMutator
 
