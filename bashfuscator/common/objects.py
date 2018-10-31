@@ -42,6 +42,8 @@ class Mutator(object):
         self.credits = credits
         self.evalWrap = evalWrap
 
+        self.sizePref = None
+        self.timePref = None
         self.writeDir = None
         self._originalCmd = ""
         self._obfuscatedCmd = ""

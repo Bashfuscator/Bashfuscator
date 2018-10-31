@@ -135,7 +135,7 @@ class CaseSwap(CommandObfuscator):
             )
         ]
 
-    def mutate(self, sizePref, timePref, userCmd):
+    def mutate(self, userCmd):
         obCmd = userCmd.swapcase()
 
         return self.deobStub.genStub(obCmd)
@@ -171,7 +171,7 @@ class Reverse(CommandObfuscator):
             )
         ]
 
-    def mutate(self, sizePref, timePref, userCmd):
+    def mutate(self, userCmd):
         obCmd = userCmd[::-1]
         
         return self.deobStub.genStub(obCmd)

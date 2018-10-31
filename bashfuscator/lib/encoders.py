@@ -58,7 +58,7 @@ class Base64(Encoder):
             author="capnspacehook"
         )
 
-    def mutate(self, sizePref, timePref, userCmd):
+    def mutate(self, userCmd):
 
         b64EncodedBlob = b64encode(userCmd.encode("utf-8"))
         b64EncodedBlob = b64EncodedBlob.decode("utf-8").replace("\n", "")
@@ -79,7 +79,7 @@ class UrlEncode(Encoder):
             evalWrap=False
         )
 
-    def mutate(self, sizePref, timePref, userCmd):
+    def mutate(self, userCmd):
         self.originalCmd = userCmd
 
         self.payload = quote_plus(userCmd)

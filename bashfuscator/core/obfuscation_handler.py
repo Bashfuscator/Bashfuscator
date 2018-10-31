@@ -270,10 +270,12 @@ class ObfuscationHandler(object):
             else:
                 selMutator = self.choosePrefMutator(self.tokObfuscators, sizePref, timePref)
 
+        selMutator.sizePref = sizePref
+        selMutator.timePref = timePref
         selMutator.writeDir = writeDir
         selMutator._originalCmd = payload
         selMutator.mangler.initialize(sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange)
-        payload = selMutator.mutate(sizePref, timePref, payload)
+        payload = selMutator.mutate(payload)
         selMutator._obfuscatedCmd = payload
 
         self.randGen.forgetUniqueStrs()
@@ -298,9 +300,9 @@ class ObfuscationHandler(object):
         """
         if selMutator.evalWrap:
             if self.randGen.probibility(50):
-                wrappedPayload = self.mangler.getMangledLine('* *:eval:^ ^"$(? ?DATA? ?)"* *', payload)
+                wrappedPayload = self.mangler.mangleLine('* *:eval:^ ^"$(? ?DATA? ?)"* *', payload)
             else:
-                wrappedPayload = self.mangler.getMangledLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
+                wrappedPayload = self.mangler.mangleLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
         else:
             wrappedPayload = payload
 

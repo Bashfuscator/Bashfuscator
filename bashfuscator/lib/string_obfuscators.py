@@ -119,11 +119,11 @@ class FileGlob(GlobObfuscator):
             author="elijah-barker"
         )
 
-    def mutate(self, sizePref, timePref, userCmd):
+    def mutate(self, userCmd):
         self.originalCmd = userCmd
 
-        self.setSizes(sizePref, userCmd)
-        self.generate(sizePref, userCmd, self.writeDir)
+        self.setSizes(self.sizePref, userCmd)
+        self.generate(self.sizePref, userCmd, self.writeDir)
         self.mangler.addPayloadLine("* *:rmdir:^ ^'" + self.workingDir + "'END* *")
 
         return self.mangler.getFinalPayload()
@@ -139,10 +139,10 @@ class FolderGlob(GlobObfuscator):
             author="elijah-barker"
         )
 
-    def mutate(self, sizePref, timePref, userCmd):
+    def mutate(self, userCmd):
         self.originalCmd = userCmd
 
-        self.setSizes(sizePref, userCmd)
+        self.setSizes(self.sizePref, userCmd)
         self.writeableDir = (self.writeDir + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
         self.workingDir = escapeQuotes(self.writeableDir)
 
@@ -150,7 +150,7 @@ class FolderGlob(GlobObfuscator):
 
         # TODO: remove created folders
         for chunk in cmdChunks:
-            self.generate(sizePref, chunk, self.writeableDir + "/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
+            self.generate(self.sizePref, chunk, self.writeableDir + "/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
 
         self.mangler.addJunk()
 
@@ -169,7 +169,7 @@ class ForCode(StringObfuscator):
                 "DisectMalare, https://twitter.com/DissectMalware/status/1029629127727431680"]
         )
 
-    def mutate(self, sizePref, timePref, userCmd):
+    def mutate(self, userCmd):
         # get a set of unique chars in original command
         shuffledCmd = list(set(userCmd))
         self.randGen.randShuffle(shuffledCmd)
@@ -185,10 +185,10 @@ class ForCode(StringObfuscator):
 
         shuffledCmd = strToArrayElements(shuffledCmd)
 
-        charArrayVar = self.randGen.randGenVar(sizePref)
+        charArrayVar = self.randGen.randGenVar()
         self.mangler.addPayloadLine("? ?{0}=({1})* *END".format(charArrayVar, shuffledCmd))
 
-        indexVar = self.randGen.randGenVar(sizePref)
+        indexVar = self.randGen.randGenVar()
         self.mangler.addPayloadLine("^ ^for^ ^{0}^ ^in^ ^{1}* *END0".format(indexVar, cmdIndexes))
 
         # randomly choose between the two different for loop syntaxes
@@ -212,7 +212,7 @@ class HexHash(StringObfuscator):
             author="elijah-barker"
         )
 
-    def mutate(self, sizePref, timePref, userCmd):
+    def mutate(self, userCmd):
         for ch in userCmd:
             hexchar = str(bytes(ch, "utf-8").hex())
             randomhash = ""
