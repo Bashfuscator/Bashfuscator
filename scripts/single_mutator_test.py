@@ -11,7 +11,7 @@ from bashfuscator.core.obfuscation_handler import ObfuscationHandler
 
 
 if __name__ == "__main__":
-    mutatorName = "token/ansi-c_quote"
+    mutatorName = "string/xor_non_null"
     
     inputCommand = "echo 'It works!'"
     expectedOutput = "It works!\n"
