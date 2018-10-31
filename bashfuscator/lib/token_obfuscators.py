@@ -57,14 +57,14 @@ class AnsiCQuote(TokenObfuscator):
 
         self.SUBSTR_QUOTE_PROB = 33
 
-    def mutate(self, sizePref, timePref, userCmd):
+    def mutate(self, userCmd):
         self.originalCmd = userCmd
 
         obCmd = "printf %s $'\\"
 
-        if sizePref < 2:
+        if self.sizePref < 2:
             maxChoice = 2
-        elif sizePref < 3:
+        elif self.sizePref < 3:
             maxChoice = 3
         else:
             maxChoice = 4
@@ -74,7 +74,7 @@ class AnsiCQuote(TokenObfuscator):
 
             # If sizePref is 3, randomly ANSI-C quote substrings of the original
             # userCmd and randomly add empty strings
-            if sizePref == 4 and self.randGen.probibility(self.SUBSTR_QUOTE_PROB):
+            if self.sizePref == 4 and self.randGen.probibility(self.SUBSTR_QUOTE_PROB):
                 obCmd = obCmd[:-1] + "'" + "".join("''" for x in range(
                     self.randGen.randGenNum(0, 5))) + "$'\\"
 
@@ -107,7 +107,7 @@ class SpecialCharOnly(TokenObfuscator):
             evalWrap=False
         )
 
-    def mutate(self, sizePref, timePref, userCmd):
+    def mutate(self, userCmd):
         self.originalCmd = userCmd
 
         self.indexCounter = 0

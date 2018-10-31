@@ -137,6 +137,11 @@ class Mangler(object):
             for line in keys:
                 self.addPayloadLine(line, payloadLines[line])
 
+    def getMangledLine(self, payloadLine, inputChunk=None):
+        self.addPayloadLine(payloadLine, inputChunk)
+
+        return self.getFinalPayload()
+
     def addPayloadLine(self, payloadLine, inputChunk=None):
         mangledPayloadLine = self.mangleLine(payloadLine, inputChunk)
 

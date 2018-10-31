@@ -270,10 +270,12 @@ class ObfuscationHandler(object):
             else:
                 selMutator = self.choosePrefMutator(self.tokObfuscators, sizePref, timePref)
 
+        selMutator.sizePref = sizePref
+        selMutator.timePref = timePref
         selMutator.writeDir = writeDir
         selMutator._originalCmd = payload
         selMutator.mangler.initialize(sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange)
-        payload = selMutator.mutate(sizePref, timePref, payload)
+        payload = selMutator.mutate(payload)
         selMutator._obfuscatedCmd = payload
 
         self.randGen.forgetUniqueStrs()
@@ -372,6 +374,8 @@ class ObfuscationHandler(object):
 
         if selMutator is not None and selMutator.mutatorType == "command":
             selMutator.deobStub = self.choosePrefStub(selMutator.prefStubs, sizePref, timePref, binaryPref, userStub)
+            selMutator.deobStub.mangler = selMutator.mangler
+            selMutator.deobStub.randGen = selMutator.mangler.randGen
 
         return selMutator
 

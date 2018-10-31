@@ -1,30 +1,25 @@
+#!/usr/bin/env python3
+"""
+Stress tests a single Mutator
+"""
 from datetime import datetime
 import os
 import pytest
 from subprocess import STDOUT, PIPE, Popen
 
-from bashfuscator.core.mutator_list import commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors
 from bashfuscator.core.obfuscation_handler import ObfuscationHandler
 
 
-inputCommand = "echo 'It works!'"
-expectedOutput = "It works!\n"
+if __name__ == "__main__":
+    mutatorName = "token/ansi-c_quote"
+    
+    inputCommand = "echo 'It works!'"
+    expectedOutput = "It works!\n"
+    
+    obHandler = ObfuscationHandler()
 
-commandObNames = [c.longName + "/" + s.longName for c in commandObfuscators for s in c.stubs]
-stringObNames = [s.longName for s in stringObfuscators]
-tokenObNames = [t.longName for t in tokenObfuscators]
-encoderObNames = [e.longName for e in encoders if not e.postEncoder]
-compressorObNames = [c.longName for c in compressors]
-
-mutators = commandObNames + stringObNames + tokenObNames + encoderObNames + compressorObNames
-
-obHandler = ObfuscationHandler()
-
-@pytest.mark.parametrize("mutatorName", mutators)
-
-def test_mutators(mutatorName):
     try:
-        for i in range(100):
+        for i in range(1000):
             payload = obHandler.genObfuscationLayer(inputCommand, userMutator=mutatorName)
 
             proc = Popen(payload, executable="bash", stdout=PIPE, stderr=STDOUT, shell=True, universal_newlines=True)

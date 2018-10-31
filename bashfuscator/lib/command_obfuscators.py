@@ -1,8 +1,11 @@
 """
 Command Obfuscators used by the framework.
 """
-from bashfuscator.common.helpers import strToArrayElements
-from bashfuscator.common.objects import Mutator, Stub
+import re
+
+from bashfuscator.common.helpers import escapeQuotes
+from bashfuscator.common.messages import printError
+from bashfuscator.common.objects import Mutator
 
 
 class CommandObfuscator(Mutator):
@@ -48,6 +51,68 @@ class CommandObfuscator(Mutator):
         self.deobStub = None
 
 
+class Stub(object):
+    """
+    This class is in charge of generating a valid deobfuscation stub,
+    taking care of properly escaping quotes in the user's input,
+    generating random variable names, and so on.
+
+    :param name: name of the Stub
+    :param binariesUsed: all the binaries
+        used in the stub
+    :type binariesUsed: list of strs
+    :param sizeRating: rating from 1 to 5 of how much the Stub
+        increases the size of the overall payload
+    :type sizeRating: int
+    :param timeRating: rating from 1 to 5 of how much the Stub
+        increases the execution time of the overall payload
+    :type timeRating: int
+    :param escapeQuotes: True if the stub requires any quotes in the
+        original command to be escaped, False otherwise
+    :type escapeQuotes: int
+    :param stub: string containing the actual stub
+    :type stub: str
+    """
+
+    def __init__(self, name, binariesUsed, sizeRating, timeRating, escapeQuotes, stub):
+        self.name = name
+        self.longName = self.name.replace(" ", "_").lower()
+        self.binariesUsed = binariesUsed
+        self.sizeRating = sizeRating
+        self.timeRating = timeRating
+        self.escapeQuotes = escapeQuotes
+        self.stub = stub
+
+        self.mangler = None
+        self.randGen = None
+
+    def genStub(self, userCmd):
+        """
+        Generate a valid deobfuscation stub and wrap an obfuscated
+        command in it.
+
+        :param userCmd: command that need to be wrapped in a
+            deobfuscation stub
+        :type userCmd: str
+        """
+        if self.escapeQuotes:
+            userCmd = escapeQuotes(userCmd)
+
+        genStub = self.stub
+        for var in re.findall(r"VAR\d+", genStub):
+            genStub = genStub.replace(var, self.randGen.randGenVar())
+
+        genStub = self.mangler.getMangledLine(genStub)
+
+        if "CMD" not in genStub:
+            printError("Stub '{0}' is improperly formatted: no 'CMD' string found".format(self.name))
+
+        else:
+            genStub = genStub.replace("CMD", userCmd)
+
+        return genStub
+
+
 class CaseSwap(CommandObfuscator):
     def __init__(self):
         super().__init__(
@@ -66,17 +131,14 @@ class CaseSwap(CommandObfuscator):
                 sizeRating=1,
                 timeRating=1,
                 escapeQuotes=True,
-                stub='''VAR1='CMD';printf %s "${VAR1~~}"'''
+                stub='''? ?VAR1='CMD'* *END* *:printf:^ ^%s^ ^"${VAR1~~}"* *END* *'''
             )
         ]
 
-    def mutate(self, sizePref, timePref, userCmd):
-        self.originalCmd = userCmd
+    def mutate(self, userCmd):
+        obCmd = userCmd.swapcase()
 
-        obCmd = self.originalCmd.swapcase()
-        self.payload = self.deobStub.genStub(sizePref, obCmd)
-
-        return self.payload
+        return self.deobStub.genStub(obCmd)
 
 
 class Reverse(CommandObfuscator):
@@ -97,7 +159,7 @@ class Reverse(CommandObfuscator):
                 sizeRating=1,
                 timeRating=1,
                 escapeQuotes=True,
-                stub="""printf %s 'CMD'|rev"""
+                stub="""* *:printf:^ ^%s^ ^'CMD'* *|* *:rev:* *END* *"""
             ),
             Stub(
                 name="herestring rev",
@@ -105,14 +167,11 @@ class Reverse(CommandObfuscator):
                 sizeRating=3,
                 timeRating=1,
                 escapeQuotes=True,
-                stub="""rev <<<'CMD'"""
+                stub="""* *:rev:^ ^<<<? ?'CMD'* *END* *"""
             )
         ]
 
-    def mutate(self, sizePref, timePref, userCmd):
-        self.originalCmd = userCmd
-
-        obCmd = self.originalCmd[::-1]
-        self.payload = self.deobStub.genStub(sizePref, obCmd)
-
-        return self.payload
+    def mutate(self, userCmd):
+        obCmd = userCmd[::-1]
+        
+        return self.deobStub.genStub(obCmd)
