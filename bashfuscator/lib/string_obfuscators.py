@@ -249,12 +249,18 @@ class XorNonNull(StringObfuscator):
 		for i in range(keyLen):
 			nullchars = set(userCmd[i::keyLen])
 			if chr(xorKeyBytes[i]) in nullchars:
-				charList = self.randGen._randStrCharList # is this var exposed?
+				charBlackList = []
+				#for j in range(len(self.randGen._randStrCharList)):
+				#	charBlackList.append(self.randGen._randStrCharList[j]) # is this var exposed?
+				charBlackList = list(self.randGen._randStrCharList[:])
 				for char in nullchars:
-					charList.remove(char)
-				if len(charList) > 0:
+					try:
+						charBlackList.remove(char)
+					except:
+						print (charBlackList)
+				if len(charBlackList) > 0:
 					# Replace character that would cause a null byte
-					xorKeyBytes[i] = int.from_bytes(bytes(self.randGen.randGenStr(minStrLen=1, maxStrLen=1, charList=charList), "utf8"), byteorder='big')
+					xorKeyBytes[i] = int.from_bytes(bytes(self.randGen.randGenStr(minStrLen=1, maxStrLen=1, charList=charBlackList), "utf8"), byteorder='big')
 				else:
 					# Die: Impossible key length modulus (there are no
 					# characters that don't cause a null byte)
