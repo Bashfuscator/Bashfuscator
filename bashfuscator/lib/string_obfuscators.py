@@ -249,15 +249,10 @@ class XorNonNull(StringObfuscator):
 		for i in range(keyLen):
 			nullchars = set(userCmd[i::keyLen])
 			if chr(xorKeyBytes[i]) in nullchars:
-				charBlackList = []
-				#for j in range(len(self.randGen._randStrCharList)):
-				#	charBlackList.append(self.randGen._randStrCharList[j]) # is this var exposed?
 				charBlackList = list(self.randGen._randStrCharList[:])
 				for char in nullchars:
-					try:
+					if char in charBlackList:
 						charBlackList.remove(char)
-					except:
-						print (charBlackList)
 				if len(charBlackList) > 0:
 					# Replace character that would cause a null byte
 					xorKeyBytes[i] = int.from_bytes(bytes(self.randGen.randGenStr(minStrLen=1, maxStrLen=1, charList=charBlackList), "utf8"), byteorder='big')
@@ -266,7 +261,6 @@ class XorNonNull(StringObfuscator):
 					# characters that don't cause a null byte)
 					# solution: try a different key length
 					return None
-		
 		return xorKeyBytes
 
 	def mutate(self, sizePref, timePref, userCmd):
