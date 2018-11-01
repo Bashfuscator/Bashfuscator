@@ -105,7 +105,7 @@ class Stub(object):
         genStub = self.mangler.getMangledLine(genStub)
 
         if "CMD" not in genStub:
-            printError("Stub '{0}' is improperly formatted: no 'CMD' string found".format(self.name))
+            printError(f"Stub '{self.name}' is improperly formatted: no 'CMD' string found")
 
         else:
             genStub = genStub.replace("CMD", userCmd)

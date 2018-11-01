@@ -123,7 +123,7 @@ class Mangler(object):
             else:
                 self.misleadingCmdsRange = (1, 3)
 
-    def addLinesInRandomOrder(self, payloadLines):
+    def addLinesInRandomOrder(self, payloadLines, mangleLine=True):
         if isinstance(payloadLines, list):
             self.randGen.randShuffle(payloadLines)
 
@@ -137,40 +137,47 @@ class Mangler(object):
             for line in keys:
                 self.addPayloadLine(line, payloadLines[line])
 
-    def getMangledLine(self, payloadLine, inputChunk=None):
-        self.addPayloadLine(payloadLine, inputChunk)
+    def getMangledLine(self, payloadLine, inputChunk=None, mangleLine=True):
+        self.addPayloadLine(payloadLine, inputChunk, mangleLine)
 
         return self.getFinalPayload()
 
-    def addPayloadLine(self, payloadLine, inputChunk=None):
-        mangledPayloadLine = self.mangleLine(payloadLine, inputChunk)
+    def addPayloadLine(self, payloadLine, inputChunk=None, mangleLine=True):
+        mangledPayloadLine = self.mangleLine(payloadLine, inputChunk, mangleLine)
 
         self.payloadLines.append(mangledPayloadLine)
 
-    def mangleLine(self, payloadLine, inputChunk=None):
+    def mangleLine(self, payloadLine, inputChunk=None, mangleLine=True):
         mangledPayloadLine = payloadLine
 
         boblSyntaxMatch = Mangler.boblRegex.search(mangledPayloadLine)
         while boblSyntaxMatch:
-            if Mangler.binaryRegex.match(boblSyntaxMatch.group()):
-                mangledPayloadLine = self.mangleBinary(boblSyntaxMatch, mangledPayloadLine)
-
-            elif Mangler.requiredWhitespaceRegex.match(boblSyntaxMatch.group()):
-                mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, True, False)
-
-            elif Mangler.optionalWhitespaceRegex.match(boblSyntaxMatch.group()):
-                mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, False)
-
-            elif Mangler.requiredWhitespaceAndRandCharsRegex.match(boblSyntaxMatch.group()):
-                mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, True, True)
-
-            elif Mangler.optionalWhitespaceAndRandCharsRegex.match(boblSyntaxMatch.group()):
-                mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, True)
-
-            elif Mangler.commandEndRegex.match(boblSyntaxMatch.group()):
+            # process command terminators regardless of whether we are mangling the line
+            if Mangler.commandEndRegex.match(boblSyntaxMatch.group()):
                 mangledPayloadLine = self.getCommandTerminator(boblSyntaxMatch, mangledPayloadLine)
 
-            boblSyntaxMatch = Mangler.boblRegex.search(mangledPayloadLine, pos=boblSyntaxMatch.start())
+            if mangleLine:
+                if Mangler.binaryRegex.match(boblSyntaxMatch.group()):
+                    mangledPayloadLine = self.mangleBinary(boblSyntaxMatch, mangledPayloadLine)
+
+                elif Mangler.requiredWhitespaceRegex.match(boblSyntaxMatch.group()):
+                    mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, True, False)
+
+                elif Mangler.optionalWhitespaceRegex.match(boblSyntaxMatch.group()):
+                    mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, False)
+
+                elif Mangler.requiredWhitespaceAndRandCharsRegex.match(boblSyntaxMatch.group()):
+                    mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, True, True)
+
+                elif Mangler.optionalWhitespaceAndRandCharsRegex.match(boblSyntaxMatch.group()):
+                    mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, True)
+
+                searchPos = boblSyntaxMatch.start()
+            
+            else:
+                searchPos = boblSyntaxMatch.end()
+
+            boblSyntaxMatch = Mangler.boblRegex.search(mangledPayloadLine, pos=searchPos)
 
         if inputChunk:
             mangledPayloadLine = mangledPayloadLine.replace("DATA", inputChunk)
@@ -271,32 +278,35 @@ class Mangler(object):
             randChars += "$" + varSymbol
 
         elif choice == 1:
-            randChars += "${{{0}}}".format(varSymbol)
+            randChars += f"${{{varSymbol}}}"
 
         elif choice == 2:
-            randChars += "${{!{0}}}".format(varSymbol)
+            randChars += f"${{!{varSymbol}}}"
 
         elif choice > 2 and choice <= 8:
-            randChars += "${{{0}{1}{2}}}".format(varSymbol, self.randGen.randSelect(["^", "^^", ",", ",,", "~", "~~"]), self.getRandWhitespace(False))
+            randParameterExpansionOperator = self.randGen.randSelect(["^", "^^", ",", ",,", "~", "~~"])
+            randChars += f"${{{varSymbol}{randParameterExpansionOperator}{self.getRandWhitespace(False)}}}"
 
         elif choice > 8 and choice <= 14:
+            randParameterExpansionOperator = self.randGen.randSelect(["#", "##", "%", "%%", "/", "//"])
             randStr = self.randGen.randGenStr(escapeChars=charsToEscape)
             randWhitespace = self.getRandWhitespace(False)
             
             if randStr[-1:] == "\\" and randWhitespace == "":
                 randStr += "\\"
 
-            randChars += "${{{0}{1}{2}{3}}}".format(varSymbol, self.randGen.randSelect(["#", "##", "%", "%%", "/", "//"]), randStr, randWhitespace)
+            randChars += f"${{{varSymbol}{randParameterExpansionOperator}{randStr}{randWhitespace}}}"
 
         else:
             randStr = self.randGen.randGenStr(escapeChars=charsToEscape)
+            randParameterExpansionOperator = self.randGen.randSelect(["/", "//"])
             randStr2 = self.randGen.randGenStr(escapeChars=charsToEscape)
             randWhitespace = self.getRandWhitespace(False)
             
             if randStr2[-1:] == "\\" and randWhitespace == "":
                 randStr2 += "\\"
 
-            randChars += "${{{0}{1}{2}/{3}{4}}}".format(varSymbol, self.randGen.randSelect(["/", "//"]), randStr, randStr2, randWhitespace)
+            randChars += f"${{{varSymbol}{randParameterExpansionOperator}{randStr}/{randStr2}{randWhitespace}}}"
 
         if self.quoted:
             randChars += '"'

@@ -85,15 +85,15 @@ class GlobObfuscator(StringObfuscator):
             cmdCharsSection = cmdChars[i]
             cmdCharsSection = escapeQuotes(cmdCharsSection)
             printLines.update({
-                "* *:printf:^ ^%s^ ^'DATA'^ ^>^ ^'" + self.workingDir + "/" +
+                f"* *:printf:^ ^%s^ ^'DATA'^ ^>^ ^'{self.workingDir}/" +
                 format(i, "0" + str(cmdLogLen) + "b").replace("0", "?").replace("1", "\n") + "'* *END": cmdCharsSection
             })
 
         # TODO: randomize ordering of 'rm' statements
-        self.mangler.addPayloadLine("* *:mkdir:^ ^-p^ ^'" + self.workingDir + "'* *END")
+        self.mangler.addPayloadLine(f"* *:mkdir:^ ^-p^ ^'{self.workingDir}'* *END")
         self.mangler.addLinesInRandomOrder(printLines)
-        self.mangler.addPayloadLine("* *:cat:^ ^'" + self.workingDir + "'/" + "?" * cmdLogLen + "* *END")
-        self.mangler.addPayloadLine("* *:rm:^ ^'" + self.workingDir + "'/" + "?" * cmdLogLen + "* *END")
+        self.mangler.addPayloadLine(f"* *:cat:^ ^'{self.workingDir}'/{'?' * cmdLogLen}* *END")
+        self.mangler.addPayloadLine(f"* *:rm:^ ^'{self.workingDir}'/{'?' * cmdLogLen}* *END")
 
     def setSizes(self, userCmd):
         if self.sizePref == 1:
@@ -119,7 +119,7 @@ class FileGlob(GlobObfuscator):
     def mutate(self, userCmd):
         self.setSizes(userCmd)
         self.generate(userCmd)
-        self.mangler.addPayloadLine("* *:rmdir:^ ^'" + self.workingDir + "'END* *")
+        self.mangler.addPayloadLine(f"* *:rmdir:^ ^'{self.workingDir}'END* *")
 
         return self.mangler.getFinalPayload()
 
@@ -141,9 +141,9 @@ class FolderGlob(GlobObfuscator):
 
         for chunk in cmdChunks:
             self.generate(chunk, self.randGen.randUniqueStr())
-            self.mangler.addPayloadLine("* *:rmdir:^ ^'" + self.workingDir + "'END")
+            self.mangler.addPayloadLine(f"* *:rmdir:^ ^'{self.workingDir}'END")
 
-        self.mangler.addPayloadLine("* *:rmdir:^ ^'" + self.startingDir + "'END* *")
+        self.mangler.addPayloadLine(f"* *:rmdir:^ ^'{self.startingDir}'END* *")
 
         return self.mangler.getFinalPayload()
 
@@ -177,17 +177,17 @@ class ForCode(StringObfuscator):
         shuffledCmd = strToArrayElements(shuffledCmd)
 
         charArrayVar = self.randGen.randGenVar()
-        self.mangler.addPayloadLine("? ?{0}=({1})* *END".format(charArrayVar, shuffledCmd))
+        self.mangler.addPayloadLine(f"? ?{charArrayVar}=({shuffledCmd})* *END")
 
         indexVar = self.randGen.randGenVar()
-        self.mangler.addPayloadLine("^ ^for^ ^{0}^ ^in^ ^{1}* *END0".format(indexVar, cmdIndexes))
+        self.mangler.addPayloadLine(f"^ ^for^ ^{indexVar}^ ^in^ ^{cmdIndexes}* *END0")
 
         # randomly choose between the two different for loop syntaxes
         if self.randGen.probibility(50):
-            self.mangler.addPayloadLine('? ?{{^ ^:printf:^ ^%s^ ^"${{{0}[${1}]}}"* *;? ?}}? ?END0* *'.format(charArrayVar, indexVar))
+            self.mangler.addPayloadLine(f'? ?{{^ ^:printf:^ ^%s^ ^"${{{charArrayVar}[${indexVar}]}}"* *;? ?}}? ?END0* *')
 
         else:
-            self.mangler.addPayloadLine('? ?do^ ^:printf:^ ^%s^ ^"${{{0}[${1}]}}"* *;? ?done? ?END0* *'.format(charArrayVar, indexVar))
+            self.mangler.addPayloadLine(f'? ?do^ ^:printf:^ ^%s^ ^"${{{charArrayVar}[${indexVar}]}}"* *;? ?done? ?END0* *')
 
         return self.mangler.getFinalPayload()
 
@@ -215,7 +215,7 @@ class HexHash(StringObfuscator):
                 randomhash = m.hexdigest()
 
             index = randomhash.find(hexchar)
-            self.mangler.addPayloadLine('* *:printf:^ ^"\\x$(:printf:^ ^%s^ ^\'' + randomString + "\'* *|* *:md5sum:* *|* *:cut:^ ^-b^ ^" + str(index + 1) + "-" + str(index + 2) + '* *)"* *END')
+            self.mangler.addPayloadLine(f"""* *:printf:^ ^"\\x$(:printf:^ ^%s^ ^'{randomString}'* *|* *:md5sum:* *|* *:cut:^ ^-b^ ^{str(index + 1)}-{str(index + 2)}* *)"* *END""")
 
         self.mangler.addJunk()
 

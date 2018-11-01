@@ -18,7 +18,7 @@ from bashfuscator.core.obfuscation_handler import ObfuscationHandler
 def check_positive(value):
     ivalue = int(value)
     if ivalue <= 0:
-         raise ArgumentTypeError("{ivalue} is an invalid positive int value".format(ivalue))
+        raise ArgumentTypeError(f"{ivalue} is an invalid positive int value")
     return ivalue
 
 
@@ -72,22 +72,22 @@ def listMutators():
 
 def listMutatorType(mutators):
     for mutator in mutators:
-        print(bold("\nName: {0}".format(mutator.name)))
-        print("Description: {0}".format(mutator.description))
-        print("Size Rating: {0}".format(mutator.sizeRating))
-        print("Time Rating: {0}".format(mutator.timeRating))
+        print(bold(f"\nName: {mutator.name}"))
+        print(f"Description: {mutator.description}")
+        print(f"Size Rating: {mutator.sizeRating}")
+        print(f"Time Rating: {mutator.timeRating}")
         if mutator.mutatorType != "command":
             if mutator.binariesUsed:
                     binariesUsedString = "".join(b + ", " for b in mutator.binariesUsed)[:-2]
             else:
                 binariesUsedString = "None"
 
-            print("Binaries used: {0}".format(binariesUsedString))
+            print(f"Binaries used: {binariesUsedString}")
 
-        print("File write: {0}".format(mutator.fileWrite))
-        if mutator.notes is not None: print("Notes: {0}".format(mutator.notes))
-        if mutator.author is not None: print("Author: {0}".format(mutator.author))
-        if mutator.credits is not None: 
+        print(f"File write: {mutator.fileWrite}")
+        if mutator.notes is not None: print(f"Notes: {mutator.notes}")
+        if mutator.author is not None: print(f"Author: {mutator.author}")
+        if mutator.credits is not None:
             print("Credits: ", end="")
 
             for idx, credit in enumerate(mutator.credits):
@@ -99,32 +99,32 @@ def listMutatorType(mutators):
         if mutator.mutatorType == "command":
             print("\nStubs:")
             for stub in mutator.stubs:
-                print("\n\tName: {0}".format(stub.name))
+                print(f"\n\tName: {stub.name}")
 
                 if stub.binariesUsed:
                     binariesUsedString = "".join(b + ", " for b in stub.binariesUsed)[:-2]
                 else:
                     binariesUsedString = "None"
 
-                print("\tBinaries Used: {0}".format(binariesUsedString))
-                print("\tSize Rating: {0}".format(stub.sizeRating))
-                print("\tTime Rating: {0}".format(stub.timeRating))
+                print(f"\tBinaries Used: {binariesUsedString}")
+                print(f"\tSize Rating: {stub.sizeRating}")
+                print(f"\tTime Rating: {stub.timeRating}")
 
 def printArgError(errorMsg):
-    print("bashfuscator: error: " + errorMsg)
+    print(f"bashfuscator: error: {errorMsg}")
     exit(1)
 
 def checkRangeArgs(argName, argValue):
     if argValue.find(",") == -1:
-        printArgError("Invalid value for {0} option: format is NUM,NUM".format(argName))
+        printArgError(f"Invalid value for {argName} option: format is NUM,NUM")
     
     rangeValues = *(int(x) for x in argValue.split(",")),
 
     if rangeValues[0] < 0 or rangeValues[1] < 0:
-        printArgError("Invalid value for {0} option: range values must be positive".format(argName))
+        printArgError(f"Invalid value for {argName} option: range values must be positive")
 
     if rangeValues[0] > rangeValues[1]:
-        printArgError("Invalid value for {0} option: invalid range".format(argName))
+        printArgError(f"Invalid value for {argName} option: invalid range")
 
     return rangeValues
 
@@ -252,7 +252,7 @@ if __name__ == "__main__":
             outfile.write(shebang.encode("utf-8"))
             outfile.write(payload.encode("utf-8"))
 
-        printInfo("Payload written to {0}".format(args.outfile))
+        printInfo(f"Payload written to {args.outfile}")
 
     if args.clip:
         pyperclip.copy(payload)
@@ -264,7 +264,7 @@ if __name__ == "__main__":
     if not args.quiet:
         print("")
 
-    printInfo("Payload size: {0} characters".format(len(payload)))
+    printInfo(f"Payload size: {len(payload)} characters")
 
     if args.test:
         printInfo("Testing payload:\n")

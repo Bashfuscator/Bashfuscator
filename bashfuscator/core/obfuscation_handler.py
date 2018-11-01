@@ -253,7 +253,7 @@ class ObfuscationHandler(object):
                 selMutator = self.choosePrefMutator(self.compressors, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
 
             else:
-                printError("ERROR: {0} isn't a valid mutator type".format(mutatorType))
+                printError(f"ERROR: {mutatorType} isn't a valid mutator type")
         else:
             # TODO: handle case when no mutators of chosen type are compatible with user's preferences
             obChoice = self.randGen.randChoice(3)
@@ -352,12 +352,12 @@ class ObfuscationHandler(object):
             for mutator in mutators:
                 if mutator.longName == userMutator:
                     if filePref is False and mutator.fileWrite != filePref:
-                        printWarning("'{0}' mutator preforms file writes".format(userMutator))
+                        printWarning(f"'{userMutator}' mutator preforms file writes")
 
                     elif binaryPref:
                         for binary in mutator.binariesUsed:
                             if (binary in binList) != includeBinary:
-                                printWarning("'{0}' mutator contains an unwanted binary".format(userMutator))
+                                printWarning(f"'{userMutator}' mutator contains an unwanted binary")
 
                     selMutator = mutator
                     if selMutator.mutatorType == "command":
@@ -366,7 +366,7 @@ class ObfuscationHandler(object):
                     break
             
             if selMutator is None:
-                printError("Selected mutator '{0}' not found".format(userMutator))
+                printError(f"Selected mutator '{userMutator}' not found")
         
         else:
             prefMutators = self.getPrefMutators(mutators, sizePref, timePref, binaryPref, filePref, prevCmdOb)
@@ -518,12 +518,12 @@ class ObfuscationHandler(object):
                     if binaryPref is not None:
                         for binary in stub.binariesUsed:
                             if (binary in binList) != includeBinary:
-                                printWarning("'{0}' stub contains an unwanted binary".format(userStub))
+                                printWarning(f"'{userStub}' stub contains an unwanted binary")
                     
                     selStub = stub
 
             if selStub is None:     
-                printError("'{0}' stub not found".format(userStub))
+                printError(f"'{userStub}' stub not found")
 
         else:
             selStub = self.randGen.randSelect(stubs)
