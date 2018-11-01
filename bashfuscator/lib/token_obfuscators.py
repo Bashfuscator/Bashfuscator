@@ -108,106 +108,104 @@ class SpecialCharOnly(TokenObfuscator):
         )
 
     def mutate(self, userCmd):
-        self.originalCmd = userCmd
-
         self.indexCounter = 0
         self.mainArrayName = self.randGen.randUniqueStr(3, 5, "_")
 
+        # test with BOBL syntax
         # build list of different commands that will return '0'
-        zeroCmdSyntax = [":", "${__}", "_=;", "_=()", "${__[@]}", "${!__[@]}", ":(){ :; };", \
-            "_(){ _; };", "_(){ _; };:", "_(){ :; };", "_(){ :; };_", "_(){ :; };:"]
+        zeroCmdSyntax = [":", "${__}", "_=END0", "_=()", "${__[@]}", "${!__[@]}", ":(){ :; }END0", \
+            "_(){ _END0 }END0", "_(){ _END0 }END0:", "_(){ :END0 }END0", "_(){ :END0 }END0_", "_(){ :END0 }END0:"]
 
         self.symbols = [" ", "#", "$", "%", "&", "+", ",", "-", ".", "/", ":", ";", "<", "=", ">", "?", "^", "_", "|", "~"]
 
         zeroCmd = self.randGen.randSelect(zeroCmdSyntax)
 
         # 1/2 of the time wrap zeroCmd in braces
-        if self.randGen.probibility(50):
-            if zeroCmd[-1:] != ";":
-                zeroCmd += ";"
+        if zeroCmd[-4:] != "END0" and self.randGen.probibility(50):
+            zeroCmd += "END0"
 
             zeroCmd = "{ " + zeroCmd + " }"
 
         initialDigitVar = self.randGen.randUniqueStr(3, 26, "_")
 
-        if self.randGen.probibility(50):
-            if zeroCmd[-1:] != ";":
-                zeroCmd += ";"
+        if zeroCmd[-4:] != "END0" and self.randGen.probibility(50):
+            zeroCmd += "END0"
 
-            arrayInstantiationStr = "{0}{1}=$?{2}".format(zeroCmd, initialDigitVar, self.genCommandSeporatorStr())
+            self.mangler.addPayloadLine(f"{zeroCmd}{initialDigitVar}=$?END")
 
         else:
-            if self.randGen.probibility(50) and zeroCmd[-1:] != ";":
-                zeroCmd += ";"
+            if zeroCmd[-4:] != "END0" and self.randGen.probibility(50):
+                zeroCmd += "END0"
 
-            arrayInstantiationStr = "{0}=`{1}`{2}".format(initialDigitVar, zeroCmd, self.genCommandSeporatorStr())
+            self.mangler.addPayloadLine(f"{initialDigitVar}=`{zeroCmd}`END")
 
-        incrementSyntaxChoices = ["(({0}={1}++)){2}", "{0}=$(({1}++)){2}", "{0}=$[{1}++]{2}"]
+        incrementSyntaxChoices = ["(({0}={1}++))END", "{0}=$(({1}++))END", "{0}=$[{1}++]END"]
+        
         self.digitVars = []
+        self.digitVars.append(self.randGen.randUniqueStr(3, 26, "_"))
+
+        incrementStr = self.randGen.randSelect(incrementSyntaxChoices)
+        if incrementStr == incrementSyntaxChoices[0]:
+            #if the in-place arithmetic expansion is used when instantiating the first digitVar,
+            # the command will return 1 for some reason
+            incrementStr = incrementStr + "1"
+
+        self.mangler.addPayloadLine(incrementStr.format(self.digitVars[0], initialDigitVar))
 
         # build variables that will hold the digits 0-9
-        for i in range(0, 10):
+        for i in range(1, 10):
             self.digitVars.append(self.randGen.randUniqueStr(3, 26, "_"))
 
             incrementStr = self.randGen.randSelect(incrementSyntaxChoices)
-            incrementStr = incrementStr.format(self.digitVars[i], initialDigitVar, self.genCommandSeporatorStr())
-
-            arrayInstantiationStr += incrementStr
+            self.mangler.addPayloadLine(incrementStr.format(self.digitVars[i], initialDigitVar))
 
         procPIDDirsArrayVar = self.randGen.randUniqueStr(3, 26, "_")
-        arrayInstantiationStr += "{0}=(/????/$$/????){1}".format(procPIDDirsArrayVar, self.genCommandSeporatorStr())
+        self.mangler.addPayloadLine(f"{procPIDDirsArrayVar}=(/????/$$/????)END")
 
         procPIDAttrArrayVar = self.randGen.randUniqueStr(3, 26, "_")
-        arrayInstantiationStr += "{0}=${{{1}[${2}]}}{3}".format(procPIDAttrArrayVar, procPIDDirsArrayVar, self.digitVars[0], self.genCommandSeporatorStr())
+        self.mangler.addPayloadLine(f"{procPIDAttrArrayVar}=${{{procPIDDirsArrayVar}[${self.digitVars[0]}]}}END")
 
         procPathArrayVar = self.randGen.randUniqueStr(3, 26, "_")
-        arrayInstantiationStr += "{0}=(${{{1}//\// }}){2}".format(procPathArrayVar, procPIDAttrArrayVar, self.genCommandSeporatorStr())
+        self.mangler.addPayloadLine(f"{procPathArrayVar}=(${{{procPIDAttrArrayVar}//\// }})END")
 
         attrVar = self.randGen.randUniqueStr(3, 26, "_")
-        arrayInstantiationStr += "{0}=${{{1}[${2}]}}{3}".format(attrVar, procPathArrayVar, self.digitVars[2], self.genCommandSeporatorStr())
+        self.mangler.addPayloadLine(f"{attrVar}=${{{procPathArrayVar}[${self.digitVars[2]}]}}END")
 
         cattrVar = self.randGen.randUniqueStr(3, 26, "_")
-        arrayInstantiationStr += "{0}=${{{1}: -${2}:${2}}}${3}{4}".format(cattrVar, procPathArrayVar, self.digitVars[1], attrVar, self.genCommandSeporatorStr())
+        self.mangler.addPayloadLine(f"{cattrVar}=${{{procPathArrayVar}: -${self.digitVars[1]}:${self.digitVars[1]}}}${attrVar}END", mangleLine=False)
 
         catVar = self.randGen.randUniqueStr(3, 26, "_")
-        arrayInstantiationStr += "{0}=${{{1}:{2}:{3}}}{4}".format(catVar, cattrVar, self.digitVars[0], self.digitVars[3], self.genCommandSeporatorStr())
+        self.mangler.addPayloadLine(f"{catVar}=${{{cattrVar}:{self.digitVars[0]}:{self.digitVars[3]}}}END", mangleLine=False)
 
         aVar = self.randGen.randUniqueStr(3, 26, "_")
-        arrayInstantiationStr += "{0}=${{{1}:{2}:{3}}}{4}".format(aVar, attrVar, self.digitVars[0], self.digitVars[1], self.genCommandSeporatorStr())
+        self.mangler.addPayloadLine(f"{aVar}=${{{attrVar}:{self.digitVars[0]}:{self.digitVars[1]}}}END", mangleLine=False)
 
         AVar = self.randGen.randUniqueStr(3, 26, "_")
-        arrayInstantiationStr += "{0}=${{{1}^}}{2}".format(AVar, aVar, self.genCommandSeporatorStr())
+        self.mangler.addPayloadLine(f"{AVar}=${{{aVar}^}}END")
 
         fromAtoaVar = self.randGen.randUniqueStr(3, 26, "_")
-        arrayInstantiationStr += r". <(${0}<<<{1}=\({{${2}..${3}}}\)){4}".format(catVar, fromAtoaVar, AVar, aVar, self.genCommandSeporatorStr())
+        self.mangler.addPayloadLine(rf". <(${catVar}<<<{fromAtoaVar}=\({{${AVar}..${aVar}}}\))END")
 
         upperAlphabetVar = self.randGen.randUniqueStr(3, 26, "_")
-        arrayInstantiationStr += "{0}=(${{{1}[@]:${2}:${3}${4}}}){5}".format(upperAlphabetVar, fromAtoaVar, self.digitVars[0], self.digitVars[2], self.digitVars[6], self.genCommandSeporatorStr())
+        self.mangler.addPayloadLine(f"{upperAlphabetVar}=(${{{fromAtoaVar}[@]:${self.digitVars[0]}:${self.digitVars[2]}${self.digitVars[6]}}})END", mangleLine=False)
 
         lowerAlphabetVar = self.randGen.randUniqueStr(3, 26, "_")
-        arrayInstantiationStr += "{0}=(${{{1}[@],,}}){2}".format(lowerAlphabetVar, upperAlphabetVar, self.genCommandSeporatorStr())
-
-        arrayInitializationStrs = []
+        self.mangler.addPayloadLine(f"{lowerAlphabetVar}=(${{{upperAlphabetVar}[@],,}})END")
 
         evalVar = self.getNextArrayIndex()
-        arrayInstantiationStr += "{0}={1}{2}".format(self.genSetElementStr(evalVar), self.genSymbolAlphabetStr(lowerAlphabetVar, upperAlphabetVar, "eval"), self.genCommandSeporatorStr())
+        evalSymbolStr = self.genSymbolAlphabetStr(lowerAlphabetVar, upperAlphabetVar, "eval")
+        self.mangler.addPayloadLine(f"{self.genSetElementStr(evalVar)}={evalSymbolStr}END")
 
         tempVar = self.getNextArrayIndex()
         cmdSubstitutionsStr = "$(:)"
-        arrayInstantiationStr += "{0}=`{1} '{{ {2}; }} '${3}'>&'${4}`{5}{6}=${{#{7}}}{8}".format(
-            self.genSetElementStr(tempVar), 
-            self.genAccessElementStr(evalVar),
-            cmdSubstitutionsStr,
-            self.digitVars[2],
-            self.digitVars[1],
-            self.genCommandSeporatorStr(),
-            self.digitVars[0],
-            self.genSetElementStr(tempVar),
-            self.genCommandSeporatorStr()
-        )
+
+        self.mangler.addPayloadLine(f"{self.genSetElementStr(tempVar)}=`{self.genAccessElementStr(evalVar)} '{{ {cmdSubstitutionsStr}END0 }} '${self.digitVars[2]}'>&'${self.digitVars[1]}`END")
+        self.mangler.addPayloadLine(f"{self.digitVars[0]}=${{#{self.genSetElementStr(tempVar)}}}END")
 
         arithemticOperators = ["+", "-"]
-        arithmeticExpansionSyntax = ["{0}=$(({1}{2}{3})){4}", "{0}=$[{1}{2}{3}]{4}", "(({0}={1}{2}{3})){4}"]
+        arithmeticExpansionSyntax = ["{0}=$(({1}{2}{3}))END", "{0}=$[{1}{2}{3}]END", "(({0}={1}{2}{3}))END"]
+        arrayInitializationStrs = []
+
         for i in range(1, 10):
             arithmeticSyntax = self.randGen.randSelect(arithmeticExpansionSyntax)
 
@@ -215,108 +213,50 @@ class SpecialCharOnly(TokenObfuscator):
                 self.digitVars[i], 
                 self.digitVars[i],
                 self.randGen.randSelect(arithemticOperators),
-                self.digitVars[0],
-                self.genCommandSeporatorStr()
+                self.digitVars[0]
             ))
 
         catKeyVar = self.getNextArrayIndex()
-        arrayInitializationStrs.append("{0}=${1}{2}".format(self.genSetElementStr(catKeyVar), catVar, self.genCommandSeporatorStr()))
+        arrayInitializationStrs.append(f"{self.genSetElementStr(catKeyVar)}=${catVar}END")
         catVar = catKeyVar
 
         # TODO: fine-tune debug crash line
-        arrayInitializationStrs.append(": {0} '{{ $[{1}]; }} '${2}'>&'${3}{4}".format(
-            self.genAccessElementStr(evalVar), 
-            self.genAccessElementStr(tempVar),
-            self.digitVars[2],
-            self.digitVars[1],
-            self.genCommandSeporatorStr()
-        ))
+        arrayInitializationStrs.append(f": {self.genAccessElementStr(evalVar)} '{{ $[{self.genAccessElementStr(tempVar)}]END0 }} '${self.digitVars[2]}'>&'${self.digitVars[1]}END")
 
-        self.randGen.randShuffle(arrayInitializationStrs)
-        arrayInstantiationStr += "".join(arrayInitializationStrs)
+        self.mangler.addLinesInRandomOrder(arrayInitializationStrs)
+
 
         # build the string 'printf' from substrings of error messages
         badStubstitutionErrMsg = " bad substitution"
         badStubstitutionErrVar = self.getNextArrayIndex()
-        badStubstitutionErrStr = "{0}=`{1} '{{ ${{}}; }} '${2}'>&'${3}`{4}{0}=${{{0}##*:}}{5}".format(
-            self.genSetElementStr(badStubstitutionErrVar),
-            self.genAccessElementStr(evalVar),
-            self.digitVars[2],
-            self.digitVars[1],
-            self.genCommandSeporatorStr(False),
-            self.genCommandSeporatorStr()
-        )
+        self.mangler.addPayloadLine(f"{self.genSetElementStr(badStubstitutionErrVar)}=`{self.genAccessElementStr(evalVar)} '{{ ${{}}END0 }} '${self.digitVars[2]}'>&'${self.digitVars[1]}`END1")
+        self.mangler.addPayloadLine(f"{self.genSetElementStr(badStubstitutionErrVar)}=${{{self.genSetElementStr(badStubstitutionErrVar)}##*:}}END")
 
         noSuchFileOrDirErrSymbols = ["!", "#", "$", "%", "+", ",", "-", ":", "=", "@", "[", "]", "^", "_", "{", "}", "~"]
         noSuchFileOrDirErrCmdSymbol = self.randGen.randSelect(noSuchFileOrDirErrSymbols)
         noSuchFileOrDirErrMsg = " No such file or directory"
         noSuchFileOrDirErrVar = self.getNextArrayIndex()
-        noSuchFileOrDirErrStr = "{0}=`{1} '{{ ./{2}; }} '${3}'>&'${4}`{5}{0}=${{{0}##*:}}{6}".format(
-            self.genSetElementStr(noSuchFileOrDirErrVar),
-            self.genAccessElementStr(evalVar),
-            noSuchFileOrDirErrCmdSymbol,
-            self.digitVars[2],
-            self.digitVars[1],
-            self.genCommandSeporatorStr(False),
-            self.genCommandSeporatorStr()
-        )
+        self.mangler.addPayloadLine(f"{self.genSetElementStr(noSuchFileOrDirErrVar)}=`{self.genAccessElementStr(evalVar)} '{{ ./{noSuchFileOrDirErrCmdSymbol}END0 }} '${self.digitVars[2]}'>&'${self.digitVars[1]}`END1")
+        self.mangler.addPayloadLine(f"{self.genSetElementStr(noSuchFileOrDirErrVar)}=${{{self.genSetElementStr(noSuchFileOrDirErrVar)}##*:}}END")
 
         # get the string 'bash'
         bashStrVar = self.getNextArrayIndex()
-        bashStr = "{0}=${{{1}:{2}:{3}}}".format(
-            self.genSetElementStr(bashStrVar),
-            self.genSetElementStr(badStubstitutionErrVar),
-            self.digitVars[0],
-            self.digitVars[3],
-        )
-
-        bashStr += "${{{0}:{1}:{2}}}".format(
-            self.genSetElementStr(noSuchFileOrDirErrVar),
-            self.digitVars[4],
-            self.digitVars[1]
-        )
-
-        bashStr += "${{{0}:{1}:{2}}}{3}".format(
-            self.genSetElementStr(noSuchFileOrDirErrVar),
-            self.digitVars[7],
-            self.digitVars[1],
-            self.genCommandSeporatorStr()
-        )
+        bashStr = f"{self.genSetElementStr(bashStrVar)}=${{{self.genSetElementStr(badStubstitutionErrVar)}:{self.digitVars[0]}:{self.digitVars[3]}}}"
+        bashStr += f"${{{self.genSetElementStr(noSuchFileOrDirErrVar)}:{self.digitVars[4]}:{self.digitVars[1]}}}"
+        bashStr += f"${{{self.genSetElementStr(noSuchFileOrDirErrVar)}:{self.digitVars[7]}:{self.digitVars[1]}}}END"
+        self.mangler.addPayloadLine(bashStr, mangleLine=False)
 
         # get the character 'c' from the 'command not found' error message
         cCharVar = self.getNextArrayIndex()
-        cCharStr = "{0}=${{{1}:{2}:{3}}}{4}".format(
-            self.genSetElementStr(cCharVar),
-            self.genSetElementStr(noSuchFileOrDirErrVar),
-            self.digitVars[6],
-            self.digitVars[1],
-            self.genCommandSeporatorStr()
-        )
+        self.mangler.addPayloadLine(f"{self.genSetElementStr(cCharVar)}=${{{self.genSetElementStr(noSuchFileOrDirErrVar)}:{self.digitVars[6]}:{self.digitVars[1]}}}END", mangleLine=False)
 
         syntaxErrorMsg = "bash: -c: line 0: syntax error near unexpected token `;' bash: -c: line 0: `;'"
         syntaxErrorVar = self.getNextArrayIndex()
-        syntaxErrorStr = """{0}=`{1} '{{ {2} -{3} ";"; }} '${4}'>&'${5}`{6}""".format(
-            self.genSetElementStr(syntaxErrorVar),
-            self.genAccessElementStr(evalVar),
-            self.genAccessElementStr(bashStrVar),
-            self.genAccessElementStr(cCharVar),
-            self.digitVars[2],
-            self.digitVars[1],
-            self.genCommandSeporatorStr(False)
-        )
+        self.mangler.addPayloadLine(f"""{self.genSetElementStr(syntaxErrorVar)}=`{self.genAccessElementStr(evalVar)} '{{ {self.genAccessElementStr(bashStrVar)} -{self.genAccessElementStr(cCharVar)} ";"END0 }} '${self.digitVars[2]}'>&'${self.digitVars[1]}`END1""")
 
         # get the character 'x' from the 'syntax' error message
         xCharVar = self.getNextArrayIndex()
-        xCharStr = "{0}=${{{1}:${2}${3}:${4}}}{5}".format(
-            self.genSetElementStr(xCharVar),
-            self.genSetElementStr(syntaxErrorVar),
-            self.digitVars[2],
-            self.digitVars[3],
-            self.digitVars[1],
-            self.genCommandSeporatorStr()
-        )
-
-        printfInstanstiationStr = badStubstitutionErrStr + noSuchFileOrDirErrStr + bashStr + cCharStr + syntaxErrorStr + xCharStr
+        self.mangler.addPayloadLine(f"{self.genSetElementStr(xCharVar)}=${{{self.genSetElementStr(syntaxErrorVar)}:${self.digitVars[2]}${self.digitVars[3]}:${self.digitVars[1]}}}END", mangleLine=False)
 
 
         #store all the characters of 'printf' from the stored error messages
@@ -335,26 +275,18 @@ class SpecialCharOnly(TokenObfuscator):
                     for digit in str(idx):
                         digitAccessStr += "$" + self.digitVars[int(digit)]
 
-                    printfCharsInstatiationStrs.append("{0}=${{{1}:{2}:${3}}}{4}".format(
-                        self.genSetElementStr(charVarName),
-                        self.genSetElementStr(errVar),
-                        digitAccessStr,
-                        self.digitVars[1],
-                        self.genCommandSeporatorStr()
-                    ))
-
+                    printfCharsInstatiationStrs.append(f"{self.genSetElementStr(charVarName)}=${{{self.genSetElementStr(errVar)}:{digitAccessStr}:${self.digitVars[1]}}}END")
                     charVars.append(charVarName)
 
             printfCharVarNames[char] = charVars
 
-        self.randGen.randShuffle(printfCharsInstatiationStrs)
-        printfInstanstiationStr += "".join(printfCharsInstatiationStrs)
+        self.mangler.addLinesInRandomOrder(printfCharsInstatiationStrs, mangleLine=False)
 
         # there are roughly 2058 ways to generate the string 'printf' from the error messages that
         # are stored as variables. If the input exceeds the number of 'printf' vars, pre-assign the
         # 'printf' vars to make the payload smaller
         self.largeCmd = False
-        if len(self.originalCmd) > 2000:
+        if len(userCmd) > 2000:
             self.largeCmd = True
             instantiationStrPieces = OrderedDict()
             printfVarsInstatiationStrs = {}
@@ -377,18 +309,14 @@ class SpecialCharOnly(TokenObfuscator):
                                     #    instantiationStrPieces.append(self.genAccessElementStr(self.randGen.randSelect(printfCharVarNames[" "])))
 
                                     printfVar = self.getNextArrayIndex()
-                                    printfVarsInstatiationStrs[printfVar] = "{0}={1}{2}".format(
-                                        self.genSetElementStr(printfVar), 
-                                        "".join(instantiationStrPieces.values()),
-                                        self.genCommandSeporatorStr()
-                                    )
+                                    printfVarsInstatiationStrs[printfVar] = f'{self.genSetElementStr(printfVar)}={"".join(instantiationStrPieces.values())}END'
                                     printfVars[printfVar] = False
 
             printfVarsList = list(printfVars.keys())
 
 
         self.printfCmdCounter = 0
-        symbolCommandStr = '{0} "$('.format(self.genAccessElementStr(evalVar))
+        symbolCommandStr = f'{self.genAccessElementStr(evalVar)} "$('
         for cmdChar in userCmd:
             if self.largeCmd:
                 printfVar = self.randGen.randSelect(printfVarsList)
@@ -407,19 +335,16 @@ class SpecialCharOnly(TokenObfuscator):
                 for char in hexCode:
                     digitsAccess += "$" + self.digitVars[int(char)]
 
-                symbolCommandStr += r'{0} "\\{1}{2}"'.format(printfStr, self.genAccessElementStr(xCharVar), digitsAccess)
+                symbolCommandStr += rf'{printfStr} "\\{self.genAccessElementStr(xCharVar)}{digitsAccess}"'
 
             else:
                 octCode = str(oct(ord(cmdChar)))[2:]
                 for char in octCode:
                     digitsAccess += "$" + self.digitVars[int(char)]
 
-                symbolCommandStr += r'{0} "\\{1}"'.format(printfStr, digitsAccess)
+                symbolCommandStr += rf'{printfStr} "\\{digitsAccess}"'
 
-            symbolCommandStr += self.genCommandSeporatorStr(printfStr=True)
-        
-        if self.randGen.probibility(50):
-            symbolCommandStr = symbolCommandStr[:-1]
+            symbolCommandStr += "END"
 
         symbolCommandStr += ')"'
 
@@ -430,33 +355,12 @@ class SpecialCharOnly(TokenObfuscator):
                 if used:
                     printfInstanstiationStrs.append(printfVarsInstatiationStrs[var])
 
-            self.randGen.randShuffle(printfInstanstiationStrs)
-            printfInstanstiationStr += "".join(printfInstanstiationStrs)
+            self.mangler.addLinesInRandomOrder(printfInstanstiationStrs)
 
-        self.payload = arrayInstantiationStr + printfInstanstiationStr + symbolCommandStr
+        self.mangler.addPayloadLine(symbolCommandStr)
 
-        return self.payload
+        return self.mangler.getFinalPayload()
 
-
-    def genCommandSeporatorStr(self, printfStr=False):
-        if printfStr:
-            if self.printfCmdCounter == 0:
-                self.printfCmdCounter += 1
-                self.cmdOffset = self.randGen.randGenNum(1250, 1750)
-                seporator = ";"
-            
-            elif self.printfCmdCounter == self.cmdOffset:
-                self.printfCmdCounter = 0
-                seporator = "\n"
-
-            else:
-                self.printfCmdCounter += 1
-                seporator = ";"
-
-        else:
-            seporator = ";"
-
-        return seporator
 
     def genSymbolAlphabetStr(self, lowerArrayName, upperArrayName, initialStr):
         invertSyntaxChoices = ["~", "~~"]
