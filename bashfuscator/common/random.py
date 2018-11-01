@@ -41,8 +41,9 @@ class RandomGen(object):
         variables and strings to the (almost) full ASCII charset.
         Only "'" and "/" are not used.
         """
-        RandomGen._randStrCharList = "".join(
-            chr(i) for i in range(1, 127) if i != 39 and i != 47)
+        RandomGen._randStrCharList = [chr(i) for i in range(1, 128)]
+        RandomGen._randStrCharList.remove("'")
+        RandomGen._randStrCharList.remove("/")
 
     def forgetUniqueStrs(self):
         """
