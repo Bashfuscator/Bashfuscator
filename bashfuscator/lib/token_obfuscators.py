@@ -58,8 +58,6 @@ class AnsiCQuote(TokenObfuscator):
         self.SUBSTR_QUOTE_PROB = 33
 
     def mutate(self, userCmd):
-        self.originalCmd = userCmd
-
         obCmd = "printf %s $'\\"
 
         if self.sizePref < 2:
@@ -69,7 +67,7 @@ class AnsiCQuote(TokenObfuscator):
         else:
             maxChoice = 4
 
-        for char in self.originalCmd:
+        for char in userCmd:
             choice = self.randGen.randChoice(maxChoice)
 
             # If sizePref is 3, randomly ANSI-C quote substrings of the original
@@ -357,7 +355,7 @@ class SpecialCharOnly(TokenObfuscator):
 
             self.mangler.addLinesInRandomOrder(printfInstanstiationStrs)
 
-        self.mangler.addPayloadLine(symbolCommandStr)
+        self.mangler.addPayloadLine(symbolCommandStr, mangleLine=False)
 
         return self.mangler.getFinalPayload()
 

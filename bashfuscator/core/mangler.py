@@ -30,6 +30,8 @@ class Mangler(object):
 
     def __init__(self):
         self.sizePref = None
+
+        self.enableMangling = None
         self.mangleBinaries = None
         self.binaryManglePercent = None
         self.randWhitespace = None
@@ -60,8 +62,13 @@ class Mangler(object):
         self.payloadLines.clear()
         self.finalPayload = ""
         
-        if enableMangling is False:
+        if enableMangling is not None:
+            self.enableMangling = enableMangling
+        elif enableMangling is False:
+            self.enableMangling = enableMangling
             return
+        else:
+            self.enableMangling = True
 
         if mangleBinaries is not None:
             self.mangleBinaries = mangleBinaries
@@ -148,6 +155,10 @@ class Mangler(object):
         self.payloadLines.append(mangledPayloadLine)
 
     def mangleLine(self, payloadLine, inputChunk=None, mangleLine=True):
+        # override based on global enableMangling option
+        if mangleLine:
+            mangleLine = self.enableMangling
+
         mangledPayloadLine = payloadLine
 
         boblSyntaxMatch = Mangler.boblRegex.search(mangledPayloadLine)
