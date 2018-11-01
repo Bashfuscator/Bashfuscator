@@ -44,53 +44,6 @@ class TokenObfuscator(Mutator):
         self.binariesUsed = binariesUsed
 
 
-class AnsiCQuote(TokenObfuscator):
-    def __init__(self):
-        super().__init__(
-            name="ANSI-C Quote",
-            description="ANSI-C quotes a string",
-            sizeRating=3,
-            timeRating=1,
-            notes="Requires Bash 4.2 or above",
-            author="capnspacehook",
-            credits=["DissectMalware, https://twitter.com/DissectMalware/status/1023682809368653826"]
-        )
-
-        self.SUBSTR_QUOTE_PROB = 33
-
-    def mutate(self, userCmd):
-        obCmd = "printf %s $'\\"
-
-        if self.sizePref < 2:
-            maxChoice = 2
-        elif self.sizePref < 3:
-            maxChoice = 3
-        else:
-            maxChoice = 4
-
-        for char in userCmd:
-            choice = self.randGen.randChoice(maxChoice)
-
-            # If sizePref is 3, randomly ANSI-C quote substrings of the original
-            # userCmd and randomly add empty strings
-            if self.sizePref == 4 and self.randGen.probibility(self.SUBSTR_QUOTE_PROB):
-                obCmd = obCmd[:-1] + "'" + "".join("''" for x in range(
-                    self.randGen.randGenNum(0, 5))) + "$'\\"
-
-            if choice == 0:
-                obCmd += oct(ord(char))[2:] + "\\"
-            elif choice == 1:
-                obCmd += hex(ord(char))[1:] + "\\"
-            elif choice == 2:
-                obCmd += "u00" + hex(ord(char))[2:] + "\\"
-            else:
-                obCmd += "U000000" + hex(ord(char))[2:] + "\\"
-
-        self.payload = obCmd[:-1] + "'"
-
-        return self.payload
-
-
 class ForCode(TokenObfuscator):
     def __init__(self):
         super().__init__(

@@ -17,7 +17,6 @@ stringObfuscators = [
 ]
 
 tokenObfuscators = [
-    AnsiCQuote(),
     ForCode(),
     SpecialCharOnly(),
 ]

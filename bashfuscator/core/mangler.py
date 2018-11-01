@@ -204,15 +204,18 @@ class Mangler(object):
 
         if self.mangleBinaries:
             for char in binaryStr:
-                if self.randGen.probibility(self.binaryManglePercent/2):
+                if self.randGen.probibility(self.binaryManglePercent / 2):
                     if self.randGen.probibility(50):
                         mangledBinary += '""'
                     else:
                         mangledBinary += "''"
 
                 if self.randGen.probibility(self.binaryManglePercent):
-                    if self.randGen.probibility(50):
+                    choice = self.randGen.randChoice(3)
+                    if choice == 0:
                         mangledBinary += "\\" + char
+                    elif choice == 1:
+                        mangledBinary += self.getAnsiCQuotedStr(char)
                     else:
                         mangledBinary += self.getRandChars() + char
 
@@ -225,6 +228,30 @@ class Mangler(object):
         mangledPayloadLine = payloadLine[:binaryMatch.start()] + mangledBinary + payloadLine[binaryMatch.end():]
 
         return mangledPayloadLine
+
+    def getAnsiCQuotedStr(self, inStr):
+        if self.sizePref == 1:
+            maxChoice = 2
+        elif self.sizePref == 2:
+            maxChoice = 3
+        else:
+            maxChoice = 4
+
+        encodedStr = "$'\\"
+
+        for char in inStr:
+            choice = self.randGen.randChoice(maxChoice)
+
+            if choice == 0:
+                encodedStr += oct(ord(char))[2:] + "\\"
+            elif choice == 1:
+                encodedStr += hex(ord(char))[1:] + "\\"
+            elif choice == 2:
+                encodedStr += "u00" + hex(ord(char))[2:] + "\\"
+            else:
+                encodedStr += "U000000" + hex(ord(char))[2:] + "\\"
+
+        return encodedStr[:-1] + "'"
 
     def insertWhitespaceAndRandChars(self, whitespaceMatch, payloadLine, whitespaceRequired, insertRandChars):
         randCharsAndWhitespace = self.getWhitespaceAndRandChars(whitespaceRequired, insertRandChars)
