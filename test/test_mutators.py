@@ -10,22 +10,22 @@ from bashfuscator.core.obfuscation_handler import ObfuscationHandler
 inputCommand = "echo 'It works!'"
 expectedOutput = "It works!\n"
 
-commandObNames = [c.longName + "/" + s.longName for c in commandObfuscators for s in c.stubs]
-stringObNames = [s.longName for s in stringObfuscators]
-tokenObNames = [t.longName for t in tokenObfuscators]
-encoderObNames = [e.longName for e in encoders if not e.postEncoder]
-compressorObNames = [c.longName for c in compressors]
+commandObNames = [(c.longName, s.longName) for c in commandObfuscators for s in c.stubs]
+stringObNames = [(s.longName, None) for s in stringObfuscators]
+tokenObNames = [(t.longName, None) for t in tokenObfuscators]
+encoderObNames = [(e.longName, None) for e in encoders if not e.postEncoder]
+compressorObNames = [(c.longName, None) for c in compressors]
 
 mutators = commandObNames + stringObNames + tokenObNames + encoderObNames + compressorObNames
 
 obHandler = ObfuscationHandler()
 
-@pytest.mark.parametrize("mutatorName", mutators)
+@pytest.mark.parametrize("mutatorName,stubName", mutators)
 
-def test_mutators(mutatorName):
+def test_mutators(mutatorName, stubName):
     try:
         for i in range(100):
-            payload = obHandler.genObfuscationLayer(inputCommand, userMutator=mutatorName)
+            payload = obHandler.genObfuscationLayer(inputCommand, userMutator=mutatorName, userStub=stubName)
 
             proc = Popen(payload, executable="bash", stdout=PIPE, stderr=STDOUT, shell=True, universal_newlines=True)
             payloadOutput, __ = proc.communicate()
