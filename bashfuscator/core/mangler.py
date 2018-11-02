@@ -10,7 +10,13 @@ class Mangler(object):
     requiredWhitespaceAndRandCharsRegexStr = "% %"
     optionalWhitespaceAndRandCharsRegexStr = r"\* \*"
     commandEndRegexStr = "END"
-    
+
+    binaryEscapedRegexStr = r"\\:\w+\\:"
+    requiredWhitespaceEscapedRegexStr = r"\\\^ \\\^"
+    optionalWhitespaceEscapedRegexStr = r"\\\? \\\?"
+    requiredWhitespaceAndRandCharsEscapedRegexStr = r"\\% \\%"
+    optionalWhitespaceAndRandCharsEscapedRegexStr = r"\\\* \\\*"
+
     binaryRegex = re.compile(binaryRegexStr)
     requiredWhitespaceRegex = re.compile(requiredWhitespaceRegexStr)
     optionalWhitespaceRegex = re.compile(optionalWhitespaceRegexStr)
@@ -27,11 +33,18 @@ class Mangler(object):
         commandEndRegexStr
     ))
 
+    escapedBoblRegex = re.compile("{0}|{1}|{2}|{3}|{4}".format(
+        binaryEscapedRegexStr,
+        requiredWhitespaceEscapedRegexStr,
+        optionalWhitespaceEscapedRegexStr,
+        requiredWhitespaceAndRandCharsEscapedRegexStr,
+        optionalWhitespaceAndRandCharsEscapedRegexStr
+    ))
+
 
     def __init__(self):
         self.sizePref = None
 
-        self.enableMangling = None
         self.mangleBinaries = None
         self.binaryManglePercent = None
         self.randWhitespace = None
@@ -62,13 +75,8 @@ class Mangler(object):
         self.payloadLines.clear()
         self.finalPayload = ""
         
-        if enableMangling is not None:
-            self.enableMangling = enableMangling
-        elif enableMangling is False:
-            self.enableMangling = enableMangling
+        if enableMangling is False:
             return
-        else:
-            self.enableMangling = True
 
         if mangleBinaries is not None:
             self.mangleBinaries = mangleBinaries
@@ -130,7 +138,7 @@ class Mangler(object):
             else:
                 self.misleadingCmdsRange = (1, 3)
 
-    def addLinesInRandomOrder(self, payloadLines, mangleLine=True):
+    def addLinesInRandomOrder(self, payloadLines):
         if isinstance(payloadLines, list):
             self.randGen.randShuffle(payloadLines)
 
@@ -144,30 +152,30 @@ class Mangler(object):
             for line in keys:
                 self.addPayloadLine(line, payloadLines[line])
 
-    def getMangledLine(self, payloadLine, inputChunk=None, mangleLine=True):
-        self.addPayloadLine(payloadLine, inputChunk, mangleLine)
+    def getMangledLine(self, payloadLine, inputChunk=None):
+        self.addPayloadLine(payloadLine, inputChunk)
 
         return self.getFinalPayload()
 
-    def addPayloadLine(self, payloadLine, inputChunk=None, mangleLine=True):
-        mangledPayloadLine = self.mangleLine(payloadLine, inputChunk, mangleLine)
+    def addPayloadLine(self, payloadLine, inputChunk=None):
+        mangledPayloadLine = self.mangleLine(payloadLine, inputChunk)
 
         self.payloadLines.append(mangledPayloadLine)
 
-    def mangleLine(self, payloadLine, inputChunk=None, mangleLine=True):
-        # override based on global enableMangling option
-        if mangleLine:
-            mangleLine = self.enableMangling
-
+    def mangleLine(self, payloadLine, inputChunk=None):
         mangledPayloadLine = payloadLine
 
-        boblSyntaxMatch = Mangler.boblRegex.search(mangledPayloadLine)
-        while boblSyntaxMatch:
-            # process command terminators regardless of whether we are mangling the line
-            if Mangler.commandEndRegex.match(boblSyntaxMatch.group()):
-                mangledPayloadLine = self.getCommandTerminator(boblSyntaxMatch, mangledPayloadLine)
+        escapedBoblSyntaxMatch = Mangler.escapedBoblRegex.search(mangledPayloadLine)
 
-            if mangleLine:
+        if not escapedBoblSyntaxMatch:
+            boblSyntaxMatch = Mangler.boblRegex.search(mangledPayloadLine)
+
+        while escapedBoblSyntaxMatch or boblSyntaxMatch:
+            if escapedBoblSyntaxMatch:
+                escapedData = mangledPayloadLine[escapedBoblSyntaxMatch.start() + 1:escapedBoblSyntaxMatch.end() - 2] + mangledPayloadLine[escapedBoblSyntaxMatch.end() - 1]
+                mangledPayloadLine = mangledPayloadLine[:escapedBoblSyntaxMatch.start()] + escapedData + mangledPayloadLine[escapedBoblSyntaxMatch.end():]
+
+            else:
                 if Mangler.binaryRegex.match(boblSyntaxMatch.group()):
                     mangledPayloadLine = self.mangleBinary(boblSyntaxMatch, mangledPayloadLine)
 
@@ -183,12 +191,18 @@ class Mangler(object):
                 elif Mangler.optionalWhitespaceAndRandCharsRegex.match(boblSyntaxMatch.group()):
                     mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, True)
 
-                searchPos = boblSyntaxMatch.start()
-            
-            else:
-                searchPos = boblSyntaxMatch.end()
+                elif Mangler.commandEndRegex.match(boblSyntaxMatch.group()):
+                    mangledPayloadLine = self.getCommandTerminator(boblSyntaxMatch, mangledPayloadLine)
 
-            boblSyntaxMatch = Mangler.boblRegex.search(mangledPayloadLine, pos=searchPos)
+            if escapedBoblSyntaxMatch:
+                searchPos = escapedBoblSyntaxMatch.end() - 1
+            else:
+                searchPos = boblSyntaxMatch.start()
+
+            escapedBoblSyntaxMatch = Mangler.escapedBoblRegex.search(mangledPayloadLine, pos=searchPos)
+
+            if not escapedBoblSyntaxMatch:
+                boblSyntaxMatch = Mangler.boblRegex.search(mangledPayloadLine, pos=searchPos)
 
         if inputChunk:
             mangledPayloadLine = mangledPayloadLine.replace("DATA", inputChunk)

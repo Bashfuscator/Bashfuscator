@@ -168,13 +168,13 @@ class SpecialCharOnly(TokenObfuscator):
         self.mangler.addPayloadLine(f"{attrVar}=${{{procPathArrayVar}[${self.digitVars[2]}]}}END")
 
         cattrVar = self.randGen.randUniqueStr(3, 26, "_")
-        self.mangler.addPayloadLine(f"{cattrVar}=${{{procPathArrayVar}: -${self.digitVars[1]}:${self.digitVars[1]}}}${attrVar}END", mangleLine=False)
+        self.mangler.addPayloadLine(f"{cattrVar}=${{{procPathArrayVar}: -${self.digitVars[1]}:${self.digitVars[1]}}}${attrVar}END")
 
         catVar = self.randGen.randUniqueStr(3, 26, "_")
-        self.mangler.addPayloadLine(f"{catVar}=${{{cattrVar}:{self.digitVars[0]}:{self.digitVars[3]}}}END", mangleLine=False)
+        self.mangler.addPayloadLine(rf"{catVar}=${{{cattrVar}\:{self.digitVars[0]}\:{self.digitVars[3]}}}END")
 
         aVar = self.randGen.randUniqueStr(3, 26, "_")
-        self.mangler.addPayloadLine(f"{aVar}=${{{attrVar}:{self.digitVars[0]}:{self.digitVars[1]}}}END", mangleLine=False)
+        self.mangler.addPayloadLine(rf"{aVar}=${{{attrVar}\:{self.digitVars[0]}\:{self.digitVars[1]}}}END")
 
         AVar = self.randGen.randUniqueStr(3, 26, "_")
         self.mangler.addPayloadLine(f"{AVar}=${{{aVar}^}}END")
@@ -183,7 +183,7 @@ class SpecialCharOnly(TokenObfuscator):
         self.mangler.addPayloadLine(rf". <(${catVar}<<<{fromAtoaVar}=\({{${AVar}..${aVar}}}\))END")
 
         upperAlphabetVar = self.randGen.randUniqueStr(3, 26, "_")
-        self.mangler.addPayloadLine(f"{upperAlphabetVar}=(${{{fromAtoaVar}[@]:${self.digitVars[0]}:${self.digitVars[2]}${self.digitVars[6]}}})END", mangleLine=False)
+        self.mangler.addPayloadLine(f"{upperAlphabetVar}=(${{{fromAtoaVar}[@]:${self.digitVars[0]}:${self.digitVars[2]}${self.digitVars[6]}}})END")
 
         lowerAlphabetVar = self.randGen.randUniqueStr(3, 26, "_")
         self.mangler.addPayloadLine(f"{lowerAlphabetVar}=(${{{upperAlphabetVar}[@],,}})END")
@@ -237,14 +237,14 @@ class SpecialCharOnly(TokenObfuscator):
 
         # get the string 'bash'
         bashStrVar = self.getNextArrayIndex()
-        bashStr = f"{self.genSetElementStr(bashStrVar)}=${{{self.genSetElementStr(badStubstitutionErrVar)}:{self.digitVars[0]}:{self.digitVars[3]}}}"
-        bashStr += f"${{{self.genSetElementStr(noSuchFileOrDirErrVar)}:{self.digitVars[4]}:{self.digitVars[1]}}}"
-        bashStr += f"${{{self.genSetElementStr(noSuchFileOrDirErrVar)}:{self.digitVars[7]}:{self.digitVars[1]}}}END"
-        self.mangler.addPayloadLine(bashStr, mangleLine=False)
+        bashStr = rf"{self.genSetElementStr(bashStrVar)}=${{{self.genSetElementStr(badStubstitutionErrVar)}\:{self.digitVars[0]}\:{self.digitVars[3]}}}"
+        bashStr += rf"${{{self.genSetElementStr(noSuchFileOrDirErrVar)}\:{self.digitVars[4]}\:{self.digitVars[1]}}}"
+        bashStr += rf"${{{self.genSetElementStr(noSuchFileOrDirErrVar)}\:{self.digitVars[7]}\:{self.digitVars[1]}}}END"
+        self.mangler.addPayloadLine(bashStr)
 
         # get the character 'c' from the 'command not found' error message
         cCharVar = self.getNextArrayIndex()
-        self.mangler.addPayloadLine(f"{self.genSetElementStr(cCharVar)}=${{{self.genSetElementStr(noSuchFileOrDirErrVar)}:{self.digitVars[6]}:{self.digitVars[1]}}}END", mangleLine=False)
+        self.mangler.addPayloadLine(rf"{self.genSetElementStr(cCharVar)}=${{{self.genSetElementStr(noSuchFileOrDirErrVar)}\:{self.digitVars[6]}\:{self.digitVars[1]}}}END")
 
         syntaxErrorMsg = "bash: -c: line 0: syntax error near unexpected token `;' bash: -c: line 0: `;'"
         syntaxErrorVar = self.getNextArrayIndex()
@@ -252,7 +252,7 @@ class SpecialCharOnly(TokenObfuscator):
 
         # get the character 'x' from the 'syntax' error message
         xCharVar = self.getNextArrayIndex()
-        self.mangler.addPayloadLine(f"{self.genSetElementStr(xCharVar)}=${{{self.genSetElementStr(syntaxErrorVar)}:${self.digitVars[2]}${self.digitVars[3]}:${self.digitVars[1]}}}END", mangleLine=False)
+        self.mangler.addPayloadLine(f"{self.genSetElementStr(xCharVar)}=${{{self.genSetElementStr(syntaxErrorVar)}:${self.digitVars[2]}${self.digitVars[3]}:${self.digitVars[1]}}}END")
 
 
         #store all the characters of 'printf' from the stored error messages
@@ -276,7 +276,7 @@ class SpecialCharOnly(TokenObfuscator):
 
             printfCharVarNames[char] = charVars
 
-        self.mangler.addLinesInRandomOrder(printfCharsInstatiationStrs, mangleLine=False)
+        self.mangler.addLinesInRandomOrder(printfCharsInstatiationStrs)
 
         # there are roughly 2058 ways to generate the string 'printf' from the error messages that
         # are stored as variables. If the input exceeds the number of 'printf' vars, pre-assign the
@@ -353,7 +353,7 @@ class SpecialCharOnly(TokenObfuscator):
 
             self.mangler.addLinesInRandomOrder(printfInstanstiationStrs)
 
-        self.mangler.addPayloadLine(symbolCommandStr, mangleLine=False)
+        self.mangler.addPayloadLine(symbolCommandStr)
 
         return self.mangler.getFinalPayload()
 
