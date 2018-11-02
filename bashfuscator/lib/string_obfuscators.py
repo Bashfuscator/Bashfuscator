@@ -101,7 +101,7 @@ class GlobObfuscator(StringObfuscator):
         elif self.sizePref == 2:
             self.sectionSize = int(len(userCmd) / 100 + 1)
         elif self.sizePref == 3:
-            self.sectionSize = 3
+            self.sectionSize = 1
 
         self.startingDir = escapeQuotes(self.writeDir + self.randGen.randUniqueStr())
 
