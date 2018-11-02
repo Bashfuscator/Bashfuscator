@@ -18,10 +18,10 @@ class StringObfuscator(Mutator):
 
     :param name: name of the StringObfuscator
     :type name: str
-    :param description: short description of what the StringObfuscator 
+    :param description: short description of what the StringObfuscator
             does
     :type description: str
-    :param sizeRating: rating from 1 to 5 of how much the 
+    :param sizeRating: rating from 1 to 5 of how much the
             StringObfuscator increases the size of the overall payload
     :type sizeRating: int
     :param timeRating: rating from 1 to 5 of how much the
@@ -31,7 +31,7 @@ class StringObfuscator(Mutator):
     :param binariesUsed: list of all the binaries the StringObfuscator
             uses
     :type binariesUsed: list of strs
-    :param fileWrite: True if the Command Obfuscator requires 
+    :param fileWrite: True if the Command Obfuscator requires
             creating/writing to files, False otherwise
     :type fileWrite: bool
     :param notes: see :class:`bashfuscator.common.objects.Mutator`

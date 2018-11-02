@@ -21,10 +21,10 @@ class TokenObfuscator(Mutator):
     :param description: short description of what the TokenObfuscator
         does
     :type description: str
-    :param sizeRating: rating from 1 to 5 of how much the 
+    :param sizeRating: rating from 1 to 5 of how much the
         TokenObfuscator increases the size of the overall payload
     :type sizeRating: int
-    :param fileWrite: True if the Token Obfuscator requires 
+    :param fileWrite: True if the Token Obfuscator requires
         creating/writing to files, False otherwise
     :type fileWrite: bool
     :param notes: see :class:`bashfuscator.common.objects.Mutator`
@@ -136,7 +136,7 @@ class SpecialCharOnly(TokenObfuscator):
             self.mangler.addPayloadLine(f"{initialDigitVar}=`{zeroCmd}`END")
 
         incrementSyntaxChoices = ["(({0}={1}++))END", "{0}=$(({1}++))END", "{0}=$[{1}++]END"]
-        
+
         self.digitVars = []
         self.digitVars.append(self.randGen.randUniqueStr(3, 26, "_"))
 
@@ -206,7 +206,7 @@ class SpecialCharOnly(TokenObfuscator):
             arithmeticSyntax = self.randGen.randSelect(arithmeticExpansionSyntax)
 
             arrayInitializationStrs.append(arithmeticSyntax.format(
-                self.digitVars[i], 
+                self.digitVars[i],
                 self.digitVars[i],
                 self.randGen.randSelect(arithemticOperators),
                 self.digitVars[0]
@@ -374,7 +374,7 @@ class SpecialCharOnly(TokenObfuscator):
                 indexStr = ""
                 for i in str(index):
                     indexStr += "${0}".format(self.digitVars[int(i)])
-                
+
                 if self.randGen.probibility(50):
                     symbolStr += "${{{0}[{1}]{2}}}".format(lowerArrayName, indexStr, "")
                 else:
@@ -405,9 +405,9 @@ class SpecialCharOnly(TokenObfuscator):
 
     def genSetElementStr(self, index):
         return '{0}[{1}]'.format(self.mainArrayName, self.getIndexVars(index))
- 
+
     def getIndexVars(self, index):
-        varIndexStr= ""        
+        varIndexStr= ""
         for num in str(index):
             varIndexStr += "$" + self.digitVars[int(num)]
 
