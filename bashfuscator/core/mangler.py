@@ -58,6 +58,7 @@ class Mangler(object):
         self.booleanCmdTerminator = False
         self.nonBinaryCmdTerminator = False
 
+        self.extraJunk = ""
         self.cmdCounter = 0
         self.cmdBufferOffset = None
         self.quoted = False
@@ -72,6 +73,7 @@ class Mangler(object):
         self.sizePref = sizePref
         self.randGen.sizePref = self.sizePref
 
+        self.extraJunk = ""
         self.payloadLines.clear()
         self.finalPayload = ""
 
@@ -209,8 +211,13 @@ class Mangler(object):
 
         return mangledPayloadLine
 
-    def addJunk(self):
-        self.finalPayload += self.getWhitespaceAndRandChars(False, True)
+    def addJunk(self, addToEnd=True):
+        randJunk = self.getWhitespaceAndRandChars(False, True)
+
+        if addToEnd:
+            self.extraJunk += randJunk
+        else:
+            self.finalPayload += randJunk
 
     def mangleBinary(self, binaryMatch, payloadLine):
         mangledBinary = ""
@@ -435,5 +442,6 @@ class Mangler(object):
             self.payloadLines[-1] = self.payloadLines[-1][:self.cmdTerminatorPos] + finalJunk
 
         self.finalPayload += "".join(self.payloadLines)
+        self.finalPayload += self.extraJunk
 
         return self.finalPayload
