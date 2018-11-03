@@ -9,12 +9,12 @@ from bashfuscator.core.obfuscation_handler import ObfuscationHandler
 
 
 #Variables
-longObfName="string/hex_hash"
+longObfName="token/special_char_only"
 repeat_cmd=":;\n"
 
 #list of times to run the command.  These values were chosen to work well on a logrithmic scale:
 #iterations=["1", "2", "3", "4", "5", "10", "20", "30", "40", "50", "100", "200", "300", "400", "500", "1000", "2000", "3000", "4000", "5000", "10000", "20000", "30000", "40000", "50000"]
-iterations=["1", "2", "3", "4", "5", "10", "20", "30", "40", "50", "100", "200", "300", "400", "500", "1000", "2000", "3000", "4000", "5000", "10000", "20000"]
+iterations=["1", "2", "3", "4", "5", "10", "20", "30", "40", "50", "100", "200", "300", "400", "500"]
 
 unobfTimeData=[]
 obfTimeData=[]
@@ -24,6 +24,7 @@ timeDelta=[]
 def timeRun(payload): #Returns double: time it took to run payload in bash
 	start_time = time.time()            #Start Timer
 	proc = Popen(payload, executable="/bin/bash", stdout=PIPE, stderr=STDOUT, shell=True, universal_newlines=True)
+	#Proc does wierd things and messes up timing...
 	__, __ = proc.communicate()
 	return time.time() - start_time		#End Timer and return
 
@@ -51,7 +52,7 @@ def plotAllTheThings(xList, yList, Title):
 	}, auto_open=True)
 
 
-
+#Try catch
 for i in iterations:        #Yo Dawg, I heard you liked iterations.  So I iterated over your iterations.
 	j=0 #Index counter for list maniputlation
 	i=int(i)
@@ -70,9 +71,8 @@ for i in iterations:        #Yo Dawg, I heard you liked iterations.  So I iterat
 	#Time run of obfuscated code
 	print("Running Obfuscated code...")
 	##$n/$len_cmd"*1000"
-	obfTime=timeRun(payload)
+	obfTime=timeRun(obfCommand)
 	print(obfTime)
-	#print(obfTime-baseline)
 	obfTimeData.append((obfTime-baseline)/(i*len(repeat_cmd)*1000))	#Append to list
 
 plotAllTheThings(iterations, obfTimeData, longObfName)
