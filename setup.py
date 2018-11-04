@@ -41,7 +41,12 @@ setup(
     install_requires=[
         "argcomplete",
         "pyperclip",
-    ]
+    ],
+    extras_require={
+        "dev": [
+            "pytest",
+        ]
+    }
 )
 
 # activate autocompletion for bashfuscator

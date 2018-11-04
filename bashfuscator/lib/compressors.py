@@ -46,8 +46,6 @@ class Compressor(Mutator):
         self.timeRating = timeRating
         self.binariesUsed = binariesUsed
         self.fileWrite = fileWrite
-        self.originalCmd = ""
-        self.payload = ""
 
 
 class Bzip2(Compressor):
@@ -57,18 +55,16 @@ class Bzip2(Compressor):
             description="Compress command with bzip2",
             sizeRating=3,
             timeRating=3,
-            binariesUsed=["base64, bunzip2"],
+            binariesUsed=["base64", "bunzip2"],
             author="capnspacehook"
         )
 
-    def mutate(self, sizePref, timePref, userCmd):
-        self.originalCmd = userCmd
-
+    def mutate(self, userCmd):
         compressedCmd = bz2.compress(userCmd.encode("utf-8"))
         compressedCmd = b64encode(compressedCmd).decode("utf-8")
-        self.payload = '''printf {0}|base64 -d|bunzip2 -c'''.format(compressedCmd)
+        self.mangler.addPayloadLine(f'''* *:printf:^ ^{compressedCmd}* *|* *:base64:^ ^-d* *|* *:bunzip2:^ ^-c* *''')
 
-        return self.payload
+        return self.mangler.getFinalPayload()
 
 
 class Gzip(Compressor):
@@ -78,15 +74,13 @@ class Gzip(Compressor):
             description="Compress command with gzip",
             sizeRating=3,
             timeRating=3,
-            binariesUsed=["base64, gunzip"],
+            binariesUsed=["base64", "gunzip"],
             author="capnspacehook"
         )
 
-    def mutate(self, sizePref, timePref, userCmd):
-        self.originalCmd = userCmd
-
+    def mutate(self, userCmd):
         compressedCmd = gzip.compress(userCmd.encode("utf-8"))
         compressedCmd = b64encode(compressedCmd).decode("utf-8")
-        self.payload = '''printf {0}|base64 -d|gunzip -c'''.format(compressedCmd)
+        self.mangler.addPayloadLine(f'''* *:printf:^ ^{compressedCmd}* *|* *:base64:^ ^-d* *|* *:gunzip:^ ^-c* *''')
 
-        return self.payload
+        return self.mangler.getFinalPayload()

@@ -13,12 +13,12 @@ commandObfuscators = [
 stringObfuscators = [
     FileGlob(),
     FolderGlob(),
-    ForCode(),
     HexHash(),
+    XorNonNull(),
 ]
 
 tokenObfuscators = [
-    AnsiCQuote(),
+    ForCode(),
     SpecialCharOnly(),
 ]
 

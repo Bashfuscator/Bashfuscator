@@ -4,6 +4,7 @@ randomness.
 """
 import string
 import random
+import re
 
 
 class RandomGen(object):
@@ -21,7 +22,18 @@ class RandomGen(object):
     randGen = random.SystemRandom()
     _generatedVars = set()
     _uniqueRandStrs = set()
-    _randStrCharList = string.ascii_letters + string.digits
+
+    _randStrCharList = [c for c in string.ascii_letters + string.digits + string.punctuation]
+    _randStrCharList.remove("'")
+    _randStrCharList.remove("/")
+    
+    _reservedVars = {"auto_resume", "BASH", "BASH_ENV", "BASH_VERSINFO", "BASH_VERSION", "CDPATH", "COLUMNS", "COMP_CWORD", "COMP_LINE", "COMP_POINT", "COMPREPLY", "COMP_WORDS", "DIRSTACK", "EUID", "FCEDIT", "FIGNORE", "FUNCNAME", "GLOBIGNORE", "GROUPS", "histchars", "HISTCMD", "HISTCONTROL", "HISTFILE", "HISTFILESIZE", "HISTIGNORE", "HISTSIZE", "HOME", "HOSTFILE", "HOSTNAME", "HOSTTYPE", "IFS", "IGNOREEOF", "INPUTRC", "LANG", "LC_ALL", "LC_COLLATE", "LC_CTYPE", "LC_MESSAGES", "LC_NUMERIC", "LINENO", "LINES", "MACHTYPE", "MAIL", "MAILCHECK", "MAILPATH", "OLDPWD", "OPTARG", "OPTERR", "OPTIND", "OSTYPE", "PATH", "PIPESTATUS", "POSIXLY_CORRECT", "PPID", "PROMPT_COMMAND", "PS1", "PS2", "PS3", "PS4", "PWD", "RANDOM", "REPLY", "SECONDS", "SHELLOPTS", "SHLVL", "TIMEFORMAT", "TMOUT", "UID"}
+    _boblReservedStrsRegex = re.compile("DATA|END")
+
+    _boblSyntaxRegex = re.compile(r":\w+:|\^ \^|\? \?|% %|\* \*|DATA|END")
+
+    def __init__(self):
+        self.sizePref = None
 
     def setFullAsciiStrings(self):
         """
@@ -29,11 +41,13 @@ class RandomGen(object):
         variables and strings to the (almost) full ASCII charset.
         Only "'" and "/" are not used.
         """
-        RandomGen._randStrCharList = "".join(
-            chr(i) for i in range(1, 127) if i != 39 and i != 47)
+        RandomGen._randStrCharList = [chr(i) for i in range(1, 128)]
+        RandomGen._randStrCharList.remove("'")
+        RandomGen._randStrCharList.remove("/")
 
     def forgetUniqueStrs(self):
-        """Clear the sets of previously generated variable names
+        """
+        Clear the sets of previously generated variable names
         and strings. Should be called when random variable
         names/strings are needed but can have the same name as
         previously generated variable names/strings without
@@ -104,7 +118,7 @@ class RandomGen(object):
         """
         RandomGen.randGen.shuffle(seq)
 
-    def randGenVar(self, sizePref):
+    def randGenVar(self, minVarLen=None, maxVarLen=None):
         """
         Generate a unique randomly named variable. Variable names can
         consist of uppercase and lowercase letters, digits, and
@@ -119,16 +133,7 @@ class RandomGen(object):
             :meth:`~RandomGen.randUniqueStr` is called under the hood,
             therefore the same performance concerns apply.
         """
-        if sizePref == 0:
-            minVarLen = 1
-        elif sizePref == 1:
-            minVarLen = 2
-        elif sizePref == 2:
-            minVarLen = 4
-        else:
-            minVarLen = 8
-
-        maxVarLen = minVarLen * 2
+        minVarLen, maxVarLen = self._getSizes(minVarLen, maxVarLen)
 
         randVarCharList = string.ascii_letters + string.digits + "_"
 
@@ -139,14 +144,17 @@ class RandomGen(object):
             if len(randomVar) == 1 and randomVar.isdigit():
                 continue
 
-            if randomVar not in RandomGen._generatedVars:
+            if RandomGen._boblReservedStrsRegex.search(randomVar):
+                continue
+
+            if randomVar not in RandomGen._generatedVars and randomVar not in RandomGen._reservedVars:
                 break
 
         RandomGen._generatedVars.add(randomVar)
 
         return randomVar
 
-    def randUniqueStr(self, minStrLen, maxStrLen, charList=None):
+    def randUniqueStr(self, minStrLen=None, maxStrLen=None, charList=None, escapeChars=""):
         """
         Generate a random string that is guaranteed to be unique.
 
@@ -165,15 +173,15 @@ class RandomGen(object):
             strings are generated, unless
             :meth:`~RandomGen.forgetUniqueStrs` is called.
         """
+        minStrLen, maxStrLen = self._getSizes(minStrLen, maxStrLen)
+
         if charList is None:
             charList = RandomGen._randStrCharList
 
-        minLen = minStrLen
-        maxLen = maxStrLen
         commonStrNum = 0
 
         while True:
-            randStr = self.randGenStr(minLen, maxLen, charList)
+            randStr = self.randGenStr(minStrLen, maxStrLen, charList)
 
             if randStr not in RandomGen._uniqueRandStrs:
                 break
@@ -182,24 +190,53 @@ class RandomGen(object):
                 # if 5 collisions are generated in a row, chances are that we are reaching the upper bound
                 # of our keyspace, so make the keyspace bigger so we can keep generating unique strings
                 if commonStrNum == 5:
-                    minLen = maxLen
-                    maxLen += 1
+                    minStrLen = maxStrLen
+                    maxStrLen += 1
                     commonStrNum = 0
 
         RandomGen._uniqueRandStrs.add(randStr)
 
         return randStr
 
-    def randGenStr(self, minStrLen, maxStrLen, charList=None):
+    def randGenStr(self, minStrLen=None, maxStrLen=None, charList=None, escapeChars=""):
         """
         Generate a random string. Functions the same as
         :meth:`~RandomGen.randUniqueStr`, the only difference being
         that the generated string is NOT guaranteed to be unique.
         """
+        minStrLen, maxStrLen = self._getSizes(minStrLen, maxStrLen)
+
         if charList is None:
             charList = RandomGen._randStrCharList
 
-        randVarLen = RandomGen.randGen.randint(minStrLen, maxStrLen)
-        randStr = "".join(self.randSelect(charList) for x in range(randVarLen))
+        randStrLen = RandomGen.randGen.randint(minStrLen, maxStrLen)
+        randStr = "".join(self.randSelect(charList) for x in range(randStrLen))
+
+        while RandomGen._boblSyntaxRegex.search(randStr):
+            randStr = "".join(self.randSelect(charList) for x in range(randStrLen))
+
+        # escape 'escapeChars', making sure that an already escaped char isn't
+        # accidentally un-escaped by adding an extra '\'
+        for char in escapeChars:
+            randStr = re.sub(r"(?<!\\)(\\{2})*(?!\\)" + re.escape(char), "\g<1>\\" + char, randStr)
 
         return randStr
+
+    def _getSizes(self, minLen, maxLen):
+        if minLen is None or maxLen is None:
+            if self.sizePref == 1:
+                defaultMinLen = 1
+            elif self.sizePref == 2:
+                defaultMinLen = 4
+            else:
+                defaultMinLen = 8
+
+            defaultMaxLen = defaultMinLen * 2
+
+            if minLen is None:
+                minLen = defaultMinLen
+
+            if maxLen is None:
+                maxLen = defaultMaxLen
+
+        return (minLen, maxLen)

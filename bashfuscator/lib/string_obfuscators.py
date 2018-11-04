@@ -5,7 +5,7 @@ import math
 import hashlib
 import string
 
-from bashfuscator.common.helpers import escapeQuotes, strToArrayElements
+from bashfuscator.common.helpers import escapeQuotes
 from bashfuscator.common.objects import Mutator
 
 
@@ -18,10 +18,10 @@ class StringObfuscator(Mutator):
 
     :param name: name of the StringObfuscator
     :type name: str
-    :param description: short description of what the StringObfuscator 
+    :param description: short description of what the StringObfuscator
             does
     :type description: str
-    :param sizeRating: rating from 1 to 5 of how much the 
+    :param sizeRating: rating from 1 to 5 of how much the
             StringObfuscator increases the size of the overall payload
     :type sizeRating: int
     :param timeRating: rating from 1 to 5 of how much the
@@ -31,7 +31,7 @@ class StringObfuscator(Mutator):
     :param binariesUsed: list of all the binaries the StringObfuscator
             uses
     :type binariesUsed: list of strs
-    :param fileWrite: True if the Command Obfuscator requires 
+    :param fileWrite: True if the Command Obfuscator requires
             creating/writing to files, False otherwise
     :type fileWrite: bool
     :param notes: see :class:`bashfuscator.common.objects.Mutator`
@@ -49,8 +49,6 @@ class StringObfuscator(Mutator):
         self.timeRating = timeRating
         self.fileWrite = fileWrite
         self.binariesUsed = binariesUsed
-        self.originalCmd = ""
-        self.payload = ""
 
 
 class GlobObfuscator(StringObfuscator):
@@ -65,15 +63,16 @@ class GlobObfuscator(StringObfuscator):
             author=author
         )
 
-        self.writeableDir = ""
-        self.workingDir = ""
+        self.workingDir = None
         self.minDirLen = None
         self.maxDirLen = None
         self.sectionSize = None
 
-    def generate(self, sizePref, userCmd, writeDir=None):
-        self.writeableDir = (writeDir + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
-        self.workingDir = escapeQuotes(self.writeableDir)
+    def generate(self, userCmd, writeableDir=None):
+        if writeableDir:
+            self.workingDir = self.startingDir + "/" + escapeQuotes(writeableDir)
+        else:
+            self.workingDir = self.startingDir
 
         cmdChars = [userCmd[i:i + self.sectionSize] for i in range(0, len(userCmd), self.sectionSize)]
         cmdLen = len(cmdChars)
@@ -81,42 +80,30 @@ class GlobObfuscator(StringObfuscator):
         if cmdLogLen <= 0:
             cmdLogLen = 1
 
-        parts = []
+        printLines = {}
         for i in range(cmdLen):
-            ch = cmdChars[i]
-            ch = escapeQuotes(ch)
-            parts.append(
-                "printf %s '" + ch + "' > '" + self.workingDir + "/" +
-                format(i, "0" + str(cmdLogLen) + "b").replace("0", "?").replace("1", "\n") + "';"
-            )
-        self.randGen.randShuffle(parts)
+            cmdCharsSection = cmdChars[i]
+            cmdCharsSection = escapeQuotes(cmdCharsSection)
+            printLines.update({
+                f"* *:printf:^ ^%s^ ^'DATA'^ ^>^ ^'{self.workingDir}/" +
+                format(i, "0" + str(cmdLogLen) + "b").replace("0", "?").replace("1", "\n") + "'* *END": cmdCharsSection
+            })
 
         # TODO: randomize ordering of 'rm' statements
-        self.payload = ""
-        self.payload += "mkdir -p '" + self.workingDir + "';"
-        self.payload += "".join(parts)
-        self.payload += "cat '" + self.workingDir + "'/" + "?" * cmdLogLen + ";"
-        self.payload += "rm '" + self.workingDir + "'/" + "?" * cmdLogLen + ";"
+        self.mangler.addPayloadLine(f"* *:mkdir:^ ^-p^ ^'{self.workingDir}'* *END")
+        self.mangler.addLinesInRandomOrder(printLines)
+        self.mangler.addPayloadLine(f"* *:cat:^ ^'{self.workingDir}'/{'?' * cmdLogLen}* *END")
+        self.mangler.addPayloadLine(f"* *:rm:^ ^'{self.workingDir}'/{'?' * cmdLogLen}* *END")
 
-    def setSizes(self, sizePref, userCmd):
-        if sizePref == 0:
-            self.minDirLen = self.maxDirLen = 1
-            self.sectionSize = int(len(userCmd) / 3 + 1)
-        elif sizePref == 1:
-            self.minDirLen = 1
-            self.maxDirLen = 3
+    def setSizes(self, userCmd):
+        if self.sizePref == 1:
             self.sectionSize = int(len(userCmd) / 10 + 1)
-        elif sizePref == 2:
-            self.minDirLen = 6
-            self.maxDirLen = 12
+        elif self.sizePref == 2:
             self.sectionSize = int(len(userCmd) / 100 + 1)
-        elif sizePref == 3:
-            self.minDirLen = 12
-            self.maxDirLen = 24
-            self.sectionSize = 3
-        elif sizePref == 4:
-            self.minDirLen = self.maxDirLen = 32
+        elif self.sizePref == 3:
             self.sectionSize = 1
+
+        self.startingDir = escapeQuotes(self.writeDir + self.randGen.randUniqueStr())
 
 
 class FileGlob(GlobObfuscator):
@@ -126,17 +113,15 @@ class FileGlob(GlobObfuscator):
             description="Uses files and glob sorting to reassemble a string",
             sizeRating=5,
             timeRating=5,
-            author="elijah-barker"
+            author="Elijah-Barker"
         )
 
-    def mutate(self, sizePref, timePref, userCmd):
-        self.originalCmd = userCmd
+    def mutate(self, userCmd):
+        self.setSizes(userCmd)
+        self.generate(userCmd)
+        self.mangler.addPayloadLine(f"* *:rmdir:^ ^'{self.workingDir}'END* *")
 
-        self.setSizes(sizePref, userCmd)
-        self.generate(sizePref, userCmd, self.writeDir)
-        self.payload += "rmdir '" + self.workingDir + "'"
-
-        return self.payload
+        return self.mangler.getFinalPayload()
 
 
 class FolderGlob(GlobObfuscator):
@@ -146,75 +131,21 @@ class FolderGlob(GlobObfuscator):
             description="Same as file glob, but better",
             sizeRating=5,
             timeRating=5,
-            author="elijah-barker"
+            author="Elijah-Barker"
         )
 
-    def mutate(self, sizePref, timePref, userCmd):
-        self.originalCmd = userCmd
-
-        self.setSizes(sizePref, userCmd)
-        self.writeableDir = (self.writeDir + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
-        self.workingDir = escapeQuotes(self.writeableDir)
+    def mutate(self, userCmd):
+        self.setSizes(userCmd)
 
         cmdChunks = [userCmd[i:i + self.sectionSize] for i in range(0, len(userCmd), self.sectionSize)]
-        parts = []
 
-        # TODO: remove created folders
         for chunk in cmdChunks:
-            self.generate(sizePref, chunk, self.writeableDir + "/" + self.randGen.randUniqueStr(self.minDirLen, self.maxDirLen))
-            parts.append(self.payload)
+            self.generate(chunk, self.randGen.randUniqueStr())
+            self.mangler.addPayloadLine(f"* *:rmdir:^ ^'{self.workingDir}'END")
 
-        self.payload = "".join(parts)
+        self.mangler.addPayloadLine(f"* *:rmdir:^ ^'{self.startingDir}'END* *")
 
-        return self.payload
-
-
-class ForCode(StringObfuscator):
-    def __init__(self):
-        super().__init__(
-            name="ForCode",
-            description="Shuffle command and reassemble it in a for loop",
-            sizeRating=2,
-            timeRating=3,
-            author="capnspacehook",
-            credits=["danielbohannon, https://github.com/danielbohannon/Invoke-DOSfuscation",
-                "DisectMalare, https://twitter.com/DissectMalware/status/1029629127727431680"]
-        )
-
-    def mutate(self, sizePref, timePref, userCmd):
-        self.originalCmd = userCmd
-
-        # get a set of unique chars in original command
-        shuffledCmd = list(set(userCmd))
-        self.randGen.randShuffle(shuffledCmd)
-        shuffledCmd = "".join(shuffledCmd)
-
-        # build a list of the indexes of where each char in the original command
-        # is in the array that holds the individual chars
-        ogCmdIdxes = []
-        for char in userCmd:
-            ogCmdIdxes.append(shuffledCmd.find(char))
-
-        cmdIndexes = "".join([str(i) + " " for i in ogCmdIdxes])[:-1]
-
-        shuffledCmd = strToArrayElements(shuffledCmd)
-
-        charArrayVar = self.randGen.randGenVar(sizePref)
-        obCmd = "{0}=({1});".format(charArrayVar, shuffledCmd)
-
-        indexVar = self.randGen.randGenVar(sizePref)
-        obCmd += "for {0} in {1}".format(indexVar, cmdIndexes)
-
-        # randomly choose between the two different for loop syntaxes
-        if self.randGen.probibility(50):
-            obCmd += ';{{ printf %s "${{{0}[${1}]}}"; }}'.format(charArrayVar, indexVar)
-        
-        else:
-            obCmd += ';do printf %s "${{{0}[${1}]}}";done'.format(charArrayVar, indexVar)
-
-        self.payload = obCmd
-
-        return self.payload
+        return self.mangler.getFinalPayload()
 
 
 class HexHash(StringObfuscator):
@@ -225,26 +156,105 @@ class HexHash(StringObfuscator):
             sizeRating=5,
             timeRating=5,
             binariesUsed=["cut", "md5sum"],
-            author="elijah-barker"
+            author="Elijah-Barker"
         )
 
-    def mutate(self, sizePref, timePref, userCmd):
-        self.originalCmd = userCmd
-
-        obCmd = ""
+    def mutate(self, userCmd):
         for ch in userCmd:
             hexchar = str(bytes(ch, "utf-8").hex())
             randomhash = ""
 
             while not hexchar in randomhash:
                 m = hashlib.md5()
-                randomString = self.randGen.randGenStr(1, 3)
+                randomString = self.randGen.randGenStr()
                 m.update(bytes(randomString, "utf-8"))
-                randomhash = m.digest().hex()
+                randomhash = m.hexdigest()
 
             index = randomhash.find(hexchar)
-            obCmd += 'printf "\\x$(printf \'' + randomString + "\'|md5sum|cut -b" + str(index + 1) + "-" + str(index + 2) + ')";'
+            self.mangler.addPayloadLine(f"""* *:printf:^ ^"\\x$(:printf:^ ^%s^ ^'{randomString}'* *|* *:md5sum:* *|* *:cut:^ ^-b^ ^{str(index + 1)}-{str(index + 2)}* *)"* *END""")
 
-        self.payload = obCmd
+        self.mangler.addJunk()
 
-        return self.payload
+        return self.mangler.getFinalPayload()
+
+
+class XorNonNull(StringObfuscator):
+    def __init__(self):
+        super().__init__(
+            name="Xor Non Null",
+            description="Uses the xor operator in perl to encode strings",
+            sizeRating=5,
+            timeRating=5,
+            binariesUsed=["perl"],
+            notes="May contain non-printable Ascii characters",
+            author="Elijah-Barker"
+        )
+
+    def genXorKey(self, keyLen, userCmd):
+        xorKeyBytes = bytearray(self.randGen.randGenStr(minStrLen=keyLen, maxStrLen=keyLen), "utf-8")
+
+        for i in range(keyLen):
+            nullchars = set(userCmd[i::keyLen])
+            if chr(xorKeyBytes[i]) in nullchars:
+                # copies the current char set for initialization of blacklist
+                charBlackList = self.randGen._randStrCharList[:]
+
+                for char in nullchars:
+                    if char in charBlackList:
+                        charBlackList.remove(char)
+
+                if len(charBlackList) > 0:
+                    # Replace character that would cause a null byte
+                    xorKeyBytes[i] = int.from_bytes(bytes(self.randGen.randSelect(charBlackList), "utf-8"), byteorder='big')
+                else:
+                    # Die: Impossible key length modulus (there are no
+                    # characters that don't cause a null byte)
+                    # solution: try a different key length
+                    return None
+
+        return xorKeyBytes
+
+    def mutate(self, userCmd):
+
+        cmdVar = self.randGen.randGenVar()
+        keyVar = self.randGen.randGenVar()
+        cmdCharVar = self.randGen.randGenVar()
+        keyCharVar = self.randGen.randGenVar()
+        iteratorVar = self.randGen.randGenVar()
+
+        if self.sizePref == 1:
+            keyLen = int(len(userCmd) / 100 + 1)
+        elif self.sizePref == 2:
+            keyLen = int(len(userCmd) / 10 + 1)
+        elif self.sizePref == 3:
+            keyLen = len(userCmd)
+
+        xorKeyBytes = None
+        while not xorKeyBytes:
+            keyLen = keyLen + 1
+            xorKeyBytes = self.genXorKey(keyLen, userCmd)
+
+        cmdBytes = bytearray(userCmd, 'utf-8')
+        for i in range(len(userCmd)):
+            cmdBytes[i] ^= xorKeyBytes[i % keyLen]
+
+        xorKey = escapeQuotes(xorKeyBytes.decode("utf-8"))
+        data = escapeQuotes(cmdBytes.decode("utf-8"))
+
+        self.mangler.addPayloadLine(f"? ?{cmdVar}='DATA'* *END", data)
+        self.mangler.addPayloadLine(f"? ?{keyVar}='{xorKey}'* *END")
+        self.mangler.addPayloadLine(f"? ?for^ ^((* *{iteratorVar}=0* *;* *{iteratorVar}* *<* *${{#{cmdVar}}}* *;* *{iteratorVar}* *++* *))? ?END0")
+        self.mangler.addPayloadLine(f'''? ?do^ ^{cmdCharVar}="${{{cmdVar}:${iteratorVar}:1? ?}}"* *END''')
+        self.mangler.addPayloadLine(f'''? ?{keyCharVar}="$(({iteratorVar}%${{#{keyVar}}}))"* *END''')
+        self.mangler.addPayloadLine(f'''? ?{keyCharVar}="${{{keyVar}:${keyCharVar}:1}}"* *END''')
+        perlEscapes = [
+            f'''? ?[[^ ^"${cmdCharVar}"^ ^==^ ^"'"^ ^]]? ?&&? ?{cmdCharVar}="\\\\'"* *END0''',
+            f'''? ?[[^ ^"${keyCharVar}"^ ^==^ ^"'"^ ^]]? ?&&? ?{keyCharVar}="\\\\'"* *END0''',
+            f"""? ?[[^ ^"${cmdCharVar}"^ ^==^ ^"\\\\"^ ^]]? ?&&? ?{cmdCharVar}='\\\\'* *END0""",
+            f"""? ?[[^ ^"${keyCharVar}"^ ^==^ ^"\\\\"^ ^]]? ?&&? ?{keyCharVar}='\\\\'* *END0"""
+        ]
+        self.mangler.addLinesInRandomOrder(perlEscapes)
+        self.mangler.addPayloadLine(f'''? ?:perl:^ ^-e^ ^"print '${cmdCharVar}'^'${keyCharVar}'"* *END0''')
+        self.mangler.addPayloadLine("? ?done? ?END")
+
+        return self.mangler.getFinalPayload()
