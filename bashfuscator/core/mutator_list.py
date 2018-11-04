@@ -15,6 +15,7 @@ stringObfuscators = [
     FolderGlob(),
     ForCode(),
     HexHash(),
+    XorNonNull(),
 ]
 
 tokenObfuscators = [

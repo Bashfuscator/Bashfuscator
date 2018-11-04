@@ -18,10 +18,10 @@ class StringObfuscator(Mutator):
 
     :param name: name of the StringObfuscator
     :type name: str
-    :param description: short description of what the StringObfuscator 
+    :param description: short description of what the StringObfuscator
             does
     :type description: str
-    :param sizeRating: rating from 1 to 5 of how much the 
+    :param sizeRating: rating from 1 to 5 of how much the
             StringObfuscator increases the size of the overall payload
     :type sizeRating: int
     :param timeRating: rating from 1 to 5 of how much the
@@ -31,7 +31,7 @@ class StringObfuscator(Mutator):
     :param binariesUsed: list of all the binaries the StringObfuscator
             uses
     :type binariesUsed: list of strs
-    :param fileWrite: True if the Command Obfuscator requires 
+    :param fileWrite: True if the Command Obfuscator requires
             creating/writing to files, False otherwise
     :type fileWrite: bool
     :param notes: see :class:`bashfuscator.common.objects.Mutator`
@@ -230,50 +230,60 @@ class XorNonNull(StringObfuscator):
             sizeRating=5,
             timeRating=5,
             binariesUsed=["perl"],
+            notes="May contain non-printable Ascii characters",
             author="elijah-barker"
         )
 
     def genXorKey(self, keyLen, userCmd):
-        
-        xorKeyBytes = bytearray(self.randGen.randGenStr(minStrLen=keyLen, maxStrLen=keyLen), "utf8")
-        
+        xorKeyBytes = bytearray(self.randGen.randGenStr(minStrLen=keyLen, maxStrLen=keyLen), "utf-8")
+
         for i in range(keyLen):
             nullchars = set(userCmd[i::keyLen])
             if chr(xorKeyBytes[i]) in nullchars:
-                charBlackList = list(self.randGen._randStrCharList[:])
+                # copies the current char set for initialization of blacklist
+                charBlackList = self.randGen._randStrCharList[:]
+
                 for char in nullchars:
                     if char in charBlackList:
                         charBlackList.remove(char)
+
                 if len(charBlackList) > 0:
                     # Replace character that would cause a null byte
-                    xorKeyBytes[i] = int.from_bytes(bytes(self.randGen.randGenStr(minStrLen=1, maxStrLen=1, charList=charBlackList), "utf8"), byteorder='big')
+                    xorKeyBytes[i] = int.from_bytes(bytes(self.randGen.randSelect(charBlackList), "utf-8"), byteorder='big')
                 else:
                     # Die: Impossible key length modulus (there are no
                     # characters that don't cause a null byte)
                     # solution: try a different key length
                     return None
+
         return xorKeyBytes
 
     def mutate(self, userCmd):
-        
+
         cmdVar = self.randGen.randGenVar()
         keyVar = self.randGen.randGenVar()
         cmdCharVar = self.randGen.randGenVar()
         keyCharVar = self.randGen.randGenVar()
         iteratorVar = self.randGen.randGenVar()
-        
-        keyLen = 40 # TODO: base on sizePref
+
+        if self.sizePref == 1:
+            keyLen = int(len(userCmd) / 100 + 1)
+        elif self.sizePref == 2:
+            keyLen = int(len(userCmd) / 10 + 1)
+        elif self.sizePref == 3:
+            keyLen = len(userCmd)
+
         xorKeyBytes = None
-        while xorKeyBytes is None:
+        while not xorKeyBytes:
             keyLen = keyLen + 1
             xorKeyBytes = self.genXorKey(keyLen, userCmd)
-        
-        cmdBytes = bytearray(userCmd, 'utf8')
+
+        cmdBytes = bytearray(userCmd, 'utf-8')
         for i in range(len(userCmd)):
-            cmdBytes[i] ^= xorKeyBytes[i%keyLen]
-            
-        xorKey = escapeQuotes(xorKeyBytes.decode("utf8"))
-        data = escapeQuotes(cmdBytes.decode("utf8"))
+            cmdBytes[i] ^= xorKeyBytes[i % keyLen]
+
+        xorKey = escapeQuotes(xorKeyBytes.decode("utf-8"))
+        data = escapeQuotes(cmdBytes.decode("utf-8"))
 
         self.mangler.addPayloadLine(f"? ?{cmdVar}='DATA'* *END", data)
         self.mangler.addPayloadLine(f"? ?{keyVar}='{xorKey}'* *END")
@@ -292,4 +302,3 @@ class XorNonNull(StringObfuscator):
         self.mangler.addPayloadLine("? ?done? ?END")
 
         return self.mangler.getFinalPayload()
-
