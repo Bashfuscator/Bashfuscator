@@ -4,6 +4,7 @@ Defines ObufscationHandler, which manages the obfuscation process.
 from bashfuscator.common.messages import printError, printWarning
 from bashfuscator.core.mutator_list import commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors
 from bashfuscator.common.random import RandomGen
+from bashfuscator.core.mangler import Mangler
 
 
 class ObfuscationHandler(object):
@@ -56,7 +57,6 @@ class ObfuscationHandler(object):
             self.filePref = args.no_file_write
             self.writeDir = args.write_dir
             self.originalCmd = args.command
-            self.prevCmdOb = None
 
             if args.choose_mutators:
                 self.userMutators = args.choose_mutators
@@ -65,15 +65,78 @@ class ObfuscationHandler(object):
             else:
                 self.userMutators = None
 
-            if args.full_ascii_strings:
-                self.randGen.setFullAsciiStrings()
+            if args.no_mangling is not None:
+                self.enableMangling = args.no_mangling
+            else:
+                self.enableMangling = None
+
+            if args.no_binary_mangling is not None:
+                self.mangleBinaries = args.no_binary_mangling
+            else:
+                self.mangleBinaries = None
+
+            if args.binary_mangle_percent:
+                self.binaryManglePercent = args.binary_mangle_percent
+            else:
+                self.binaryManglePercent = None
+
+            if args.no_random_whitespace is not None:
+                self.randWhitespace = args.no_random_whitespace
+            else:
+                self.randWhitespace = None
+
+            if args.random_whitespace_range:
+                self.randWhitespaceRange = args.random_whitespace_range
+            else:
+                self.randWhitespaceRange = None
+
+            if args.no_insert_chars is not None:
+                self.insertChars = args.no_insert_chars
+            else:
+                self.insertChars = None
+
+            if args.insert_chars_range:
+                self.insertCharsRange = args.insert_chars_range
+            else:
+                self.insertCharsRange = None
+
+            if args.no_misleading_commands is not None:
+                self.misleadingCmds = args.no_misleading_commands
+            else:
+                self.misleadingCmds = None
+
+            if args.misleading_commands_range:
+                self.misleadingCmdsRange = args.misleading_commands_range
+            else:
+                self.misleadingCmdsRange = None
 
         else:
             self.sizePref = 2
             self.timePref = 2
             self.binaryPref = None
-            self.filePref = False
+            self.filePref = True
             self.writeDir = "/tmp/"
+            self.userMutators = None
+        
+            self.enableMangling = None
+            self.mangleBinaries = None
+            self.binaryManglePercent = None
+            self.randWhitespace = None
+            self.randWhitespaceRange = None
+            self.insertChars = None
+            self.insertCharsRange = None
+            self.misleadingCmds = None
+            self.misleadingCmdsRange = None
+        
+        self.prevCmdOb = None
+
+        self.mangler = Mangler()
+        self.randGen = self.mangler.randGen
+
+        self.mangler.initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange)
+
+        if args and args.full_ascii_strings:
+            self.randGen.setFullAsciiStrings()
 
     def generatePayload(self):
         """
@@ -104,7 +167,8 @@ class ObfuscationHandler(object):
 
         return payload
 
-    def genObfuscationLayer(self, payload, userMutator=None, userStub=None, sizePref=None, timePref=None, binaryPref=None, filePref=None, writeDir=None):
+    # TODO: update docs
+    def genObfuscationLayer(self, payload, userMutator=None, userStub=None, sizePref=None, timePref=None, binaryPref=None, filePref=None, enableMangling=None, mangleBinaries=None, binaryManglePercent=None, randWhitespace=None, randWhitespaceRange=None, insertChars=None, insertCharsRange=None, misleadingCmds=None, misleadingCmdsRange=None, writeDir=None):
         """
         Generate one layer of obfuscation. If called with the
         userMutator or userStub parameters, the Mutator and/or Stub
@@ -138,15 +202,33 @@ class ObfuscationHandler(object):
         :returns: a str containing the 'payload' argument obfuscated by
             a single Mutator
         """
-        if not sizePref:
+        if sizePref is None:
             sizePref = self.sizePref
-        if not timePref:
+        if timePref is None:
             timePref = self.timePref
-        if not binaryPref:
+        if binaryPref is None:
             binaryPref = self.binaryPref
-        if not filePref:
+        if filePref is None:
             filePref = self.filePref
-        if not writeDir:
+        if enableMangling is None:
+            enableMangling = self.enableMangling
+        if mangleBinaries is None:
+            mangleBinaries = self.mangleBinaries
+        if binaryManglePercent is None:
+            binaryManglePercent = self.binaryManglePercent
+        if randWhitespace is None:
+            randWhitespace = self.randWhitespace
+        if randWhitespaceRange is None:
+            randWhitespaceRange = self.randWhitespaceRange
+        if insertChars is None:
+            insertChars = self.insertChars
+        if insertCharsRange is None:
+            insertCharsRange = self.insertCharsRange
+        if misleadingCmds is None:
+            misleadingCmds = self.misleadingCmds
+        if misleadingCmdsRange is None:
+            misleadingCmdsRange = self.misleadingCmdsRange
+        if writeDir is None:
             writeDir = self.writeDir
 
         selMutator = None
@@ -172,7 +254,7 @@ class ObfuscationHandler(object):
                 selMutator = self.choosePrefMutator(self.compressors, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
 
             else:
-                printError("ERROR: {0} isn't a valid mutator type".format(mutatorType))
+                printError(f"ERROR: {mutatorType} isn't a valid mutator type")
         else:
             # TODO: handle case when no mutators of chosen type are compatible with user's preferences
             obChoice = self.randGen.randChoice(3)
@@ -189,8 +271,13 @@ class ObfuscationHandler(object):
             else:
                 selMutator = self.choosePrefMutator(self.tokObfuscators, sizePref, timePref)
 
+        selMutator.sizePref = sizePref
+        selMutator.timePref = timePref
         selMutator.writeDir = writeDir
-        payload = selMutator.mutate(sizePref, timePref, payload)
+        selMutator._originalCmd = payload
+        selMutator.mangler.initialize(sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange)
+        payload = selMutator.mutate(payload)
+        selMutator._obfuscatedCmd = payload
 
         self.randGen.forgetUniqueStrs()
         payload = self.evalWrap(payload, selMutator)
@@ -214,12 +301,12 @@ class ObfuscationHandler(object):
         """
         if selMutator.evalWrap:
             if self.randGen.probibility(50):
-                wrappedPayload = '''eval "$({0})"'''.format(payload)
+                wrappedPayload = self.mangler.mangleLine('* *:eval:^ ^"$(? ?DATA? ?)"* *', payload)
             else:
-                wrappedPayload = '''printf %s "$({0})"|bash'''.format(payload)
+                wrappedPayload = self.mangler.mangleLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
         else:
             wrappedPayload = payload
-        
+
         return wrappedPayload
 
     def choosePrefMutator(self, mutators, sizePref=None, timePref=None, binaryPref=None, filePref=None, prevCmdOb=None, userMutator=None, userStub=None):
@@ -261,16 +348,18 @@ class ObfuscationHandler(object):
                 binList = binaryPref[0]
                 includeBinary = binaryPref[1]
 
+            # TODO: warn user when using a reversible CommandObfuscator back to back
+            # TODO: warn when user uses a post Encoder as anything but the final layer
             for mutator in mutators:
                 if mutator.longName == userMutator:
-                    if filePref and mutator.fileWrite == filePref:
-                        printWarning("'{0}' mutator preforms file writes".format(userMutator))
+                    if filePref is False and mutator.fileWrite != filePref:
+                        printWarning(f"'{userMutator}' mutator preforms file writes")
 
                     elif binaryPref:
                         for binary in mutator.binariesUsed:
                             if (binary in binList) != includeBinary:
-                                printWarning("'{0}' mutator contains an unwanted binary".format(userMutator))
-                    
+                                printWarning(f"'{userMutator}' mutator contains an unwanted binary")
+
                     selMutator = mutator
                     if selMutator.mutatorType == "command":
                         selMutator.prefStubs = selMutator.stubs
@@ -278,7 +367,7 @@ class ObfuscationHandler(object):
                     break
             
             if selMutator is None:
-                printError("Selected mutator '{0}' not found".format(userMutator))
+                printError(f"Selected mutator '{userMutator}' not found")
         
         else:
             prefMutators = self.getPrefMutators(mutators, sizePref, timePref, binaryPref, filePref, prevCmdOb)
@@ -286,6 +375,8 @@ class ObfuscationHandler(object):
 
         if selMutator is not None and selMutator.mutatorType == "command":
             selMutator.deobStub = self.choosePrefStub(selMutator.prefStubs, sizePref, timePref, binaryPref, userStub)
+            selMutator.deobStub.mangler = selMutator.mangler
+            selMutator.deobStub.randGen = selMutator.mangler.randGen
 
         return selMutator
 
@@ -323,10 +414,7 @@ class ObfuscationHandler(object):
 
         prefMutators = []
         for mutator in goodMutators:
-            if filePref and mutator.fileWrite == filePref:
-                continue
-
-            elif mutator.mutatorType == "command":
+            if mutator.mutatorType == "command":
                 if prevCmdOb and prevCmdOb.reversible and prevCmdOb.name == mutator.name:
                     continue
 
@@ -336,6 +424,10 @@ class ObfuscationHandler(object):
                     mutator.prefStubs = prefStubs
                 else:
                     continue
+
+            # don't choose special encoders that produce output that Bash can't parse
+            elif mutator.mutatorType == "encode" and mutator.postEncoder:
+                continue
 
             # TODO: decide if TokenObfuscators should be allowed if the user chooses to only use certain binaries,
             # TokenObfuscators don't use any binaries 
@@ -348,6 +440,9 @@ class ObfuscationHandler(object):
                 
                 if badBinary:
                     continue
+
+            elif filePref is False and mutator.fileWrite != filePref:
+                continue
             
             prefMutators.append(mutator)
 
@@ -424,12 +519,12 @@ class ObfuscationHandler(object):
                     if binaryPref is not None:
                         for binary in stub.binariesUsed:
                             if (binary in binList) != includeBinary:
-                                printWarning("'{0}' stub contains an unwanted binary".format(userStub))
+                                printWarning(f"'{userStub}' stub contains an unwanted binary")
                     
                     selStub = stub
 
             if selStub is None:     
-                printError("'{0}' stub not found".format(userStub))
+                printError(f"'{userStub}' stub not found")
 
         else:
             selStub = self.randGen.randSelect(stubs)
@@ -485,18 +580,11 @@ class ObfuscationHandler(object):
         :param pref: sizePref or timePref options
         :returns: tuple of minimum and maximum ratings
         """
-        if pref == 0:
-            minRating = maxRating = 1
-        elif pref == 1:
-            minRating = 1
+        if pref == 1:
             maxRating = 2
         elif pref == 2:
-            minRating = 1
             maxRating = 3
         elif pref == 3:
-            minRating = 1
             maxRating = 5
-        else:
-            minRating = maxRating = 5
 
-        return (minRating, maxRating)
+        return (1, maxRating)

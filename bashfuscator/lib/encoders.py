@@ -37,15 +37,14 @@ class Encoder(Mutator):
     :type credits: str
     """
 
-    def __init__(self, name, description, sizeRating, timeRating, binariesUsed=[], fileWrite=False, notes=None, author=None, credits=None, evalWrap=True):
+    def __init__(self, name, description, sizeRating, timeRating, postEncoder=False, binariesUsed=[], fileWrite=False, notes=None, author=None, credits=None, evalWrap=True):
         super().__init__(name, "encode", description, notes, author, credits, evalWrap)
 
         self.sizeRating = sizeRating
         self.timeRating = timeRating
+        self.postEncoder = postEncoder
         self.binariesUsed = binariesUsed
         self.fileWrite = fileWrite
-        self.originalCmd = ""
-        self.payload = ""
 
 
 class Base64(Encoder):
@@ -59,14 +58,13 @@ class Base64(Encoder):
             author="capnspacehook"
         )
 
-    def mutate(self, sizePref, timePref, userCmd):
-        self.originalCmd = userCmd
+    def mutate(self, userCmd):
 
         b64EncodedBlob = b64encode(userCmd.encode("utf-8"))
         b64EncodedBlob = b64EncodedBlob.decode("utf-8").replace("\n", "")
-        self.payload = "printf {0}|base64 -d".format(b64EncodedBlob)
+        self.mangler.addPayloadLine(f'* *:printf:^ ^"{b64EncodedBlob}"* *|* *:base64:^ ^-d* *')
 
-        return self.payload
+        return self.mangler.getFinalPayload()
 
 
 class UrlEncode(Encoder):
@@ -76,11 +74,12 @@ class UrlEncode(Encoder):
             description="Url encode command",
             sizeRating=3,
             timeRating=1,
+            postEncoder=True,
             author="capnspacehook",
             evalWrap=False
         )
 
-    def mutate(self, sizePref, timePref, userCmd):
+    def mutate(self, userCmd):
         self.originalCmd = userCmd
 
         self.payload = quote_plus(userCmd)

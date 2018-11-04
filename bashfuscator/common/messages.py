@@ -18,16 +18,16 @@ def activateQuietMode():
 def printInfo(msg):
     """Format and print informational messages to the terminal."""
     if not QUIET_OUTPUT:
-        print("[{0}] {1}".format(blue("+"), msg))
+        print(f'[{blue("+")}] {msg}')
 
 
 def printWarning(msg):
     """Format and print warning messages to the terminal."""
     if not QUIET_OUTPUT:
-        print(yellow("[!] {0}".format(msg)))
+        print(yellow(f"[!] {msg}"))
 
 
 def printError(msg):
     """Format and print error messages to the terminal."""
-    print(bold(red("[ERROR] {0}".format(msg))))
+    print(bold(red(f"[ERROR] {msg}")))
     exit(1)

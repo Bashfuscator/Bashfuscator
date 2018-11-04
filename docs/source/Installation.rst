@@ -12,3 +12,8 @@ Installation of Bashfuscator is simple. Just follow these steps:
    python3 setup.py install --user
 
 Bashfuscator should now be installed onto your PATH and ready to go!
+
+.. note::
+    Bashfuscator is written in Python 3, Python 2 is NOT supported and will probably not
+    run Bashfuscator properly.
+    

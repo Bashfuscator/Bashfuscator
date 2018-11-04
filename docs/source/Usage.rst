@@ -1,33 +1,5 @@
-Quick Start
-===========
-
-Introduction
-------------
-
-Bashfuscator is built to be a modular, flexible Bash obfuscation framework. It achieves this by organizing
-different obfuscation techniques and methods into modules within the framework, called Mutators. 
-Different obfuscation 'recipes' can be created by stacking different Mutators.
-
-There are 5 types of Mutators:
-
-#. Command Obfuscators
-    * Simple obfuscators that leverage behavior of commands or binaries present in a Linux environment
-    * Obfuscates entire input in one chunk
-
-#. String Obfuscators
-    * Obfuscators that use more advanced features/binaries
-    * Breaks input into chunks, obfuscates those chunks, then builds up input by concatenating standard output of all of the different obfuscated chunks
-
-#. Token Obfuscators
-    * Leverages Bash functionality or behavior to obfuscate commands
-    * Typically don't use any external binaries
-    * Obfuscates entire input in one chunk
-
-#. Encoders
-    * Encodes the entire input and decodes it using a stub.
-
-#. Compressors
-    * Compresses the input and decompresses it using a stub, using various compressors typically available in a Linux environment
+Usage
+=====
 
 Basic CLI Usage
 ---------------
@@ -80,8 +52,6 @@ ratings, descriptions, and more.
             Digital Trauma, https://codegolf.stackexchange.com/questions/22533/weirdest-obfuscated-hello-world
     [snip]
 
-
-
 When you're ready to start obfuscating, use the `-c` or `-f` options to specify a one-liner or script file to 
 obfuscate, and Bashfuscator will take care of the rest, randomly choosing Mutators to obfuscate the input with.
 Bashfuscator only requires one of those two options, although many more are available to fine-tune the obfuscation.
@@ -131,7 +101,8 @@ an output file to write to, the output file will be run after the payload is wri
 Advanced CLI Usage
 ------------------
 
-All options are tab-completable! This makes CLI usage sooo much easier.
+.. note::
+    All options are tab-completable! This makes CLI usage sooo much easier, especially when using long options.
 
 The `--layers` option will control the amount of obfuscation layers Bashfuscator will apply to the input. The default
 is 2 layers. This is useful to control the amount of obfuscation applied to the input.
@@ -139,19 +110,6 @@ is 2 layers. This is useful to control the amount of obfuscation applied to the 
 The `--full-ascii-strings` option is an interesting one. When used, the full ASCII character set is used when randomly
 generating strings to be used within the final payload. This means non-printable characters can possibly exist within
 the obfuscated payload, potentially (hopefully) messing with tools and regex used to examine your payload.
-
-.. code-block:: bash
-    $ bashfuscator -c "cat /etc/passwd" --choose-mutators string/file_glob --full-ascii-strings -s3
-    [+] Payload:
-
-    eval "$(mkdir -p '/tmp/0fmdLZ}Bw7V	iY:_V';printf %s ' /e' > '/tmp/0fmdLZ}Bw7V	iY:_V/??
-    ';printf %s 'tc/' > '/tmp/0fmdLZ}Bw7V	iY:_V/?
-    ?';printf %s 'pas' > '/tmp/0fmdLZ}Bw7V	iY:_V/?
-
-    ';printf %s 'cat' > '/tmp/0fmdLZ}Bw7V	iY:_V/???';printf %s 'swd' > '/tmp/0fmdLZ}Bw7V	iY:_V/
-    ??';cat '/tmp/0fmdLZ}Bw7V	iY:_V'/???;rm '/tmp/0fmdLZ}Bw7V	iY:_V'/???;rmdir '/tmp/0fmdLZ}Bw7V	iY:_V')"
-
-    [+] Payload size: 437 characters
 
 You can further fine-tune the obfuscation process by using the `--choose-mutators` option. This option allows
 you to manually select which Mutators Bashfuscator will use, and in what order. You can create some pretty creative 

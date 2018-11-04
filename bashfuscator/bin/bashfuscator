@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
-from argparse import ArgumentTypeError, ArgumentParser, FileType
+from argparse import ArgumentTypeError, ArgumentParser
 from collections import OrderedDict
 from subprocess import STDOUT, PIPE, Popen
-from sys import exit
+from sys import exit, stdin
 import re
 
 from argcomplete import autocomplete
 import pyperclip
 
 from bashfuscator.common.colors import bold
-from bashfuscator.common.messages import activateQuietMode, printInfo
+from bashfuscator.common.messages import activateQuietMode, printInfo, printWarning, printError
 from bashfuscator.core.mutator_list import commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors
 from bashfuscator.core.obfuscation_handler import ObfuscationHandler
 
@@ -18,7 +18,7 @@ from bashfuscator.core.obfuscation_handler import ObfuscationHandler
 def check_positive(value):
     ivalue = int(value)
     if ivalue <= 0:
-         raise ArgumentTypeError("{ivalue} is an invalid positive int value".format(ivalue))
+        raise ArgumentTypeError(f"{ivalue} is an invalid positive int value")
     return ivalue
 
 
@@ -72,22 +72,22 @@ def listMutators():
 
 def listMutatorType(mutators):
     for mutator in mutators:
-        print(bold("\nName: {0}".format(mutator.name)))
-        print("Description: {0}".format(mutator.description))
-        print("Size Rating: {0}".format(mutator.sizeRating))
-        print("Time Rating: {0}".format(mutator.timeRating))
+        print(bold(f"\nName: {mutator.name}"))
+        print(f"Description: {mutator.description}")
+        print(f"Size Rating: {mutator.sizeRating}")
+        print(f"Time Rating: {mutator.timeRating}")
         if mutator.mutatorType != "command":
             if mutator.binariesUsed:
                     binariesUsedString = "".join(b + ", " for b in mutator.binariesUsed)[:-2]
             else:
                 binariesUsedString = "None"
 
-            print("Binaries used: {0}".format(binariesUsedString))
+            print(f"Binaries used: {binariesUsedString}")
 
-        print("File write: {0}".format(mutator.fileWrite))
-        if mutator.notes is not None: print("Notes: {0}".format(mutator.notes))
-        if mutator.author is not None: print("Author: {0}".format(mutator.author))
-        if mutator.credits is not None: 
+        print(f"File write: {mutator.fileWrite}")
+        if mutator.notes is not None: print(f"Notes: {mutator.notes}")
+        if mutator.author is not None: print(f"Author: {mutator.author}")
+        if mutator.credits is not None:
             print("Credits: ", end="")
 
             for idx, credit in enumerate(mutator.credits):
@@ -99,16 +99,34 @@ def listMutatorType(mutators):
         if mutator.mutatorType == "command":
             print("\nStubs:")
             for stub in mutator.stubs:
-                print("\n\tName: {0}".format(stub.name))
+                print(f"\n\tName: {stub.name}")
 
                 if stub.binariesUsed:
                     binariesUsedString = "".join(b + ", " for b in stub.binariesUsed)[:-2]
                 else:
                     binariesUsedString = "None"
 
-                print("\tBinaries Used: {0}".format(binariesUsedString))
-                print("\tSize Rating: {0}".format(stub.sizeRating))
-                print("\tTime Rating: {0}".format(stub.timeRating))
+                print(f"\tBinaries Used: {binariesUsedString}")
+                print(f"\tSize Rating: {stub.sizeRating}")
+                print(f"\tTime Rating: {stub.timeRating}")
+
+def printArgError(errorMsg):
+    print(f"bashfuscator: error: {errorMsg}")
+    exit(1)
+
+def checkRangeArgs(argName, argValue):
+    if argValue.find(",") == -1:
+        printArgError(f"Invalid value for {argName} option: format is NUM,NUM")
+    
+    rangeValues = *(int(x) for x in argValue.split(",")),
+
+    if rangeValues[0] < 0 or rangeValues[1] < 0:
+        printArgError(f"Invalid value for {argName} option: range values must be positive")
+
+    if rangeValues[0] > rangeValues[1]:
+        printArgError(f"Invalid value for {argName} option: invalid range")
+
+    return rangeValues
 
 
 if __name__ == "__main__":
@@ -117,37 +135,36 @@ if __name__ == "__main__":
     inptOpts = progOpts.add_mutually_exclusive_group()
     progOpts.add_argument("-l", "--list", action="store_true", help="List all the availible obfuscators, compressors, encoders, and encryptors")
     inptOpts.add_argument("-c", "--command", type=str, help="Command to obfuscate")
-    inptOpts.add_argument("-f", "--file", type=str, help="Name of the script to obfuscate")
-    #inptOpts.add_argument("--stdin", action="store_true", help="Receive command to obfuscate from stdin")
+    inptOpts.add_argument("-f", "--file", type=str, help="Name of the script to obfuscate. Use '-' if you want to obfuscate stdin")
     progOpts.add_argument("-o", "--outfile", type=str, help="File to write payload to")
     progOpts.add_argument("-q", "--quiet", action="store_true", help="Print only the payload")
+    progOpts.add_argument("--clip", action="store_true", help="Copy the payload to clipboard")
+    progOpts.add_argument("--test", action="store_true", help="Test the payload after running it. Not compatible with -q")
 
     obOpts = parser.add_argument_group("Obfuscation Options")
-    sizeOpts = obOpts.add_mutually_exclusive_group()
-    sizeOpts.add_argument("-s", "--payload-size", default=2, type=int, choices=range(1, 4), help="Desired size of the payload. Default: 2")
-    sizeOpts.add_argument("-sm", "--min-payload-size", action="store_true", help="Generate the smallest payload possible")
-    sizeOpts.add_argument("-sM", "--max-payload-size", action="store_true", help="Generate the largest payload possible")
-    timeOpts = obOpts.add_mutually_exclusive_group()
-    timeOpts.add_argument("-t", "--execution-time", default=2, type=int, choices=range(1, 4), help="Desired speed of the payload. Default: 2")
-    timeOpts.add_argument("-tm", "--min-execution-time", action="store_true", help="Generate the fastest payload possible")
-    timeOpts.add_argument("-tM", "--max-execution-time", action="store_true", help="Generate the slowest payload possible")
+    obOpts.add_argument("-s", "--payload-size", default=2, type=int, choices=range(1, 4), help="Desired size of the payload. Default: 2")
+    obOpts.add_argument("-t", "--execution-time", default=2, type=int, choices=range(1, 4), help="Desired speed of the payload. Default: 2")
+    obOpts.add_argument("--layers", type=check_positive, help="Number of layers of obfuscation to apply. Default is 1 when --choose-mutators is used, otherwise: 2")
+    binOpts = obOpts.add_mutually_exclusive_group()
+    binOpts.add_argument("--include-binaries", nargs="+", type=str, metavar="BINARIES", help="Binaries you exclusively want used in the generated payload")
+    binOpts.add_argument("--exclude-binaries", nargs="+", type=str, metavar="BINARIES", help="Binaries you don't want to be used in the generated payload")
+    obOpts.add_argument("--no-file-write", action="store_false", help="Don't use obfuscators that require writing to files")
 
     advancedOpts = parser.add_argument_group("Advanced Options")
     chooseOpts = advancedOpts.add_mutually_exclusive_group()
     chooseOpts.add_argument("--choose-mutators", nargs="+", metavar="MUTATOR", help="Manually choose what mutators are used in what order").completer = getMutators
     chooseOpts.add_argument("--choose-all", nargs="+", metavar="MUTATOR", help="Manually choose what mutators and their stubs if applicable").completer = getMutatorsAndStubs
-    advancedOpts.add_argument("--layers", type=check_positive, help="Number of layers of obfuscation to apply. Default is 1 when --choose-mutators is used, otherwise: 2")
-    binOpts = advancedOpts.add_mutually_exclusive_group()
-    binOpts.add_argument("--include-binaries", nargs="+", type=str, metavar="BINARIES", help="Binaries you exclusively want used in the generated payload")
-    binOpts.add_argument("--exclude-binaries", nargs="+", type=str, metavar="BINARIES", help="Binaries you don't want to be used in the generated payload")
-    advancedOpts.add_argument("--full-ascii-strings", action="store_true", help="Use the full ASCII character set (with a few exceptions) when generating random strings")
+    advancedOpts.add_argument("--no-mangling", action="store_false", help="Don't preform binary mangling and don't insert random whitespace and characters")
+    advancedOpts.add_argument("--no-binary-mangling", action="store_false", help="Don't obfuscate binary/builtin names")
+    advancedOpts.add_argument("--binary-mangle-percent", type=int, choices=range(1, 101), metavar="{1..100}", help="Percentage of chars of binary/builtin names to mangle")
+    advancedOpts.add_argument("--no-random-whitespace", action="store_false", help="Don't randomly add whitespace")
+    advancedOpts.add_argument("--random-whitespace-range", type=str, metavar="NUM,NUM", help="The range of random whitespace to add")
+    advancedOpts.add_argument("--no-insert-chars", action="store_false", help="Don't randomly add variables and characters that Bash ignores")
+    advancedOpts.add_argument("--insert-chars-range", type=str, metavar="NUM,NUM", help="The range of random variables and characters to add")
+    advancedOpts.add_argument("--no-misleading-commands", action="store_false", help="Don't randomly insert misleading commands that do nothing")
+    advancedOpts.add_argument("--misleading-commands-range", type=str, metavar="NUM,NUM", help="The range of random misleading commands to add")
     advancedOpts.add_argument("--write-dir", default="/tmp/", type=str, help="Directory to use if Mutators need to write to or create files")
-    advancedOpts.add_argument("--no-file-write", action="store_true", help="Don't use obfuscators that require writing to files")
-    #advancedOpts.add_argument("--no-minify", action="store_true", help="Don't minify script or command entered before obfuscation")
-    advancedOpts = parser.add_argument("--test", action="store_true", help="Test the payload after running it. Not compatible with -q")
-
-    misc = parser.add_argument_group("Misc Options")
-    misc.add_argument("--clip", action="store_true", help="Copy the payload to clipboard")
+    advancedOpts.add_argument("--full-ascii-strings", action="store_true", help="Use the full ASCII character set (with a few exceptions) when generating random strings")
 
     autocomplete(parser)
     args = parser.parse_args()
@@ -158,26 +175,20 @@ if __name__ == "__main__":
 
     if not args.command and not args.file:
         parser.print_usage()
-        print("bashfuscator: error: one of the arguments -c/--command -f/--file is required")
-        exit(1)
+        printArgError("one of the arguments -c/--command -f/--file is required")
 
     if args.quiet and args.test:
         parser.print_usage()
-        print("bashfuscator: error: argument --test: not allowed with argument -q/--quiet")
-        exit(1)
+        printArgError("--test is not allowed with -q/--quiet")
 
     if args.quiet:
         activateQuietMode()
 
-    if args.min_payload_size:
-        args.payload_size = 0
-    elif args.max_payload_size:
-        args.payload_size = 4
-
-    if args.min_execution_time:
-        args.execution_time = 0
-    elif args.max_execution_time:
-        args.execution_time = 4
+    if args.layers is None:
+        if args.choose_mutators is not None or args.choose_all is not None:
+            args.layers = 1
+        else:
+            args.layers = 2
 
     if args.include_binaries is not None:
         args.binaryPref = (args.include_binaries, True)
@@ -185,23 +196,50 @@ if __name__ == "__main__":
         args.binaryPref = (args.exclude_binaries, False)
     else:
         args.binaryPref = None
-
-    if args.layers is None:
-        if args.choose_mutators is not None or args.choose_all is not None:
-            args.layers = 1
-        else:
-            args.layers = 2
     
-    shebang = ""
+    shebang = "#!/usr/bin/env bash\n"
     if args.file:
-        with open(args.file, "rb") as infile:
-            firstLine = infile.readline().decode("utf-8")
-            if re.match(r"\s*#!", firstLine) is not None:
-                shebang = firstLine
-            else:
-                infile.seek(0)
+        if args.file == "-":
+            args.command = stdin.read()
+        else:
+            with open(args.file, "rb") as infile:
+                firstLine = infile.readline().decode("utf-8")
+                if re.match(r"\s*#!", firstLine) is not None:
+                    shebang = firstLine
+                else:
+                    infile.seek(0)
 
-            args.command = infile.read().decode("utf-8")
+                args.command = infile.read().decode("utf-8")
+
+    if not args.no_mangling:
+        if not args.no_binary_mangling:
+            printWarning("--no-mangling implies --no-binary-mangling")
+        elif not args.no_random_whitespace:
+            printWarning("--no-mangling implies --no-random-whitespace")
+        elif not args.no_insert_chars:
+            printWarning("--no-mangling impiles --no-insert-chars")
+
+    if args.binary_mangle_percent:
+        if not args.no_mangling or not args.no_binary_mangling:
+            printWarning("binary mangling is disabled, --binary-mangle-percent argument will not take effect")
+
+    if args.random_whitespace_range:
+        if not args.no_mangling or not args.no_random_whitespace:
+            printWarning("random whitespace is disabled, --random-whitespace-range argument will not take effect")
+        else:
+            args.random_whitespace_range = checkRangeArgs("--random-whitespace-range", args.random_whitespace_range)
+
+    if args.insert_chars_range:
+        if not args.no_mangling or not args.no_insert_chars:
+            printWarning("random character insertion is disabled, --insert-char-range argument will not take effect")
+        else:
+            args.insert_chars_range = checkRangeArgs("--insert_chars_range", args.insert_chars_range)
+
+    if args.misleading_commands_range:
+        if not args.no_mangling or not args.no_misleading_commands:
+            printWarning("misleading command insertion is disabled --misleading-commands-range argument will not take effect")
+        else:
+            args.misleading_commands_range = checkRangeArgs("--misleading_commands_range", args.misleading_commands_range)
 
     if args.write_dir[-1:] != "/":
         args.write_dir += "/"
@@ -211,12 +249,10 @@ if __name__ == "__main__":
 
     if args.outfile:
         with open(args.outfile, "wb") as outfile:
-            if shebang != "":
-                outfile.write(shebang.encode("utf-8"))
-            
+            outfile.write(shebang.encode("utf-8"))
             outfile.write(payload.encode("utf-8"))
 
-        printInfo("Payload written to {0}".format(args.outfile))
+        printInfo(f"Payload written to {args.outfile}")
 
     if args.clip:
         pyperclip.copy(payload)
@@ -228,7 +264,7 @@ if __name__ == "__main__":
     if not args.quiet:
         print("")
 
-    printInfo("Payload size: {0} characters".format(len(payload)))
+    printInfo(f"Payload size: {len(payload)} characters")
 
     if args.test:
         printInfo("Testing payload:\n")
