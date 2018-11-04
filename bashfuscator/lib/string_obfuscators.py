@@ -275,20 +275,35 @@ class XorNonNull(StringObfuscator):
         xorKey = xorKeyBytes.decode("utf8").replace("'","""'"'"'""")
         data = cmdBytes.decode("utf8").replace("'","""'"'"'""")
         
-        self.mangler.addPayloadLine("""
-"""+cmdVar+"""='DATA'
-"""+keyVar+"""='"""+xorKey+"""'
-for (( """+iteratorVar+"""=0; """+iteratorVar+"""<${#"""+cmdVar+"""}; """+iteratorVar+"""++ )); do
-"""+cmdCharVar+"""="${"""+cmdVar+""":$"""+iteratorVar+""":1}"
-"""+keyCharVar+"""="$(("""+iteratorVar+"""%${#"""+keyVar+"""}))"
-"""+keyCharVar+"""="${"""+keyVar+""":$"""+keyCharVar+""":1}"
-[[ "$"""+cmdCharVar+"""" == "'" ]] && """+cmdCharVar+"""="\\\\'"
-[[ "$"""+keyCharVar+"""" == "'" ]] && """+keyCharVar+"""="\\\\'"
-[[ "$"""+cmdCharVar+"""" == "\\\\" ]] && """+cmdCharVar+"""='\\\\'
-[[ "$"""+keyCharVar+"""" == "\\\\" ]] && """+keyCharVar+"""='\\\\'
-perl -e "print '$"""+cmdCharVar+"""'^'$"""+keyCharVar+"""'"
-done
-""", data)
+#		self.mangler.addPayloadLine("""
+#"""+cmdVar+"""='DATA'
+#"""+keyVar+"""='"""+xorKey+"""'
+#for (( """+iteratorVar+"""=0; """+iteratorVar+"""<${#"""+cmdVar+"""}; """+iteratorVar+"""++ )); do
+#"""+cmdCharVar+"""="${"""+cmdVar+""":$"""+iteratorVar+""":1}"
+#"""+keyCharVar+"""="$(("""+iteratorVar+"""%${#"""+keyVar+"""}))"
+#"""+keyCharVar+"""="${"""+keyVar+""":$"""+keyCharVar+""":1}"
+#[[ "$"""+cmdCharVar+"""" == "'" ]] && """+cmdCharVar+"""="\\\\'"
+#[[ "$"""+keyCharVar+"""" == "'" ]] && """+keyCharVar+"""="\\\\'"
+#[[ "$"""+cmdCharVar+"""" == "\\\\" ]] && """+cmdCharVar+"""='\\\\'
+#[[ "$"""+keyCharVar+"""" == "\\\\" ]] && """+keyCharVar+"""='\\\\'
+#perl -e "print '$"""+cmdCharVar+"""'^'$"""+keyCharVar+"""'"
+#done
+#""", data)
+#		
+        self.mangler.addPayloadLine(f"{cmdVar}='DATA'* *END", data)
+        self.mangler.addPayloadLine(f"{keyVar}='{xorKey}'* *END")
+        self.mangler.addPayloadLine(f"for (( {iteratorVar}=0; {iteratorVar}<${{#{cmdVar}}}; {iteratorVar}++ )); do")
+        self.mangler.addPayloadLine(f'''{cmdCharVar}="${{{cmdVar}:${iteratorVar}:1}}"* *END''')
+        self.mangler.addPayloadLine(f'''{keyCharVar}="$(({iteratorVar}%${{#{keyVar}}}))"* *END''')
+        self.mangler.addPayloadLine(f'''{keyCharVar}="${{{keyVar}:${keyCharVar}:1}}"* *END''')
+        self.mangler.addPayloadLine(f'''[[ "${cmdCharVar}" == "'" ]] && {cmdCharVar}="\\\\'"* *END''')
+        self.mangler.addPayloadLine(f'''[[ "${keyCharVar}" == "'" ]] && {keyCharVar}="\\\\'"* *END''')
+        self.mangler.addPayloadLine(f"""[[ "${cmdCharVar}" == "\\\\" ]] && {cmdCharVar}='\\\\'* *END""")
+        self.mangler.addPayloadLine(f"""[[ "${keyCharVar}" == "\\\\" ]] && {keyCharVar}='\\\\'* *END""")
+        self.mangler.addPayloadLine(f''':perl: -e "print '${cmdCharVar}'^'${keyCharVar}'"* *END''')
+        self.mangler.addPayloadLine("done* *END")
+
+
 
         self.mangler.addJunk()
 
