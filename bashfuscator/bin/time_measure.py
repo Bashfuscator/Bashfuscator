@@ -2,6 +2,7 @@
 
 #Imported Libraries
 import time
+import timeit
 import plotly
 import plotly.graph_objs as go
 from subprocess import STDOUT, PIPE, Popen
@@ -22,11 +23,18 @@ timeDelta=[]
 
 #Functions
 def timeRun(payload): #Returns double: time it took to run payload in bash
-	start_time = time.time()            #Start Timer
+	mysetup='''from subprocess import STDOUT, PIPE, Popen
+from __main__ import payload, runProcess'''
+
+	snippet="runProcess(payload)"
+	t=timeit.timeit(setup=mysetup, stmt=snippet, number=1)
+	print(t)
+	return t
+
+def runProcess(payload):
 	proc = Popen(payload, executable="/bin/bash", stdout=PIPE, stderr=STDOUT, shell=True, universal_newlines=True)
-	#Proc does wierd things and messes up timing...
 	__, __ = proc.communicate()
-	return time.time() - start_time		#End Timer and return
+	return
 
 def  processData(runTimeList):	#Returns list: "timeDelta" values for plotting
 	#Fill timeDelta list
@@ -59,9 +67,8 @@ for i in iterations:        #Yo Dawg, I heard you liked iterations.  So I iterat
 	payload = repeat_cmd * i
 
 	#Generate a baseline time (how long it takes to run unobfuscated)
-	baseline=timeRun(payload)
-	unobfTimeData.append(baseline)
-	print("Baseline time for {0} Iterations: {1}".format(i, baseline))
+	unobfTimeData.append(timeRun(payload))
+	print("Baseline time for {0} Iterations: {1}".format(i, unobfTimeData[-1]))
 
 
 	#Obfuscate the command
@@ -73,6 +80,6 @@ for i in iterations:        #Yo Dawg, I heard you liked iterations.  So I iterat
 	##$n/$len_cmd"*1000"
 	obfTime=timeRun(obfCommand)
 	print(obfTime)
-	obfTimeData.append((obfTime-baseline)/(i*len(repeat_cmd)*1000))	#Append to list
+	obfTimeData.append((obfTime-unobfTimeData[-1])/(i*len(repeat_cmd)*1000))	#Append to list
 
 plotAllTheThings(iterations, obfTimeData, longObfName)
