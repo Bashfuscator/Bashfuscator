@@ -113,7 +113,7 @@ class FileGlob(GlobObfuscator):
             description="Uses files and glob sorting to reassemble a string",
             sizeRating=5,
             timeRating=5,
-            author="elijah-barker"
+            author="Elijah-Barker"
         )
 
     def mutate(self, userCmd):
@@ -131,7 +131,7 @@ class FolderGlob(GlobObfuscator):
             description="Same as file glob, but better",
             sizeRating=5,
             timeRating=5,
-            author="elijah-barker"
+            author="Elijah-Barker"
         )
 
     def mutate(self, userCmd):
@@ -156,7 +156,7 @@ class HexHash(StringObfuscator):
             sizeRating=5,
             timeRating=5,
             binariesUsed=["cut", "md5sum"],
-            author="elijah-barker"
+            author="Elijah-Barker"
         )
 
     def mutate(self, userCmd):
@@ -181,13 +181,13 @@ class HexHash(StringObfuscator):
 class XorNonNull(StringObfuscator):
     def __init__(self):
         super().__init__(
-            name="xor non null",
+            name="Xor Non Null",
             description="Uses the xor operator in perl to encode strings",
             sizeRating=5,
             timeRating=5,
             binariesUsed=["perl"],
             notes="May contain non-printable Ascii characters",
-            author="elijah-barker"
+            author="Elijah-Barker"
         )
 
     def genXorKey(self, keyLen, userCmd):
