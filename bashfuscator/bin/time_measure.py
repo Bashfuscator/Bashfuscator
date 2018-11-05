@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 #Imported Libraries
 import time
@@ -21,7 +21,7 @@ iterations=["1", "2", "3", "4", "5", "10", "20", "30", "40", "50", "100", "200",
 
 #Functions
 def timeRun(payload): #Returns double: time it took to run payload in bash
-	
+
 	mysetup='''from subprocess import STDOUT, PIPE, Popen
 from __main__ import payload, runProcess'''
 	snippet="runProcess(payload)"
@@ -31,7 +31,7 @@ from __main__ import payload, runProcess'''
 
 def runProcess(payload):
 	proc = Popen(payload, executable="/bin/bash", stdout=PIPE, stderr=STDOUT, shell=True, universal_newlines=True)
-	
+
 	while proc.poll() is None:
 		time.sleep(0)
 
@@ -63,7 +63,7 @@ for i in iterations:        #Yo Dawg, I heard you liked iterations.  So I iterat
 
 	#Obfuscate the command
 	obHandler = ObfuscationHandler()
-	obfCommand=obHandler.genObfuscationLayer(payload, longObfName)
+	obfCommand=obHandler.genObfuscationLayer(payload, userMutator=longObfName, enableMangling=None)
 
 	#Time run of obfuscated code
 	print("Running Obfuscated code...")
