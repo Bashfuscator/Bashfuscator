@@ -16,10 +16,10 @@ class CommandObfuscator(Mutator):
 
     :param name: name of the CommandObfuscator
     :type name: str
-    :param description: short description of what the CommandObfuscator 
+    :param description: short description of what the CommandObfuscator
         does
     :type description: str
-    :param sizeRating: rating from 1 to 5 of how much the 
+    :param sizeRating: rating from 1 to 5 of how much the
         CommandObfuscator increases the size of the overall payload
     :type sizeRating: int
     :param timeRating: rating from 1 to 5 of how much the
@@ -29,7 +29,7 @@ class CommandObfuscator(Mutator):
     :param reversible: True if the obfuscator cancels itself out when
         run twice in a row on a command/script, False otherwise
     :type reversible: bool
-    :param fileWrite: True if the Command Obfuscator requires 
+    :param fileWrite: True if the Command Obfuscator requires
         creating/writing to files, False otherwise
     :type fileWrite: bool
     :param notes: see :class:`bashfuscator.common.objects.Mutator`
@@ -131,7 +131,7 @@ class CaseSwap(CommandObfuscator):
                 sizeRating=1,
                 timeRating=1,
                 escapeQuotes=True,
-                stub='''? ?VAR1='CMD'* *END* *:printf:^ ^%s^ ^"${VAR1~~}"* *END* *'''
+                stub='''? ?VAR1='CMD'* *END0* *:printf:^ ^%s^ ^"${VAR1~~}"* *END0* *'''
             )
         ]
 
@@ -159,7 +159,7 @@ class Reverse(CommandObfuscator):
                 sizeRating=1,
                 timeRating=1,
                 escapeQuotes=True,
-                stub="""* *:printf:^ ^%s^ ^'CMD'* *|* *:rev:* *END* *"""
+                stub="""* *:printf:^ ^%s^ ^'CMD'* *|* *:rev:* *END0* *"""
             ),
             Stub(
                 name="herestring rev",
@@ -167,11 +167,11 @@ class Reverse(CommandObfuscator):
                 sizeRating=3,
                 timeRating=1,
                 escapeQuotes=True,
-                stub="""* *:rev:^ ^<<<? ?'CMD'* *END* *"""
+                stub="""* *:rev:^ ^<<<? ?'CMD'* *END0* *"""
             )
         ]
 
     def mutate(self, userCmd):
         obCmd = userCmd[::-1]
-        
+
         return self.deobStub.genStub(obCmd)

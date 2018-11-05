@@ -374,17 +374,16 @@ class Mangler(object):
 
     def getCommandTerminator(self, terminatorMatch, payloadLine):
         endDigit = False
-        cmdReturnsError = False
+        cmdReturnsTrue = False
         self.booleanCmdTerminator = False
-        self.nonBinaryCmdTerminator = False
+        self.nonBinaryCmdTerminator = True
 
         if len(payloadLine) > terminatorMatch.end():
             if payloadLine[terminatorMatch.end()] == "0":
-                self.nonBinaryCmdTerminator = True
+                cmdReturnsTrue = True
                 endDigit = True
 
             if payloadLine[terminatorMatch.end()] == "1":
-                cmdReturnsError = True
                 endDigit = True
 
         if self.cmdCounter == 0:
@@ -398,10 +397,10 @@ class Mangler(object):
             if not self.nonBinaryCmdTerminator and self.randGen.probibility(50):
                 self.booleanCmdTerminator = True
 
-                if cmdReturnsError:
-                    cmdTerminator = "||"
-                else:
+                if cmdReturnsTrue:
                     cmdTerminator = "&&"
+                else:
+                    cmdTerminator = "||"
 
             else:
                 cmdTerminator = ";"
