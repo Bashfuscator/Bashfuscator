@@ -44,6 +44,7 @@ class Mangler(object):
 
     def __init__(self):
         self.sizePref = None
+        self.debug = None
 
         self.mangleBinaries = None
         self.binaryManglePercent = None
@@ -69,13 +70,18 @@ class Mangler(object):
         self.randGen = RandomGen()
 
 
-    def initialize(self, sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange):
+    def initialize(self, sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange, debug):
         self.sizePref = sizePref
         self.randGen.sizePref = self.sizePref
 
         self.extraJunk = ""
         self.payloadLines.clear()
         self.finalPayload = ""
+
+        if debug:
+            self.debug = debug
+        else:
+            self.debug = False
 
         if enableMangling is False:
             return
@@ -386,26 +392,31 @@ class Mangler(object):
             if payloadLine[terminatorMatch.end()] == "1":
                 endDigit = True
 
-        if self.cmdCounter == 0:
-            self.cmdBufferOffset = self.randGen.randGenNum(1250, 1750)
-
-        if self.cmdCounter == self.cmdBufferOffset:
-            self.cmdCounter = 0
+        if self.debug:
             cmdTerminator = "\n"
 
         else:
-            if not self.nonBinaryCmdTerminator and self.randGen.probibility(50):
-                self.booleanCmdTerminator = True
+            if self.cmdCounter == 0:
+                self.cmdBufferOffset = self.randGen.randGenNum(1250, 1750)
 
-                if cmdReturnsTrue:
-                    cmdTerminator = "&&"
-                else:
-                    cmdTerminator = "||"
+            if self.cmdCounter == self.cmdBufferOffset:
+                self.cmdCounter = 0
+                cmdTerminator = "\n"
 
             else:
-                cmdTerminator = ";"
+                if not self.nonBinaryCmdTerminator and self.randGen.probibility(50):
+                    self.booleanCmdTerminator = True
 
-        self.cmdCounter += 1
+                    if cmdReturnsTrue:
+                        cmdTerminator = "&&"
+                    else:
+                        cmdTerminator = "||"
+
+                else:
+                    cmdTerminator = ";"
+
+            self.cmdCounter += 1
+
         self.cmdTerminatorPos = terminatorMatch.start()
 
         if endDigit:

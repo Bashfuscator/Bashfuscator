@@ -55,6 +55,7 @@ class ObfuscationHandler(object):
             self.binaryPref = args.binaryPref
             self.filePref = args.no_file_write
             self.writeDir = args.write_dir
+            self.debug = args.debug
             self.originalCmd = args.command
 
             if args.choose_mutators:
@@ -115,6 +116,7 @@ class ObfuscationHandler(object):
             self.binaryPref = None
             self.filePref = True
             self.writeDir = "/tmp/"
+            self.debug = False
             self.userMutators = None
 
             self.enableMangling = None
@@ -132,7 +134,7 @@ class ObfuscationHandler(object):
         self.mangler = Mangler()
         self.randGen = self.mangler.randGen
 
-        self.mangler.initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange)
+        self.mangler.initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange, self.debug)
 
         if args and args.full_ascii_strings:
             self.randGen.setFullAsciiStrings()
@@ -167,7 +169,7 @@ class ObfuscationHandler(object):
         return payload
 
     # TODO: update docs
-    def genObfuscationLayer(self, payload, userMutator=None, userStub=None, sizePref=None, timePref=None, binaryPref=None, filePref=None, enableMangling=None, mangleBinaries=None, binaryManglePercent=None, randWhitespace=None, randWhitespaceRange=None, insertChars=None, insertCharsRange=None, misleadingCmds=None, misleadingCmdsRange=None, writeDir=None):
+    def genObfuscationLayer(self, payload, userMutator=None, userStub=None, sizePref=None, timePref=None, binaryPref=None, filePref=None, enableMangling=None, mangleBinaries=None, binaryManglePercent=None, randWhitespace=None, randWhitespaceRange=None, insertChars=None, insertCharsRange=None, misleadingCmds=None, misleadingCmdsRange=None, writeDir=None, debug=None):
         """
         Generate one layer of obfuscation. If called with the
         userMutator or userStub parameters, the Mutator and/or Stub
@@ -227,6 +229,8 @@ class ObfuscationHandler(object):
             misleadingCmds = self.misleadingCmds
         if misleadingCmdsRange is None:
             misleadingCmdsRange = self.misleadingCmdsRange
+        if debug is None:
+            debug = self.debug
         if writeDir is None:
             writeDir = self.writeDir
 
@@ -274,7 +278,7 @@ class ObfuscationHandler(object):
         selMutator.timePref = timePref
         selMutator.writeDir = writeDir
         selMutator._originalCmd = payload
-        selMutator.mangler.initialize(sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange)
+        selMutator.mangler.initialize(sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange, debug)
         payload = selMutator.mutate(payload)
         selMutator._obfuscatedCmd = payload
 

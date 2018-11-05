@@ -38,7 +38,7 @@ def getMutators(prefix, parsed_args, **kwargs):
 def getMutatorsAndStubs(prefix, parsed_args, **kwargs):
     """
     Returns a list of all mutator's longName attribute, and every
-    longName attribute of each CommandObfuscator's stubs for 
+    longName attribute of each CommandObfuscator's stubs for
     auto-completion in cli
     """
     mutatorNames = []
@@ -49,7 +49,7 @@ def getMutatorsAndStubs(prefix, parsed_args, **kwargs):
     mutators = stringObfuscators + tokenObfuscators + encoders + compressors
     for mutator in mutators:
         mutatorNames.append(mutator.longName)
-    
+
     return mutatorNames
 
 
@@ -117,7 +117,7 @@ def printArgError(errorMsg):
 def checkRangeArgs(argName, argValue):
     if argValue.find(",") == -1:
         printArgError(f"Invalid value for {argName} option: format is NUM,NUM")
-    
+
     rangeValues = *(int(x) for x in argValue.split(",")),
 
     if rangeValues[0] < 0 or rangeValues[1] < 0:
@@ -166,6 +166,9 @@ if __name__ == "__main__":
     advancedOpts.add_argument("--write-dir", default="/tmp/", type=str, help="Directory to use if Mutators need to write to or create files")
     advancedOpts.add_argument("--full-ascii-strings", action="store_true", help="Use the full ASCII character set (with a few exceptions) when generating random strings")
 
+    debugOpts = parser.add_argument_group("Debugging Options")
+    debugOpts = debugOpts.add_argument("--debug", action="store_true", help="Automatically terminate every command in the payload with a newline for easier payload debugging")
+
     autocomplete(parser)
     args = parser.parse_args()
 
@@ -196,7 +199,7 @@ if __name__ == "__main__":
         args.binaryPref = (args.exclude_binaries, False)
     else:
         args.binaryPref = None
-    
+
     shebang = "#!/usr/bin/env bash\n"
     if args.file:
         if args.file == "-":
@@ -260,7 +263,7 @@ if __name__ == "__main__":
 
     printInfo("Payload:\n")
     print(payload)
-    
+
     if not args.quiet:
         print("")
 
@@ -275,4 +278,4 @@ if __name__ == "__main__":
         else:
             proc = Popen(payload, executable="bash", stdout=PIPE, stderr=STDOUT, shell=True, universal_newlines=True)
             stdout, __ = proc.communicate()
-            print(stdout)  
+            print(stdout)
