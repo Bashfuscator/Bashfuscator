@@ -15,7 +15,8 @@ do
 	echo Generating obfuscated code... >&2
 	#obf=`time bashfuscator -f payload -sM --choose-mutators string/file_glob -q`
 	#obf=`time bashfuscator -f payload --choose-mutators string/folder_glob -q`
-	obf=`time bashfuscator -f payload --choose-mutators string/hex_hash -q`
+	#obf=`time bashfuscator -f payload --choose-mutators string/hex_hash -q`
+	obf=`time bashfuscator -f payload --choose-mutators token/special_char_only -q`
 
 
 	echo -n "$obf" > new.sh
