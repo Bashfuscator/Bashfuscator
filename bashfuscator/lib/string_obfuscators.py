@@ -241,11 +241,14 @@ class XorNonNull(StringObfuscator):
         xorKey = escapeQuotes(xorKeyBytes.decode("utf-8"))
         data = escapeQuotes(cmdBytes.decode("utf-8"))
 
-        self.mangler.addPayloadLine(f"? ?{cmdVar}='DATA'* *END0", data)
-        self.mangler.addPayloadLine(f"? ?{keyVar}='{xorKey}'* *END0")
+        variableInstantiations = {
+            f"? ?{cmdVar}='DATA'* *END0": data,
+            f"? ?{keyVar}='{xorKey}'* *END0": None
+        }
+        self.mangler.addLinesInRandomOrder(variableInstantiations)
         self.mangler.addPayloadLine(f"? ?for^ ^((* *{iteratorVar}=0* *;* *{iteratorVar}* *<* *${{#{cmdVar}}}* *;* *{iteratorVar}* *++* *))? ?END")
         self.mangler.addPayloadLine(f'''? ?do^ ^{cmdCharVar}="${{{cmdVar}:${iteratorVar}:1? ?}}"* *END0''')
-        self.mangler.addPayloadLine(f'''? ?{keyCharVar}="$(({iteratorVar}%${{#{keyVar}}}))"* *END0''')
+        self.mangler.addPayloadLine(f'''? ?{keyCharVar}="$((* *{iteratorVar}* * %* *${{#{keyVar}}}* *))"* *END0''')
         self.mangler.addPayloadLine(f'''? ?{keyCharVar}="${{{keyVar}:${keyCharVar}:1}}"* *END0''')
         perlEscapes = [
             f'''? ?[[^ ^"${cmdCharVar}"^ ^==^ ^"'"^ ^]]? ?&&? ?{cmdCharVar}="\\\\'"* *END''',
@@ -254,7 +257,7 @@ class XorNonNull(StringObfuscator):
             f"""? ?[[^ ^"${keyCharVar}"^ ^==^ ^"\\\\"^ ^]]? ?&&? ?{keyCharVar}='\\\\'* *END"""
         ]
         self.mangler.addLinesInRandomOrder(perlEscapes)
-        self.mangler.addPayloadLine(f'''? ?:perl:^ ^-e^ ^"print '${cmdCharVar}'^'${keyCharVar}'"* *END''')
+        self.mangler.addPayloadLine(f'''? ?:perl:^ ^-e^ ^"? ?print^ ^'${cmdCharVar}'? ?^? ?'${keyCharVar}'? ?"* *END''')
         self.mangler.addPayloadLine("? ?done? ?END0")
 
         return self.mangler.getFinalPayload()
