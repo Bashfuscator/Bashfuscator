@@ -200,7 +200,7 @@ if __name__ == "__main__":
     else:
         args.binaryPref = None
 
-    shebang = "#!/usr/bin/env bash\n"
+    shebang = "#!/bin/bash\n"
     if args.file:
         if args.file == "-":
             args.command = sys.stdin.read()
