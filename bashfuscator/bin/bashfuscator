@@ -3,7 +3,7 @@
 from argparse import ArgumentTypeError, ArgumentParser
 from collections import OrderedDict
 from subprocess import STDOUT, PIPE, Popen
-from sys import exit, stdin
+import sys
 import re
 
 from argcomplete import autocomplete
@@ -112,7 +112,7 @@ def listMutatorType(mutators):
 
 def printArgError(errorMsg):
     print(f"bashfuscator: error: {errorMsg}")
-    exit(1)
+    sys.exit(1)
 
 def checkRangeArgs(argName, argValue):
     if argValue.find(",") == -1:
@@ -203,7 +203,7 @@ if __name__ == "__main__":
     shebang = "#!/usr/bin/env bash\n"
     if args.file:
         if args.file == "-":
-            args.command = stdin.read()
+            args.command = sys.stdin.read()
         else:
             with open(args.file, "rb") as infile:
                 firstLine = infile.readline().decode("utf-8")

@@ -281,9 +281,9 @@ class SpecialCharOnly(TokenObfuscator):
         # there are roughly 2058 ways to generate the string 'printf' from the error messages that
         # are stored as variables. If the input exceeds the number of 'printf' vars, pre-assign the
         # 'printf' vars to make the payload smaller
-        self.largeCmd = False
+        largeCmd = False
         if len(userCmd) > 2000:
-            self.largeCmd = True
+            largeCmd = True
             instantiationStrPieces = OrderedDict()
             printfVarsInstatiationStrs = {}
             printfVars = {}
@@ -314,7 +314,7 @@ class SpecialCharOnly(TokenObfuscator):
         self.printfCmdCounter = 0
         symbolCommandStr = f'{self.genAccessElementStr(evalVar)} "$('
         for cmdChar in userCmd:
-            if self.largeCmd:
+            if largeCmd:
                 printfVar = self.randGen.randSelect(printfVarsList)
                 printfVars[printfVar] = True
                 printfStr = self.genAccessElementStr(printfVar)
@@ -345,7 +345,7 @@ class SpecialCharOnly(TokenObfuscator):
         symbolCommandStr += ')"'
 
         # declare and assign the printf variables that were randomly selected to be used
-        if self.largeCmd:
+        if largeCmd:
             printfInstanstiationStrs = []
             for var, used in printfVars.items():
                 if used:
