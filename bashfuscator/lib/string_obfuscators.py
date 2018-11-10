@@ -85,7 +85,7 @@ class GlobObfuscator(StringObfuscator):
             cmdCharsSection = cmdChars[i]
             cmdCharsSection = escapeQuotes(cmdCharsSection)
             printLines.update({
-                f"* *:printf:^ ^%s^ ^'DATA'* *>* *'{self.workingDir}/" +
+                f"* *:printf:^ ^%s^ ^'DATA'? ?>? ?'{self.workingDir}/" +
                 format(i, "0" + str(cmdLogLen) + "b").replace("0", "?").replace("1", "\n") + "'* *END0": cmdCharsSection
             })
 
