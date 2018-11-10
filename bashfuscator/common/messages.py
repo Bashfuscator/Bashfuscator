@@ -31,3 +31,11 @@ def printError(msg):
     """Format and print error messages to the terminal."""
     print(bold(red(f"[ERROR] {msg}")))
     sys.exit(1)
+
+
+def printExitMsg(msg):
+    """Format and print exit messages to the terminal."""
+    if not QUIET_OUTPUT:
+        print(bold(red(msg)))
+
+    sys.exit(1)

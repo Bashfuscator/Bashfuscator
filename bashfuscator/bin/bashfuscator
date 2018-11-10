@@ -10,7 +10,7 @@ from argcomplete import autocomplete
 import pyperclip
 
 from bashfuscator.common.colors import bold
-from bashfuscator.common.messages import activateQuietMode, printInfo, printWarning, printError
+from bashfuscator.common.messages import activateQuietMode, printInfo, printWarning, printError, printExitMsg
 from bashfuscator.core.mutator_list import commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors
 from bashfuscator.core.obfuscation_handler import ObfuscationHandler
 
@@ -248,7 +248,10 @@ if __name__ == "__main__":
         args.write_dir += "/"
 
     obHandler = ObfuscationHandler(args=args)
-    payload = obHandler.generatePayload()
+    try:
+        payload = obHandler.generatePayload()
+    except KeyboardInterrupt:
+        printExitMsg("\nCtrl-C caught... stopping payload generation...")
 
     if args.outfile:
         with open(args.outfile, "wb") as outfile:
@@ -270,12 +273,15 @@ if __name__ == "__main__":
     printInfo(f"Payload size: {len(payload)} characters")
 
     if args.test:
-        printInfo("Testing payload:\n")
-        if args.outfile:
-            proc = Popen(["bash", args.outfile], stdout=PIPE, stderr=STDOUT, shell=False, universal_newlines=True)
-            stdout, __ = proc.communicate()
-            print(stdout)
-        else:
-            proc = Popen(payload, executable="bash", stdout=PIPE, stderr=STDOUT, shell=True, universal_newlines=True)
-            stdout, __ = proc.communicate()
-            print(stdout)
+        try:
+            printInfo("Testing payload:\n")
+            if args.outfile:
+                proc = Popen(["bash", args.outfile], stdout=PIPE, stderr=STDOUT, shell=False, universal_newlines=True)
+                stdout, __ = proc.communicate()
+                print(stdout)
+            else:
+                proc = Popen(payload, executable="bash", stdout=PIPE, stderr=STDOUT, shell=True, universal_newlines=True)
+                stdout, __ = proc.communicate()
+                print(stdout)
+        except KeyboardInterrupt:
+            printExitMsg("\nCtrl-C caught... stopping payload testing...")
