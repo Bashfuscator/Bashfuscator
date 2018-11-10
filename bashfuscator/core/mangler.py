@@ -9,7 +9,7 @@ class Mangler(object):
     optionalWhitespaceRegexStr = r"\? \?"
     requiredWhitespaceAndRandCharsRegexStr = "% %"
     optionalWhitespaceAndRandCharsRegexStr = r"\* \*"
-    commandEndRegexStr = "END"
+    commandEndRegexStr = "END[01]?"
 
     binaryEscapedRegexStr = r"\\:\w+\\:"
     requiredWhitespaceEscapedRegexStr = r"\\\^ \\\^"
@@ -44,6 +44,7 @@ class Mangler(object):
 
     def __init__(self):
         self.sizePref = None
+        self.debug = None
 
         self.mangleBinaries = None
         self.binaryManglePercent = None
@@ -56,7 +57,7 @@ class Mangler(object):
 
         self.cmdTerminatorPos = 0
         self.booleanCmdTerminator = False
-        self.nonBinaryCmdTerminator = False
+        self.nonBooleanCmdTerminator = False
 
         self.extraJunk = ""
         self.cmdCounter = 0
@@ -69,13 +70,18 @@ class Mangler(object):
         self.randGen = RandomGen()
 
 
-    def initialize(self, sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange):
+    def initialize(self, sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange, debug):
         self.sizePref = sizePref
         self.randGen.sizePref = self.sizePref
 
         self.extraJunk = ""
         self.payloadLines.clear()
         self.finalPayload = ""
+
+        if debug:
+            self.debug = debug
+        else:
+            self.debug = False
 
         if enableMangling is False:
             return
@@ -374,47 +380,48 @@ class Mangler(object):
 
     def getCommandTerminator(self, terminatorMatch, payloadLine):
         endDigit = False
-        cmdReturnsError = False
+        cmdReturnsTrue = False
         self.booleanCmdTerminator = False
-        self.nonBinaryCmdTerminator = False
+        self.nonBooleanCmdTerminator = True
 
-        if len(payloadLine) > terminatorMatch.end():
-            if payloadLine[terminatorMatch.end()] == "0":
-                self.nonBinaryCmdTerminator = True
+        if payloadLine[terminatorMatch.end() - 1].isdigit():
+            self.nonBooleanCmdTerminator = False
+
+            if payloadLine[terminatorMatch.end() - 1] == "0":
+                cmdReturnsTrue = True
                 endDigit = True
 
-            if payloadLine[terminatorMatch.end()] == "1":
-                cmdReturnsError = True
+            if payloadLine[terminatorMatch.end() - 1] == "1":
                 endDigit = True
 
-        if self.cmdCounter == 0:
-            self.cmdBufferOffset = self.randGen.randGenNum(1250, 1750)
-
-        if self.cmdCounter == self.cmdBufferOffset:
-            self.cmdCounter = 0
+        if self.debug:
             cmdTerminator = "\n"
 
         else:
-            if not self.nonBinaryCmdTerminator and self.randGen.probibility(50):
-                self.booleanCmdTerminator = True
+            if self.cmdCounter == 0:
+                self.cmdBufferOffset = self.randGen.randGenNum(1250, 1750)
 
-                if cmdReturnsError:
-                    cmdTerminator = "||"
-                else:
-                    cmdTerminator = "&&"
+            if self.cmdCounter == self.cmdBufferOffset:
+                self.cmdCounter = 0
+                cmdTerminator = "\n"
 
             else:
-                cmdTerminator = ";"
+                if not self.nonBooleanCmdTerminator and self.randGen.probibility(50):
+                    self.booleanCmdTerminator = True
 
-        self.cmdCounter += 1
+                    if cmdReturnsTrue:
+                        cmdTerminator = "&&"
+                    else:
+                        cmdTerminator = "||"
+
+                else:
+                    cmdTerminator = ";"
+
+            self.cmdCounter += 1
+
         self.cmdTerminatorPos = terminatorMatch.start()
 
-        if endDigit:
-            terminatorMatchEndPos = terminatorMatch.end() + 1
-        else:
-            terminatorMatchEndPos = terminatorMatch.end()
-
-        mangledPayloadLine = payloadLine[:terminatorMatch.start()] + cmdTerminator + payloadLine[terminatorMatchEndPos:]
+        mangledPayloadLine = payloadLine[:terminatorMatch.start()] + cmdTerminator + payloadLine[terminatorMatch.end():]
 
         return mangledPayloadLine
 
@@ -435,7 +442,7 @@ class Mangler(object):
             self.payloadLines[-1] += finalJunk
 
         # randomly remove the final command terminator
-        elif not self.nonBinaryCmdTerminator and self.cmdTerminatorPos != 0 and self.randGen.probibility(50):
+        elif not self.nonBooleanCmdTerminator and self.cmdTerminatorPos != 0 and self.randGen.probibility(50):
             if len(self.payloadLines[-1]) > self.cmdTerminatorPos + 1:
                 finalJunk = self.payloadLines[-1][self.cmdTerminatorPos + 1:]
 

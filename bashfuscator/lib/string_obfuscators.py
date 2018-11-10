@@ -85,15 +85,15 @@ class GlobObfuscator(StringObfuscator):
             cmdCharsSection = cmdChars[i]
             cmdCharsSection = escapeQuotes(cmdCharsSection)
             printLines.update({
-                f"* *:printf:^ ^%s^ ^'DATA'^ ^>^ ^'{self.workingDir}/" +
-                format(i, "0" + str(cmdLogLen) + "b").replace("0", "?").replace("1", "\n") + "'* *END": cmdCharsSection
+                f"* *:printf:^ ^%s^ ^'DATA'? ?>? ?'{self.workingDir}/" +
+                format(i, "0" + str(cmdLogLen) + "b").replace("0", "?").replace("1", "\n") + "'* *END0": cmdCharsSection
             })
 
         # TODO: randomize ordering of 'rm' statements
-        self.mangler.addPayloadLine(f"* *:mkdir:^ ^-p^ ^'{self.workingDir}'* *END")
+        self.mangler.addPayloadLine(f"* *:mkdir:^ ^-p^ ^'{self.workingDir}'* *END0")
         self.mangler.addLinesInRandomOrder(printLines)
-        self.mangler.addPayloadLine(f"* *:cat:^ ^'{self.workingDir}'/{'?' * cmdLogLen}* *END")
-        self.mangler.addPayloadLine(f"* *:rm:^ ^'{self.workingDir}'/{'?' * cmdLogLen}* *END")
+        self.mangler.addPayloadLine(f"* *:cat:^ ^'{self.workingDir}'/{'?' * cmdLogLen}* *END0")
+        self.mangler.addPayloadLine(f"* *:rm:^ ^'{self.workingDir}'/{'?' * cmdLogLen}* *END0")
 
     def setSizes(self, userCmd):
         if self.sizePref == 1:
@@ -119,7 +119,7 @@ class FileGlob(GlobObfuscator):
     def mutate(self, userCmd):
         self.setSizes(userCmd)
         self.generate(userCmd)
-        self.mangler.addPayloadLine(f"* *:rmdir:^ ^'{self.workingDir}'END* *")
+        self.mangler.addPayloadLine(f"* *:rmdir:^ ^'{self.workingDir}'END0* *")
 
         return self.mangler.getFinalPayload()
 
@@ -141,9 +141,9 @@ class FolderGlob(GlobObfuscator):
 
         for chunk in cmdChunks:
             self.generate(chunk, self.randGen.randUniqueStr())
-            self.mangler.addPayloadLine(f"* *:rmdir:^ ^'{self.workingDir}'END")
+            self.mangler.addPayloadLine(f"* *:rmdir:^ ^'{self.workingDir}'END0")
 
-        self.mangler.addPayloadLine(f"* *:rmdir:^ ^'{self.startingDir}'END* *")
+        self.mangler.addPayloadLine(f"* *:rmdir:^ ^'{self.startingDir}'END0* *")
 
         return self.mangler.getFinalPayload()
 
@@ -171,7 +171,7 @@ class HexHash(StringObfuscator):
                 randomhash = m.hexdigest()
 
             index = randomhash.find(hexchar)
-            self.mangler.addPayloadLine(f"""* *:printf:^ ^"\\x$(:printf:^ ^%s^ ^'{randomString}'* *|* *:md5sum:* *|* *:cut:^ ^-b^ ^{str(index + 1)}-{str(index + 2)}* *)"* *END""")
+            self.mangler.addPayloadLine(f"""* *:printf:^ ^"\\x$(:printf:^ ^%s^ ^'{randomString}'* *|* *:md5sum:* *|* *:cut:^ ^-b^ ^{str(index + 1)}-{str(index + 2)}* *)"* *END0""")
 
         self.mangler.addJunk()
 
@@ -241,20 +241,23 @@ class XorNonNull(StringObfuscator):
         xorKey = escapeQuotes(xorKeyBytes.decode("utf-8"))
         data = escapeQuotes(cmdBytes.decode("utf-8"))
 
-        self.mangler.addPayloadLine(f"? ?{cmdVar}='DATA'* *END", data)
-        self.mangler.addPayloadLine(f"? ?{keyVar}='{xorKey}'* *END")
-        self.mangler.addPayloadLine(f"? ?for^ ^((* *{iteratorVar}=0* *;* *{iteratorVar}* *<* *${{#{cmdVar}}}* *;* *{iteratorVar}* *++* *))? ?END0")
-        self.mangler.addPayloadLine(f'''? ?do^ ^{cmdCharVar}="${{{cmdVar}:${iteratorVar}:1? ?}}"* *END''')
-        self.mangler.addPayloadLine(f'''? ?{keyCharVar}="$(({iteratorVar}%${{#{keyVar}}}))"* *END''')
-        self.mangler.addPayloadLine(f'''? ?{keyCharVar}="${{{keyVar}:${keyCharVar}:1}}"* *END''')
+        variableInstantiations = {
+            f"? ?{cmdVar}='DATA'* *END0": data,
+            f"? ?{keyVar}='{xorKey}'* *END0": None
+        }
+        self.mangler.addLinesInRandomOrder(variableInstantiations)
+        self.mangler.addPayloadLine(f"? ?for^ ^((* *{iteratorVar}=0* *;* *{iteratorVar}* *<* *${{#{cmdVar}}}* *;* *{iteratorVar}* *++* *))? ?END")
+        self.mangler.addPayloadLine(f'''? ?do^ ^{cmdCharVar}="${{{cmdVar}:${iteratorVar}:1? ?}}"* *END0''')
+        self.mangler.addPayloadLine(f'''? ?{keyCharVar}="$((* *{iteratorVar}* * %* *${{#{keyVar}}}* *))"* *END0''')
+        self.mangler.addPayloadLine(f'''? ?{keyCharVar}="${{{keyVar}:${keyCharVar}:1}}"* *END0''')
         perlEscapes = [
-            f'''? ?[[^ ^"${cmdCharVar}"^ ^==^ ^"'"^ ^]]? ?&&? ?{cmdCharVar}="\\\\'"* *END0''',
-            f'''? ?[[^ ^"${keyCharVar}"^ ^==^ ^"'"^ ^]]? ?&&? ?{keyCharVar}="\\\\'"* *END0''',
-            f"""? ?[[^ ^"${cmdCharVar}"^ ^==^ ^"\\\\"^ ^]]? ?&&? ?{cmdCharVar}='\\\\'* *END0""",
-            f"""? ?[[^ ^"${keyCharVar}"^ ^==^ ^"\\\\"^ ^]]? ?&&? ?{keyCharVar}='\\\\'* *END0"""
+            f'''? ?[[^ ^"${cmdCharVar}"^ ^==^ ^"'"^ ^]]? ?&&? ?{cmdCharVar}="\\\\'"* *END''',
+            f'''? ?[[^ ^"${keyCharVar}"^ ^==^ ^"'"^ ^]]? ?&&? ?{keyCharVar}="\\\\'"* *END''',
+            f"""? ?[[^ ^"${cmdCharVar}"^ ^==^ ^"\\\\"^ ^]]? ?&&? ?{cmdCharVar}='\\\\'* *END""",
+            f"""? ?[[^ ^"${keyCharVar}"^ ^==^ ^"\\\\"^ ^]]? ?&&? ?{keyCharVar}='\\\\'* *END"""
         ]
         self.mangler.addLinesInRandomOrder(perlEscapes)
-        self.mangler.addPayloadLine(f'''? ?:perl:^ ^-e^ ^"print '${cmdCharVar}'^'${keyCharVar}'"* *END0''')
-        self.mangler.addPayloadLine("? ?done? ?END")
+        self.mangler.addPayloadLine(f'''? ?:perl:^ ^-e^ ^"? ?print^ ^'${cmdCharVar}'? ?^? ?'${keyCharVar}'? ?"* *END''')
+        self.mangler.addPayloadLine("? ?done? ?END0")
 
         return self.mangler.getFinalPayload()

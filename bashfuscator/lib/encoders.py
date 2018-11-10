@@ -17,7 +17,7 @@ class Encoder(Mutator):
     :type name: str
     :param description: short description of what the Encoder does
     :type description: str
-    :param sizeRating: rating from 1 to 5 of how effectively the 
+    :param sizeRating: rating from 1 to 5 of how effectively the
         Encoder increases the size of the overall payload
     :type sizeRating: int
     :param timeRating: rating from 1 to 5 of how much the
@@ -26,7 +26,7 @@ class Encoder(Mutator):
     :type timeRating: int
     :param binariesUsed: list of all the binaries the Encoder uses
     :type binariesUsed: list of strs
-    :param fileWrite: True if the Encoder requires 
+    :param fileWrite: True if the Encoder requires
         creating/writing to files, False otherwise
     :type fileWrite: bool
     :param notes: see :class:`bashfuscator.common.objects.Mutator`
@@ -38,11 +38,10 @@ class Encoder(Mutator):
     """
 
     def __init__(self, name, description, sizeRating, timeRating, postEncoder=False, binariesUsed=[], fileWrite=False, notes=None, author=None, credits=None, evalWrap=True):
-        super().__init__(name, "encode", description, notes, author, credits, evalWrap)
+        super().__init__(name, "encode", description, notes, author, credits, evalWrap, postEncoder)
 
         self.sizeRating = sizeRating
         self.timeRating = timeRating
-        self.postEncoder = postEncoder
         self.binariesUsed = binariesUsed
         self.fileWrite = fileWrite
 

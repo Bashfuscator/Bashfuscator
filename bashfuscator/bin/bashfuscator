@@ -2,15 +2,15 @@
 
 from argparse import ArgumentTypeError, ArgumentParser
 from collections import OrderedDict
-from subprocess import STDOUT, PIPE, Popen
-from sys import exit, stdin
+from subprocess import check_output, STDOUT, PIPE, Popen
+import sys
 import re
 
 from argcomplete import autocomplete
 import pyperclip
 
-from bashfuscator.common.colors import bold
-from bashfuscator.common.messages import activateQuietMode, printInfo, printWarning, printError
+from bashfuscator.common.colors import bold, yellow
+from bashfuscator.common.messages import activateQuietMode, printInfo, printWarning, printError, printExitMsg
 from bashfuscator.core.mutator_list import commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors
 from bashfuscator.core.obfuscation_handler import ObfuscationHandler
 
@@ -38,7 +38,7 @@ def getMutators(prefix, parsed_args, **kwargs):
 def getMutatorsAndStubs(prefix, parsed_args, **kwargs):
     """
     Returns a list of all mutator's longName attribute, and every
-    longName attribute of each CommandObfuscator's stubs for 
+    longName attribute of each CommandObfuscator's stubs for
     auto-completion in cli
     """
     mutatorNames = []
@@ -49,7 +49,7 @@ def getMutatorsAndStubs(prefix, parsed_args, **kwargs):
     mutators = stringObfuscators + tokenObfuscators + encoders + compressors
     for mutator in mutators:
         mutatorNames.append(mutator.longName)
-    
+
     return mutatorNames
 
 
@@ -112,12 +112,12 @@ def listMutatorType(mutators):
 
 def printArgError(errorMsg):
     print(f"bashfuscator: error: {errorMsg}")
-    exit(1)
+    sys.exit(1)
 
 def checkRangeArgs(argName, argValue):
     if argValue.find(",") == -1:
         printArgError(f"Invalid value for {argName} option: format is NUM,NUM")
-    
+
     rangeValues = *(int(x) for x in argValue.split(",")),
 
     if rangeValues[0] < 0 or rangeValues[1] < 0:
@@ -127,6 +127,41 @@ def checkRangeArgs(argName, argValue):
         printArgError(f"Invalid value for {argName} option: invalid range")
 
     return rangeValues
+
+def printPayload(payload, args):
+    rows, columns = check_output(["stty", "size"]).decode().split()
+    rows = int(rows)
+    columns = int(columns)
+
+    printInfo("Payload:\n")
+
+    if not args.quiet and (args.clip or args.outfile):
+        # we don't need to print the whole payload, the user is given the full payload via a different method
+        # thanks Dbo for most of the logic and idea: https://github.com/danielbohannon/Invoke-Obfuscation
+        payloadPrintLen = int((rows * (columns * .75)) / 2)
+        payloadPrintLen = payloadPrintLen + (payloadPrintLen % columns)
+
+        notShownMessageLen = len("[Not shown: characters]")
+        redactedLen = len(payload) - payloadPrintLen - notShownMessageLen
+        notShownMessage = yellow(f"[Not shown: {redactedLen + len(str(redactedLen))} characters]")
+
+        # make sure message is centered
+        notShownMsgCenteredIndex = int((columns - len(notShownMessage)) / 2)
+        notShownMsgCurrentIndex = payloadPrintLen % columns
+
+        if notShownMsgCurrentIndex > notShownMsgCenteredIndex:
+            payloadPrintLen = payloadPrintLen - (notShownMsgCurrentIndex - notShownMsgCenteredIndex)
+        else:
+            payloadPrintLen = payloadPrintLen + (notShownMsgCenteredIndex - notShownMsgCurrentIndex)
+
+        print(payload[:payloadPrintLen] + notShownMessage + payload[len(payload) - payloadPrintLen:])
+    else:
+        print(payload)
+
+    if not args.quiet:
+        print("")
+
+    printInfo(f"Payload size: {len(payload)} characters")
 
 
 if __name__ == "__main__":
@@ -166,6 +201,9 @@ if __name__ == "__main__":
     advancedOpts.add_argument("--write-dir", default="/tmp/", type=str, help="Directory to use if Mutators need to write to or create files")
     advancedOpts.add_argument("--full-ascii-strings", action="store_true", help="Use the full ASCII character set (with a few exceptions) when generating random strings")
 
+    debugOpts = parser.add_argument_group("Debugging Options")
+    debugOpts = debugOpts.add_argument("--debug", action="store_true", help="Automatically terminate every command in the payload with a newline for easier payload debugging")
+
     autocomplete(parser)
     args = parser.parse_args()
 
@@ -196,11 +234,11 @@ if __name__ == "__main__":
         args.binaryPref = (args.exclude_binaries, False)
     else:
         args.binaryPref = None
-    
-    shebang = "#!/usr/bin/env bash\n"
+
+    shebang = "#!/bin/bash\n"
     if args.file:
         if args.file == "-":
-            args.command = stdin.read()
+            args.command = sys.stdin.read()
         else:
             with open(args.file, "rb") as infile:
                 firstLine = infile.readline().decode("utf-8")
@@ -245,7 +283,10 @@ if __name__ == "__main__":
         args.write_dir += "/"
 
     obHandler = ObfuscationHandler(args=args)
-    payload = obHandler.generatePayload()
+    try:
+        payload = obHandler.generatePayload()
+    except KeyboardInterrupt:
+        printExitMsg("\nCtrl-C caught... stopping payload generation...")
 
     if args.outfile:
         with open(args.outfile, "wb") as outfile:
@@ -258,21 +299,18 @@ if __name__ == "__main__":
         pyperclip.copy(payload)
         printInfo("Payload copied to clipboard\n")
 
-    printInfo("Payload:\n")
-    print(payload)
-    
-    if not args.quiet:
-        print("")
-
-    printInfo(f"Payload size: {len(payload)} characters")
+    printPayload(payload, args)
 
     if args.test:
-        printInfo("Testing payload:\n")
-        if args.outfile:
-            proc = Popen(["bash", args.outfile], stdout=PIPE, stderr=STDOUT, shell=False, universal_newlines=True)
-            stdout, __ = proc.communicate()
-            print(stdout)
-        else:
-            proc = Popen(payload, executable="bash", stdout=PIPE, stderr=STDOUT, shell=True, universal_newlines=True)
-            stdout, __ = proc.communicate()
-            print(stdout)  
+        try:
+            printInfo("Testing payload:\n")
+            if args.outfile:
+                proc = Popen(["bash", args.outfile], stdout=PIPE, stderr=STDOUT, shell=False, universal_newlines=True)
+                stdout, __ = proc.communicate()
+                print(stdout)
+            else:
+                proc = Popen(payload, executable="bash", stdout=PIPE, stderr=STDOUT, shell=True, universal_newlines=True)
+                stdout, __ = proc.communicate()
+                print(stdout)
+        except KeyboardInterrupt:
+            printExitMsg("\nCtrl-C caught... stopping payload testing...")
