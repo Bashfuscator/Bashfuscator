@@ -2,14 +2,14 @@
 
 from argparse import ArgumentTypeError, ArgumentParser
 from collections import OrderedDict
-from subprocess import STDOUT, PIPE, Popen
+from subprocess import check_output, STDOUT, PIPE, Popen
 import sys
 import re
 
 from argcomplete import autocomplete
 import pyperclip
 
-from bashfuscator.common.colors import bold
+from bashfuscator.common.colors import bold, yellow
 from bashfuscator.common.messages import activateQuietMode, printInfo, printWarning, printError, printExitMsg
 from bashfuscator.core.mutator_list import commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors
 from bashfuscator.core.obfuscation_handler import ObfuscationHandler
@@ -127,6 +127,41 @@ def checkRangeArgs(argName, argValue):
         printArgError(f"Invalid value for {argName} option: invalid range")
 
     return rangeValues
+
+def printPayload(payload, args):
+    rows, columns = check_output(["stty", "size"]).decode().split()
+    rows = int(rows)
+    columns = int(columns)
+
+    printInfo("Payload:\n")
+
+    if not args.quiet and (args.clip or args.outfile):
+        # we don't need to print the whole payload, the user is given the full payload via a different method
+        # thanks Dbo for most of the logic and idea: https://github.com/danielbohannon/Invoke-Obfuscation
+        payloadPrintLen = int((rows * (columns * .75)) / 2)
+        payloadPrintLen = payloadPrintLen + (payloadPrintLen % columns)
+
+        notShownMessageLen = len("[Not shown: characters]")
+        redactedLen = len(payload) - payloadPrintLen - notShownMessageLen
+        notShownMessage = yellow(f"[Not shown: {redactedLen + len(str(redactedLen))} characters]")
+
+        # make sure message is centered
+        notShownMsgCenteredIndex = int((columns - len(notShownMessage)) / 2)
+        notShownMsgCurrentIndex = payloadPrintLen % columns
+
+        if notShownMsgCurrentIndex > notShownMsgCenteredIndex:
+            payloadPrintLen = payloadPrintLen - (notShownMsgCurrentIndex - notShownMsgCenteredIndex)
+        else:
+            payloadPrintLen = payloadPrintLen + (notShownMsgCenteredIndex - notShownMsgCurrentIndex)
+
+        print(payload[:payloadPrintLen] + notShownMessage + payload[len(payload) - payloadPrintLen:])
+    else:
+        print(payload)
+
+    if not args.quiet:
+        print("")
+
+    printInfo(f"Payload size: {len(payload)} characters")
 
 
 if __name__ == "__main__":
@@ -264,13 +299,7 @@ if __name__ == "__main__":
         pyperclip.copy(payload)
         printInfo("Payload copied to clipboard\n")
 
-    printInfo("Payload:\n")
-    print(payload)
-
-    if not args.quiet:
-        print("")
-
-    printInfo(f"Payload size: {len(payload)} characters")
+    printPayload(payload, args)
 
     if args.test:
         try:

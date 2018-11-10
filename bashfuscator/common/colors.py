@@ -23,7 +23,7 @@ def color(text, colorCode):
     # mintty -> "xterm" (supports colors)
     if sys.platform == "win32" and os.getenv("TERM") != "xterm":
         return text
-    return "\x1b[%dm%s\x1b[0m" % (colorCode, text)
+    return f"\x1b[{colorCode}m{text}\x1b[0m"
 
 
 def black(text):
