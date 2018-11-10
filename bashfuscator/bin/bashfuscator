@@ -135,14 +135,15 @@ def printPayload(payload, args):
 
     printInfo("Payload:\n")
 
-    if not args.quiet and (args.clip or args.outfile):
+    payloadLen = len(payload)
+    payloadPrintLen = int((rows * (columns * .75)) / 2)
+    payloadPrintLen = payloadPrintLen + (payloadPrintLen % columns)
+
+    if not args.quiet and (args.clip or args.outfile) and payloadLen > payloadPrintLen * 2:
         # we don't need to print the whole payload, the user is given the full payload via a different method
         # thanks Dbo for most of the logic and idea: https://github.com/danielbohannon/Invoke-Obfuscation
-        payloadPrintLen = int((rows * (columns * .75)) / 2)
-        payloadPrintLen = payloadPrintLen + (payloadPrintLen % columns)
-
         notShownMessageLen = len("[Not shown: characters]")
-        redactedLen = len(payload) - payloadPrintLen - notShownMessageLen
+        redactedLen = payloadLen - payloadPrintLen - notShownMessageLen
         notShownMessage = yellow(f"[Not shown: {redactedLen + len(str(redactedLen))} characters]")
 
         # make sure message is centered
@@ -154,14 +155,14 @@ def printPayload(payload, args):
         else:
             payloadPrintLen = payloadPrintLen + (notShownMsgCenteredIndex - notShownMsgCurrentIndex)
 
-        print(payload[:payloadPrintLen] + notShownMessage + payload[len(payload) - payloadPrintLen:])
+        print(payload[:payloadPrintLen] + notShownMessage + payload[payloadLen - payloadPrintLen:])
     else:
         print(payload)
 
     if not args.quiet:
         print("")
 
-    printInfo(f"Payload size: {len(payload)} characters")
+    printInfo(f"Payload size: {payloadLen} characters")
 
 
 if __name__ == "__main__":
@@ -297,7 +298,7 @@ if __name__ == "__main__":
 
     if args.clip:
         pyperclip.copy(payload)
-        printInfo("Payload copied to clipboard\n")
+        printInfo("Payload copied to clipboard")
 
     printPayload(payload, args)
 
