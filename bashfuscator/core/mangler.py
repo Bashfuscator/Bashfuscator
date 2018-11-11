@@ -1,9 +1,15 @@
+"""
+Class to manage obfuscation technuqies that are applied on all Mutators
+"""
 import re
 
 from bashfuscator.common.random import RandomGen
 
 
 class Mangler(object):
+    """
+    Class to handle mangling of individual payload lines
+    """
     binaryRegexStr = r":\w+:"
     requiredWhitespaceRegexStr = r"\^ \^"
     optionalWhitespaceRegexStr = r"\? \?"
