@@ -134,7 +134,7 @@ class ObfuscationHandler(object):
         self.mangler = Mangler()
         self.randGen = self.mangler.randGen
 
-        self.mangler.initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange, self.debug)
+        self.mangler._initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange, self.debug)
 
         if args and args.full_ascii_strings:
             self.randGen.setFullAsciiStrings()
@@ -278,7 +278,7 @@ class ObfuscationHandler(object):
         selMutator.timePref = timePref
         selMutator.writeDir = writeDir
         selMutator._originalCmd = payload
-        selMutator.mangler.initialize(sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange, debug)
+        selMutator.mangler._initialize(sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange, debug)
         payload = selMutator.mutate(payload)
         selMutator._obfuscatedCmd = payload
 
@@ -304,9 +304,9 @@ class ObfuscationHandler(object):
         """
         if selMutator.evalWrap:
             if self.randGen.probibility(50):
-                wrappedPayload = self.mangler.mangleLine('* *:eval:^ ^"$(? ?DATA? ?)"* *', payload)
+                wrappedPayload = self.mangler._mangleLine('* *:eval:^ ^"$(? ?DATA? ?)"* *', payload)
             else:
-                wrappedPayload = self.mangler.mangleLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
+                wrappedPayload = self.mangler._mangleLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
 
         # if the Mutator evals itself, wrap it in a subshell so it doesn't pollute the parent shell environment
         elif not selMutator.postEncoder:

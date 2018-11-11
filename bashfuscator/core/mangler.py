@@ -70,7 +70,7 @@ class Mangler(object):
         self.randGen = RandomGen()
 
 
-    def initialize(self, sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange, debug):
+    def _initialize(self, sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange, debug):
         self.sizePref = sizePref
         self.randGen.sizePref = self.sizePref
 
@@ -147,6 +147,16 @@ class Mangler(object):
                 self.misleadingCmdsRange = (1, 3)
 
     def addLinesInRandomOrder(self, payloadLines):
+        """
+        Add lines contained in payloadLines to the final payload in a
+        random order.
+
+        :param payloadLines: sequence of lines to be added to the final
+            payload. Can be a list, or a dict, with the keys being the
+            lines to add, and the values being the data to add into the
+            line after BOBL expansions are processed.
+        :type payloadLines: list or dict
+        """
         if isinstance(payloadLines, list):
             self.randGen.randShuffle(payloadLines)
 
@@ -161,16 +171,57 @@ class Mangler(object):
                 self.addPayloadLine(line, payloadLines[line])
 
     def getMangledLine(self, payloadLine, inputChunk=None):
+        """
+        Mangle a line, preform any final processing and return its
+        output.
+
+        :param payloadLine: line to be mangled. If the line contains
+            more than 2 characters of unknown input data, 'DATA' should
+            be substituted for where the input data should go, and
+            the inputChunk parameter should contain the input data
+        :type payloadLine: str
+        :param inputChunk: unknown input data to be substituted into
+            the line after it undergoes mangling
+        :type inputChunk: str or None
+        :returns: mangled line as str
+        """
         self.addPayloadLine(payloadLine, inputChunk)
 
         return self.getFinalPayload()
 
     def addPayloadLine(self, payloadLine, inputChunk=None):
-        mangledPayloadLine = self.mangleLine(payloadLine, inputChunk)
+        """
+        Mangle a line and add it to the final payload.
+
+        :param payloadLine: line to be mangled. If the line contains
+            more than 2 characters of unknown input data, 'DATA' should
+            be substituted for where the input data should go, and
+            the inputChunk parameter should contain the input data
+        :type payloadLine: str
+        :param inputChunk: unknown input data to be substituted into
+            the line after it undergoes mangling
+        :type inputChunk: str or None
+        """
+        mangledPayloadLine = self._mangleLine(payloadLine, inputChunk)
 
         self.payloadLines.append(mangledPayloadLine)
 
-    def mangleLine(self, payloadLine, inputChunk=None):
+    def _mangleLine(self, payloadLine, inputChunk=None):
+        """
+        Return a mangled line. Should not be called directly, use
+        :meth:`~Mangler.addPayloadLine` or
+        :meth:`~Mangler.getMangledLine` instead.
+
+        :param payloadLine: line to be mangled. If the line contains
+            more than 2 characters of unknown input data, 'DATA' should
+            be substituted for where the input data should go, and
+            the inputChunk parameter should contain the input data
+        :type payloadLine: str
+        :param inputChunk: unknown input data to be substituted into
+            the line after it undergoes mangling
+        :type inputChunk: str or None
+        :returns: mangled line as str
+        """
         mangledPayloadLine = payloadLine
 
         escapedBoblSyntaxMatch = Mangler.escapedBoblRegex.search(mangledPayloadLine)
@@ -185,22 +236,22 @@ class Mangler(object):
 
             else:
                 if Mangler.binaryRegex.match(boblSyntaxMatch.group()):
-                    mangledPayloadLine = self.mangleBinary(boblSyntaxMatch, mangledPayloadLine)
+                    mangledPayloadLine = self._mangleBinary(boblSyntaxMatch, mangledPayloadLine)
 
                 elif Mangler.requiredWhitespaceRegex.match(boblSyntaxMatch.group()):
-                    mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, True, False)
+                    mangledPayloadLine = self._insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, True, False)
 
                 elif Mangler.optionalWhitespaceRegex.match(boblSyntaxMatch.group()):
-                    mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, False)
+                    mangledPayloadLine = self._insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, False)
 
                 elif Mangler.requiredWhitespaceAndRandCharsRegex.match(boblSyntaxMatch.group()):
-                    mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, True, True)
+                    mangledPayloadLine = self._insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, True, True)
 
                 elif Mangler.optionalWhitespaceAndRandCharsRegex.match(boblSyntaxMatch.group()):
-                    mangledPayloadLine = self.insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, True)
+                    mangledPayloadLine = self._insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, True)
 
                 elif Mangler.commandEndRegex.match(boblSyntaxMatch.group()):
-                    mangledPayloadLine = self.getCommandTerminator(boblSyntaxMatch, mangledPayloadLine)
+                    mangledPayloadLine = self._getCommandTerminator(boblSyntaxMatch, mangledPayloadLine)
 
             if escapedBoblSyntaxMatch:
                 searchPos = escapedBoblSyntaxMatch.end() - 1
@@ -217,15 +268,26 @@ class Mangler(object):
 
         return mangledPayloadLine
 
-    def addJunk(self, addToEnd=True):
-        randJunk = self.getWhitespaceAndRandChars(False, True)
+    def addJunk(self, prependJunk=False):
+        """
+        Add random whitespace and useless commands to the beginning or
+        end of the final payload.
 
-        if addToEnd:
-            self.extraJunk += randJunk
-        else:
+        :param prependJunk: True if junk should be added to beginning
+            of payload
+        :type prependJunk: bool
+        """
+        randJunk = self._getWhitespaceAndRandChars(False, True)
+
+        if prependJunk:
             self.finalPayload += randJunk
+        else:
+            self.extraJunk += randJunk
 
-    def mangleBinary(self, binaryMatch, payloadLine):
+    def _mangleBinary(self, binaryMatch, payloadLine):
+        """
+
+        """
         mangledBinary = ""
         binaryStr = payloadLine[binaryMatch.start() + 1:binaryMatch.end() - 1]
 
@@ -242,9 +304,9 @@ class Mangler(object):
                     if choice == 0:
                         mangledBinary += "\\" + char
                     elif choice == 1:
-                        mangledBinary += self.getAnsiCQuotedStr(char)
+                        mangledBinary += self._getAnsiCQuotedStr(char)
                     else:
-                        mangledBinary += self.getRandChars() + char
+                        mangledBinary += self._getRandChars() + char
 
                 else:
                     mangledBinary += char
@@ -256,7 +318,15 @@ class Mangler(object):
 
         return mangledPayloadLine
 
-    def getAnsiCQuotedStr(self, inStr):
+    def _getAnsiCQuotedStr(self, inStr):
+        """
+        Return an Ansi-C quoted string. Apply longer forms of
+        Ansi-C quoting depending on the user's sizePref.
+
+        :param inStr: string to Ansi-C quote
+        :type inStr: str
+        :returns: Ansi-C quoted str
+        """
         if self.sizePref == 1:
             maxChoice = 2
         elif self.sizePref == 2:
@@ -280,33 +350,33 @@ class Mangler(object):
 
         return encodedStr[:-1] + "'"
 
-    def insertWhitespaceAndRandChars(self, whitespaceMatch, payloadLine, whitespaceRequired, insertRandChars):
-        randCharsAndWhitespace = self.getWhitespaceAndRandChars(whitespaceRequired, insertRandChars)
+    def _insertWhitespaceAndRandChars(self, whitespaceMatch, payloadLine, whitespaceRequired, insertRandChars):
+        randCharsAndWhitespace = self._getWhitespaceAndRandChars(whitespaceRequired, insertRandChars)
 
         mangledPayloadLine = payloadLine[:whitespaceMatch.start()] + randCharsAndWhitespace + payloadLine[whitespaceMatch.end():]
 
         return mangledPayloadLine
 
-    def getWhitespaceAndRandChars(self, whitespaceRequired, insertRandChars):
+    def _getWhitespaceAndRandChars(self, whitespaceRequired, insertRandChars):
         randCharsAndWhitespace = ""
 
         if not (insertRandChars and self.insertChars):
-            randCharsAndWhitespace = self.getRandWhitespace(whitespaceRequired)
+            randCharsAndWhitespace = self._getRandWhitespace(whitespaceRequired)
 
         elif insertRandChars and self.insertChars:
             charsInsertNum = self.randGen.randGenNum(self.insertCharsRange[0], self.insertCharsRange[1])
 
             for i in range(charsInsertNum):
                 if self.randWhitespace:
-                    randCharsAndWhitespace += self.getRandWhitespace(whitespaceRequired)
+                    randCharsAndWhitespace += self._getRandWhitespace(whitespaceRequired)
 
-                randCharsAndWhitespace += self.getRandChars()
+                randCharsAndWhitespace += self._getRandChars()
 
-            randCharsAndWhitespace += self.getRandWhitespace(whitespaceRequired)
+            randCharsAndWhitespace += self._getRandWhitespace(whitespaceRequired)
 
         return randCharsAndWhitespace
 
-    def getRandWhitespace(self, whitespaceRequired):
+    def _getRandWhitespace(self, whitespaceRequired):
         if not self.randWhitespace:
             if whitespaceRequired:
                 whitespaceAmount = 1
@@ -322,7 +392,7 @@ class Mangler(object):
 
         return " "*whitespaceAmount
 
-    def getRandChars(self):
+    def _getRandChars(self):
         randChars = ""
         charsToEscape = "[!(){}'`" + '"'
 
@@ -350,12 +420,12 @@ class Mangler(object):
 
         elif choice > 2 and choice <= 8:
             randParameterExpansionOperator = self.randGen.randSelect(["^", "^^", ",", ",,", "~", "~~"])
-            randChars += f"${{{varSymbol}{randParameterExpansionOperator}{self.getRandWhitespace(False)}}}"
+            randChars += f"${{{varSymbol}{randParameterExpansionOperator}{self._getRandWhitespace(False)}}}"
 
         elif choice > 8 and choice <= 14:
             randParameterExpansionOperator = self.randGen.randSelect(["#", "##", "%", "%%", "/", "//"])
             randStr = self.randGen.randGenStr(escapeChars=charsToEscape)
-            randWhitespace = self.getRandWhitespace(False)
+            randWhitespace = self._getRandWhitespace(False)
 
             if randStr[-1:] == "\\" and randWhitespace == "":
                 randStr += "\\"
@@ -366,7 +436,7 @@ class Mangler(object):
             randStr = self.randGen.randGenStr(escapeChars=charsToEscape)
             randParameterExpansionOperator = self.randGen.randSelect(["/", "//"])
             randStr2 = self.randGen.randGenStr(escapeChars=charsToEscape)
-            randWhitespace = self.getRandWhitespace(False)
+            randWhitespace = self._getRandWhitespace(False)
 
             if randStr2[-1:] == "\\" and randWhitespace == "":
                 randStr2 += "\\"
@@ -378,7 +448,7 @@ class Mangler(object):
 
         return randChars
 
-    def getCommandTerminator(self, terminatorMatch, payloadLine):
+    def _getCommandTerminator(self, terminatorMatch, payloadLine):
         endDigit = False
         cmdReturnsTrue = False
         self.booleanCmdTerminator = False
@@ -426,6 +496,9 @@ class Mangler(object):
         return mangledPayloadLine
 
     def getFinalPayload(self):
+        """
+        Apply any final processing and return the final payload.
+        """
         finalJunk = ""
 
         # if the final cmd terminator of the payload is '&&' or '||', bash will throw errors
