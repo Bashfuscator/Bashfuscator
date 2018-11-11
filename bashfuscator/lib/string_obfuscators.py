@@ -246,7 +246,7 @@ class XorNonNull(StringObfuscator):
             f"? ?{keyVar}='{xorKey}'* *END0": None
         }
         self.mangler.addLinesInRandomOrder(variableInstantiations)
-        self.mangler.addPayloadLine(f"? ?for^ ^((* *{iteratorVar}=0* *;* *{iteratorVar}* *<* *${{#{cmdVar}}}* *;* *{iteratorVar}* *++* *))? ?END")
+        self.mangler.addPayloadLine(f"? ?for^ ^((* *{iteratorVar}=0* *END* *{iteratorVar}* *<* *${{#{cmdVar}}}* *END* *{iteratorVar}* *++* *))? ?END")
         self.mangler.addPayloadLine(f'''? ?do^ ^{cmdCharVar}="${{{cmdVar}:${iteratorVar}:1? ?}}"* *END0''')
         self.mangler.addPayloadLine(f'''? ?{keyCharVar}="$((* *{iteratorVar}* * %* *${{#{keyVar}}}* *))"* *END0''')
         self.mangler.addPayloadLine(f'''? ?{keyCharVar}="${{{keyVar}:${keyCharVar}:1}}"* *END0''')
