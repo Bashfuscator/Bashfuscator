@@ -18,7 +18,7 @@ class Compressor(Mutator):
     :type name: str
     :param description: short description of what the Compressor does
     :type description: str
-    :param sizeRating: rating from 1 to 5 of how effectively the 
+    :param sizeRating: rating from 1 to 5 of how effectively the
         Compressor decreases the size of the overall payload. Smaller
         is better
     :type sizeRating: int
@@ -28,7 +28,7 @@ class Compressor(Mutator):
     :type timeRating: int
     :param binariesUsed: list of all the binaries the Compressor uses
     :type binariesUsed: list of strs
-    :param fileWrite: True if the Compressor requires 
+    :param fileWrite: True if the Compressor requires
         creating/writing to files, False otherwise
     :type fileWrite: bool
     :param notes: see :class:`bashfuscator.common.objects.Mutator`
@@ -62,7 +62,7 @@ class Bzip2(Compressor):
     def mutate(self, userCmd):
         compressedCmd = bz2.compress(userCmd.encode("utf-8"))
         compressedCmd = b64encode(compressedCmd).decode("utf-8")
-        self.mangler.addPayloadLine(f'''* *:printf:^ ^{compressedCmd}* *|* *:base64:^ ^-d* *|* *:bunzip2:^ ^-c* *''')
+        self.mangler.addPayloadLine(f'''* *:printf:^ ^'{compressedCmd}'* *|* *:base64:^ ^-d* *|* *:bunzip2:^ ^-c* *''')
 
         return self.mangler.getFinalPayload()
 
@@ -81,6 +81,6 @@ class Gzip(Compressor):
     def mutate(self, userCmd):
         compressedCmd = gzip.compress(userCmd.encode("utf-8"))
         compressedCmd = b64encode(compressedCmd).decode("utf-8")
-        self.mangler.addPayloadLine(f'''* *:printf:^ ^{compressedCmd}* *|* *:base64:^ ^-d* *|* *:gunzip:^ ^-c* *''')
+        self.mangler.addPayloadLine(f'''* *:printf:^ ^'{compressedCmd}'* *|* *:base64:^ ^-d* *|* *:gunzip:^ ^-c* *''')
 
         return self.mangler.getFinalPayload()
