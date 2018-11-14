@@ -261,3 +261,52 @@ class XorNonNull(StringObfuscator):
         self.mangler.addPayloadLine("? ?done? ?END0")
 
         return self.mangler.getFinalPayload()
+
+class RotN(StringObfuscator):
+    def __init__(self):
+        super().__init__(
+            name="Rotate N",
+            description="Offsets each character a random number of times across the ASCII charset",
+            sizeRating=1,
+            timeRating=1,
+            binariesUsed=["base64"],
+            author="343iChurch"
+        )
+
+    def mutate(self, userCmd):
+        orig = []
+        rotn = []
+        sign = []
+        final = []
+        for ch in userCmd:
+            badrot = True
+            while not badrot:
+                gen = self.randGen.randGenNum(0, 127)
+                if ord(ch) + gen > 127:
+                    numsign = "+"
+                if ord(ch) - gen <= 0:
+                    numsign = "-"
+                if (ord(ch) + gen != 39) and (ord(ch) - gen != 39) and (ord(ch) - gen != 0):
+                    badrot = False
+            
+            sign.append(numsign)
+            orig.append(ord(ch))
+            rotn.append(gen)
+        
+        for num in orig:
+            i = 0
+
+            if sign[i] == "+"
+                orig[i] += rotn[i]
+            elif sign[i] == "-"
+                orig[i] -= rotn[i]
+
+            final.append(chr(orig[i]))
+            final.append(b64encode(rotn[i]))
+            final.append(sign[i])
+            
+            i += 1
+
+        
+
+        return self.mangler.getFinalPayload()
