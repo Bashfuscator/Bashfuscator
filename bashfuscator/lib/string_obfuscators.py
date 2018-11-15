@@ -7,6 +7,7 @@ import string
 
 from bashfuscator.common.helpers import escapeQuotes
 from bashfuscator.common.objects import Mutator
+from base64 import b64encode
 
 
 class StringObfuscator(Mutator):
@@ -265,7 +266,7 @@ class XorNonNull(StringObfuscator):
 class RotN(StringObfuscator):
     def __init__(self):
         super().__init__(
-            name="Rotate N",
+            name="RotN",
             description="Offsets each character a random number of times across the ASCII charset",
             sizeRating=1,
             timeRating=1,
@@ -278,8 +279,10 @@ class RotN(StringObfuscator):
         rotn = []
         sign = []
         final = []
+        numsign = ""
         for ch in userCmd:
             badrot = True
+            gen = ""
             while not badrot:
                 gen = self.randGen.randGenNum(0, 127)
                 if ord(ch) + gen > 127:
@@ -296,17 +299,18 @@ class RotN(StringObfuscator):
         for num in orig:
             i = 0
 
-            if sign[i] == "+"
+            if sign[i] == "+":
                 orig[i] += rotn[i]
-            elif sign[i] == "-"
+            elif sign[i] == "-":
                 orig[i] -= rotn[i]
 
             final.append(chr(orig[i]))
-            final.append(b64encode(rotn[i]))
+            final.append(b64encode(rotn[i].encode("utf-8")).decode("utf-8"))
             final.append(sign[i])
             
             i += 1
 
-        
+        for index in final:
+            print(index,end="")
 
         return self.mangler.getFinalPayload()
