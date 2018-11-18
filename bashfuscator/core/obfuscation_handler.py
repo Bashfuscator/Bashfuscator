@@ -130,6 +130,7 @@ class ObfuscationHandler(object):
             self.misleadingCmdsRange = None
 
         self.prevCmdOb = None
+        self.mutatorList = []
 
         self.mangler = Mangler()
         self.randGen = self.mangler.randGen
@@ -152,21 +153,75 @@ class ObfuscationHandler(object):
         for i in range(self.layers):
             if self.userMutators:
                 for userMutator in self.userMutators:
+                    userStub = None
                     if userMutator.count("/") == 2:
                         if userMutator[-1] == "/":
                             userMutator = userMutator[:-1]
-                            payload = self.genObfuscationLayer(payload, userMutator)
                         else:
                             userStub = userMutator.split("/")[2]
                             userMutator = userMutator[:-int(len(userStub) + 1)]
-                            payload = self.genObfuscationLayer(payload, userMutator, userStub)
-                    else:
-                        payload = self.genObfuscationLayer(payload, userMutator)
+
+                    self.mutatorList.append(self.getMutator(userMutator, userStub, self.sizePref, self.timePref, self.binaryPref, self.filePref))
 
             else:
-                payload = self.genObfuscationLayer(payload)
+                self.mutatorList.append(self.getMutator(userMutator, userStub, self.sizePref, self.timePref, self.binaryPref, self.filePref))
+
+        for mutator in self.mutatorList:
+            mutator.writeDir = self.writeDir
+            mutator.mangler._initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange, self.debug)
+            payload = mutator.mutate(payload)
+            mutator._obfuscatedCmd = payload
+
+            self.randGen.forgetUniqueStrs()
+            payload = self.evalWrap(payload, mutator)
 
         return payload
+
+    def getMutator(self, userMutator=None, userStub=None, sizePref=None, timePref=None, binaryPref=None, filePref=None):
+        selMutator = None
+
+        if userMutator:
+            mutatorType = userMutator.split("/")[0]
+
+            if mutatorType == "command":
+                selMutator = self.choosePrefMutator(self.cmdObfuscators, sizePref, timePref,
+                    binaryPref, filePref, self.prevCmdOb, userMutator, userStub)
+                self.prevCmdOb = selMutator
+
+            elif mutatorType == "string":
+                selMutator = self.choosePrefMutator(self.strObfuscators, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
+
+            elif mutatorType == "token":
+                selMutator = self.choosePrefMutator(self.tokObfuscators, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
+
+            elif mutatorType == "encode":
+                selMutator = self.choosePrefMutator(self.encoders, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
+
+            elif mutatorType == "compress":
+                selMutator = self.choosePrefMutator(self.compressors, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
+
+            else:
+                printError(f"{mutatorType} isn't a valid mutator type")
+        else:
+            # TODO: handle case when no mutators of chosen type are compatible with user's preferences
+            obChoice = self.randGen.randChoice(3)
+
+            if obChoice == 0:
+                selMutator = self.choosePrefMutator(self.cmdObfuscators, sizePref, timePref,
+                    binaryPref, filePref, self.prevCmdOb)
+                self.prevCmdOb = selMutator
+
+            elif obChoice == 1:
+                selMutator = self.choosePrefMutator(self.strObfuscators, sizePref, timePref,
+                    binaryPref, filePref)
+
+            else:
+                selMutator = self.choosePrefMutator(self.tokObfuscators, sizePref, timePref)
+
+        selMutator.sizePref = sizePref
+        selMutator.timePref = timePref
+
+        return selMutator
 
     # TODO: update docs
     def genObfuscationLayer(self, payload, userMutator=None, userStub=None, sizePref=None, timePref=None, binaryPref=None, filePref=None, enableMangling=None, mangleBinaries=None, binaryManglePercent=None, randWhitespace=None, randWhitespaceRange=None, insertChars=None, insertCharsRange=None, misleadingCmds=None, misleadingCmdsRange=None, writeDir=None, debug=None):
@@ -234,53 +289,11 @@ class ObfuscationHandler(object):
         if writeDir is None:
             writeDir = self.writeDir
 
-        selMutator = None
+        selMutator = self.getMutator(userMutator, userStub, sizePref, timePref, binaryPref, filePref)
 
-        if userMutator:
-            mutatorType = userMutator.split("/")[0]
-
-            if mutatorType == "command":
-                selMutator = self.choosePrefMutator(self.cmdObfuscators, sizePref, timePref,
-                    binaryPref, filePref, self.prevCmdOb, userMutator, userStub)
-                self.prevCmdOb = selMutator
-
-            elif mutatorType == "string":
-                selMutator = self.choosePrefMutator(self.strObfuscators, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
-
-            elif mutatorType == "token":
-                selMutator = self.choosePrefMutator(self.tokObfuscators, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
-
-            elif mutatorType == "encode":
-                selMutator = self.choosePrefMutator(self.encoders, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
-
-            elif mutatorType == "compress":
-                selMutator = self.choosePrefMutator(self.compressors, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
-
-            else:
-                printError(f"ERROR: {mutatorType} isn't a valid mutator type")
-        else:
-            # TODO: handle case when no mutators of chosen type are compatible with user's preferences
-            obChoice = self.randGen.randChoice(3)
-
-            if obChoice == 0:
-                selMutator = self.choosePrefMutator(self.cmdObfuscators, sizePref, timePref,
-                    binaryPref, filePref, self.prevCmdOb)
-                self.prevCmdOb = selMutator
-
-            elif obChoice == 1:
-                selMutator = self.choosePrefMutator(self.strObfuscators, sizePref, timePref,
-                    binaryPref, filePref)
-
-            else:
-                selMutator = self.choosePrefMutator(self.tokObfuscators, sizePref, timePref)
-
-        selMutator.sizePref = sizePref
-        selMutator.timePref = timePref
         selMutator.writeDir = writeDir
-        selMutator._originalCmd = payload
         selMutator.mangler._initialize(sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange, debug)
         payload = selMutator.mutate(payload)
-        selMutator._obfuscatedCmd = payload
 
         self.randGen.forgetUniqueStrs()
         payload = self.evalWrap(payload, selMutator)
