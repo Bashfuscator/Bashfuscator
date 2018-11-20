@@ -171,7 +171,7 @@ class HexHash(StringObfuscator):
                 randomhash = m.hexdigest()
 
             index = randomhash.find(hexchar)
-            self.mangler.addPayloadLine(f"""* *:printf:^ ^"\\x$(:printf:^ ^%s^ ^'{randomString}'* *|* *:md5sum:* *|* *:cut:^ ^-b^ ^{str(index + 1)}-{str(index + 2)}* *)"* *END0""")
+            self.mangler.addPayloadLine(f"""* *:printf:^ ^"\\x$(* *:printf:^ ^%s^ ^'{randomString}'* *|* *:md5sum:* *|* *:cut:^ ^-b^ ^{str(index + 1)}-{str(index + 2)}* *)"* *END0""")
 
         self.mangler.addJunk()
 
