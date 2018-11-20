@@ -136,7 +136,7 @@ def printPayload(payload, args):
     printInfo("Payload:\n")
 
     payloadLen = len(payload)
-    payloadPrintLen = int((rows * (columns * .75)) / 2)
+    payloadPrintLen = int((rows * (columns * .50)) / 2)
     payloadPrintLen = payloadPrintLen + (payloadPrintLen % columns)
 
     if not args.quiet and (args.clip or args.outfile) and payloadLen > payloadPrintLen * 2:
