@@ -105,7 +105,7 @@ class SpecialCharOnly(TokenObfuscator):
 
     def mutate(self, userCmd):
         self.indexCounter = 0
-        self.mainArrayName = self.randGen.randUniqueStr(3, 5, "_")
+        self.mainArrayName = self.randGen.randUniqueStr(3, 26, "_")
 
         # test with BOBL syntax
         # build list of different commands that will return '0'
