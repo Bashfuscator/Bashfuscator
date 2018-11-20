@@ -123,6 +123,9 @@ def checkRangeArgs(argName, argValue):
     if rangeValues[0] < 0 or rangeValues[1] < 0:
         printArgError(f"Invalid value for {argName} option: range values must be positive")
 
+    if rangeValues[1] == 0:
+        printArgError(f"Invalid value for {argName} option: upper bound must be greater than zero")
+
     if rangeValues[0] > rangeValues[1]:
         printArgError(f"Invalid value for {argName} option: invalid range")
 
