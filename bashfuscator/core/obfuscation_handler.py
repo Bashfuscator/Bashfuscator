@@ -164,7 +164,7 @@ class ObfuscationHandler(object):
                     self.mutatorList.append(self.getMutator(userMutator, userStub, self.sizePref, self.timePref, self.binaryPref, self.filePref))
 
             else:
-                self.mutatorList.append(self.getMutator(userMutator, userStub, self.sizePref, self.timePref, self.binaryPref, self.filePref))
+                self.mutatorList.append(self.getMutator(sizePref=self.sizePref, timePref=self.timePref, binaryPref=self.binaryPref, filePref=self.filePref))
 
         for mutator in self.mutatorList:
             mutator.writeDir = self.writeDir
