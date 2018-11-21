@@ -16,17 +16,20 @@ repeat_cmd=":;\n"
 unobfTimeData=[]
 obfTimeData=[]
 obfTimeMSCHAR=[]
+unobfSizeData=[]
+obfSizeData=[]
 
 #list of times to run the command.  These values were chosen to work well on a logrithmic scale:
 #iterations=["1", "2", "3", "4", "5", "10", "20", "30", "40", "50", "100", "200", "300", "400", "500", "1000", "2000", "3000", "4000", "5000", "10000", "20000", "30000"]
-iterations=["1", "2", "3", "4", "5", "10", "20", "30", "40", "50", "100", "200", "300", "400", "500", "1000", "2000", "3000", "4000", "5000"]
+#iterations=["1", "2", "3", "4", "5", "10", "20", "30", "40", "50", "100", "200", "300", "400", "500", "1000", "2000", "3000", "4000", "5000"]
+iterations=["1", "2", "3", "4", "5", "10", "20", "30", "40"]
 
 #-------------------------------------------#
 #Functions used to generate and process data#
 #-------------------------------------------#
 
 def timeRun(payload): #Returns double: time it took to run payload in bash subprocess
-	repeater=7		#Set to 1 for testing, 5 or higher for actual analysis
+	repeater=1		#Set to 1 for testing, 5 or higher for actual analysis
 	mysetup='''from subprocess import STDOUT, PIPE, Popen
 from __main__ import payload, runProcess'''
 	snippet="runProcess(payload)"
@@ -83,6 +86,21 @@ def plotRunTime(iterations, obfExecutionTime, unObfExecutionTime):
 	)
 	}, auto_open=True, filename='RunTime.html')
 
+def plotSizeIncrease(iterations, unobfuscatedData, obfuscatedData):	#Does not return expected results, needs to be fixed.
+	sizeDelta=[]
+	for unobfuscated, obfuscated in zip(unobfuscatedData, obfuscatedData):
+		sizeDelta.append((obfuscated-unobfuscated)/unobfuscated)		#Percent difference, might not want *100, we'll see what it looks like.
+	
+	trace0=go.Scatter(x = iterations, y=sizeDelta, mode='lines', name= 'Size Difference Ratio')
+
+	plotly.offline.plot({
+    "data": [trace0],
+    "layout": go.Layout(title=longObfName+": Obfuscated Run Time",
+		xaxis=dict(autorange=True),
+		yaxis=dict(autorange=True)
+	)
+	}, auto_open=True, filename='SizeDelta.html')
+
 #------------------------#
 #-----Actual Script------#
 #------------------------#
@@ -94,6 +112,7 @@ for i in iterations:		#Yo Dawg, I heard you liked iterations.  So I iterated ove
 	i=int(i)
 	payload = repeat_cmd * i
 
+	unobfSizeData.append(len(payload))
 	#Generate a baseline time (how long it takes to run unobfuscated)
 	unobfTimeData.append(timeRun(payload))
 	print("Baseline time for {0} Iterations: {1}".format(i, unobfTimeData[-1]))
@@ -102,6 +121,7 @@ for i in iterations:		#Yo Dawg, I heard you liked iterations.  So I iterated ove
 	obHandler = ObfuscationHandler()
 	obfCommand=obHandler.genObfuscationLayer(payload, userMutator=longObfName, enableMangling=False)
 
+	obfSizeData.append(len(obfCommand))
 	#Time run of obfuscated code
 	print("Running Obfuscated code...")
 	obfTime=timeRun(obfCommand)
@@ -110,9 +130,11 @@ for i in iterations:		#Yo Dawg, I heard you liked iterations.  So I iterated ove
 	obfTimeMSCHAR.append((obfTime)-unobfTimeData[-1]/(i*len(repeat_cmd)*1000))
 
 #Plot Total Obfuscated & Unobfuscated run time
-plotRunTime(iterations, obfTimeData, unobfTimeData)
+#plotRunTime(iterations, obfTimeData, unobfTimeData)
 
 #Generate TimeDeltaData for ObfTimeGrowth Graph
 timeDeltaData=generateTimeDelta(obfTimeMSCHAR)
 #Plot Delta-T graph: obfuscation time growth.  Need to discuss with the team exaclty how we want to do this, but... It's a good start.
-plotObfTimeGrowth(iterations, timeDeltaData)
+#plotObfTimeGrowth(iterations, timeDeltaData)
+
+plotSizeIncrease(iterations, unobfSizeData, obfSizeData)
