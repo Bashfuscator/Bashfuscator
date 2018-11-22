@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #Imported Libraries
-from subprocess import STDOUT, PIPE, Popen
+from subprocess import run
 from tempfile import NamedTemporaryFile
 import time
 import timeit
@@ -33,15 +33,9 @@ iterations=["1", "2", "3", "4", "5", "10", "20", "30", "40", "50", "100", "200",
 
 def timeRun(payload): #Returns double: time it took to run payload in bash subprocess
 	repeater=5		#Set to 1 for testing, 5 or higher for actual analysis
-	mysetup='''from subprocess import Popen'''
-	t=timeit.timeit(setup=mysetup, stmt=lambda: runProcess(payload), number=repeater)
+	t=timeit.timeit(stmt=lambda: run(payload, executable="/bin/bash", shell=True), number=repeater)
 	#Figure out a way to account for and subtract overhead?
 	return t/repeater	#Return the average runtime
-
-def runProcess(payload):	#Runs the payload in bash
-	proc = Popen(payload, executable="/bin/bash", shell=True)
-	proc.wait()
-	return
 
 def generateTimeDelta(obfuscatedData):	#Depending on how I store obfuscated execution times, may have to ms/char maniputlation in this function.
 	timeDeltaData=[]
