@@ -68,7 +68,7 @@ class ForCode(TokenObfuscator):
         for char in userCmd:
             ogCmdIdxes.append(shuffledCmd.find(char))
 
-        cmdIndexes = "".join([str(i) + " " for i in ogCmdIdxes])[:-1]
+        cmdIndexes = "".join([str(i) + "* *" for i in ogCmdIdxes])[:-3]
 
         shuffledCmd = strToArrayElements(shuffledCmd)
 
