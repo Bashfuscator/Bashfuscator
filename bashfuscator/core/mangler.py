@@ -76,7 +76,7 @@ class Mangler(object):
         self.randGen = RandomGen()
 
 
-    def _initialize(self, sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange, debug):
+    def _initialize(self, sizePref=None, enableMangling=None, mangleBinaries=None, binaryManglePercent=None, randWhitespace=None, randWhitespaceRange=None, insertChars=None, insertCharsRange=None, misleadingCmds=None, misleadingCmdsRange=None, debug=None):
         self.sizePref = sizePref
         self.randGen.sizePref = self.sizePref
 
@@ -389,7 +389,7 @@ class Mangler(object):
             else:
                 whitespaceAmount = 0
         else:
-            if whitespaceRequired and self.randWhitespaceRange[0] == 0:
+            if whitespaceRequired and (not self.randWhitespaceRange or self.randWhitespaceRange[0] == 0):
                 minSpace = 1
             else:
                 minSpace = self.randWhitespaceRange[0]
