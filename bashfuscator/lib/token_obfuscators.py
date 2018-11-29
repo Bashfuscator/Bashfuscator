@@ -68,7 +68,7 @@ class ForCode(TokenObfuscator):
         for char in userCmd:
             ogCmdIdxes.append(shuffledCmd.find(char))
 
-        cmdIndexes = "".join([str(i) + "* *" for i in ogCmdIdxes])[:-3]
+        cmdIndexes = "".join([str(i) + "% %" for i in ogCmdIdxes])[:-3]
 
         shuffledCmd = strToArrayElements(shuffledCmd)
 
@@ -76,7 +76,7 @@ class ForCode(TokenObfuscator):
         self.mangler.addPayloadLine(f"? ?{charArrayVar}=({shuffledCmd})* *END0")
 
         indexVar = self.randGen.randGenVar()
-        self.mangler.addPayloadLine(f"^ ^for^ ^{indexVar}^ ^in^ ^{cmdIndexes}* *END")
+        self.mangler.addPayloadLine(f"? ?for^ ^{indexVar}^ ^in^ ^{cmdIndexes}* *END")
 
         # randomly choose between the two different for loop syntaxes
         if self.randGen.probibility(50):

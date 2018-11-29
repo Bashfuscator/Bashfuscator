@@ -9,12 +9,12 @@ def escapeQuotes(inCmd):
 
 def strToArrayElements(inCmd):
     specialChars = string.punctuation + " "
-    arrayElementsStr = ""
+    arrayElementsStr = "* *"
 
     for char in inCmd:
         if char in specialChars:
             char = "\\" + char
 
-        arrayElementsStr += char + "^ ^"
+        arrayElementsStr += char + "% %"
 
-    return arrayElementsStr[:-3] + "? ?"
+    return arrayElementsStr[:-3] + "* *"
