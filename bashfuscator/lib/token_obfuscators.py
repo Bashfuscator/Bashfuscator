@@ -80,10 +80,10 @@ class ForCode(TokenObfuscator):
 
         # randomly choose between the two different for loop syntaxes
         if self.randGen.probibility(50):
-            self.mangler.addPayloadLine(f'? ?{{^ ^:printf:^ ^%s^ ^"${{{charArrayVar}[${indexVar}]}}"* *;? ?}}? ?END* *')
+            self.mangler.addPayloadLine(f'? ?{{^ ^:printf:^ ^%s^ ^"${{{charArrayVar}[* *${indexVar}* *]}}"* *;? ?}}? ?END* *')
 
         else:
-            self.mangler.addPayloadLine(f'? ?do^ ^:printf:^ ^%s^ ^"${{{charArrayVar}[${indexVar}]}}"* *;? ?done? ?END* *')
+            self.mangler.addPayloadLine(f'? ?do^ ^:printf:^ ^%s^ ^"${{{charArrayVar}[* *${indexVar}* *]}}"* *;? ?done? ?END* *')
 
         return self.mangler.getFinalPayload()
 
