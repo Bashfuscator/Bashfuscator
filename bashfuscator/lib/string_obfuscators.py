@@ -282,13 +282,16 @@ class RotN(StringObfuscator):
         numsign = ""
         for ch in userCmd:
             badrot = True
-            gen = ""
-            while not badrot:
+            gen = 0
+            while badrot:
                 gen = self.randGen.randGenNum(0, 127)
+                print(gen)
+
                 if ord(ch) + gen > 127:
                     numsign = "+"
                 if ord(ch) - gen <= 0:
                     numsign = "-"
+                #ADD RANDOM IF
                 if (ord(ch) + gen != 39) and (ord(ch) - gen != 39) and (ord(ch) - gen != 0):
                     badrot = False
             
@@ -304,13 +307,15 @@ class RotN(StringObfuscator):
             elif sign[i] == "-":
                 orig[i] -= rotn[i]
 
+            #print(rotn[i])
+
             final.append(chr(orig[i]))
-            final.append(b64encode(rotn[i].encode("utf-8")).decode("utf-8"))
+            final.append(b64encode(str(rotn[i]).encode("utf-8")).decode("utf-8"))
             final.append(sign[i])
             
             i += 1
 
-        for index in final:
-            print(index,end="")
+        print(final[:])
+        #print(gen[:])
 
         return self.mangler.getFinalPayload()
