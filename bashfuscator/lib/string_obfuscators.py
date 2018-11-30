@@ -284,38 +284,36 @@ class RotN(StringObfuscator):
             badrot = True
             gen = 0
             while badrot:
+                minus = False
+                plus = False
+                signarr = ["+","-"]
                 gen = self.randGen.randGenNum(0, 127)
-                print(gen)
 
-                if ord(ch) + gen > 127:
-                    numsign = "+"
-                if ord(ch) - gen <= 0:
+                if (ord(ch) + gen > 127) and (ord(ch) - gen >= 0):
                     numsign = "-"
-                #ADD RANDOM IF
-                if (ord(ch) + gen != 39) and (ord(ch) - gen != 39) and (ord(ch) - gen != 0):
+                    minus = True
+                if (ord(ch) - gen <= 0) and (ord(ch) + gen < 127):
+                    numsign = "+"
+                    plus = True
+                if minus and plus:
+                    numsign = self.randGen.randSelect(signarr)
+                if (minus or plus) and (ord(ch) + gen != 39) and (ord(ch) - gen != 39) and (ord(ch) - gen != 0):
                     badrot = False
             
             sign.append(numsign)
             orig.append(ord(ch))
             rotn.append(gen)
         
-        for num in orig:
-            i = 0
-
+        for i, num in enumerate(orig):
             if sign[i] == "+":
                 orig[i] += rotn[i]
             elif sign[i] == "-":
                 orig[i] -= rotn[i]
 
-            #print(rotn[i])
-
             final.append(chr(orig[i]))
             final.append(b64encode(str(rotn[i]).encode("utf-8")).decode("utf-8"))
             final.append(sign[i])
-            
-            i += 1
-
+        
         print(final[:])
-        #print(gen[:])
 
         return self.mangler.getFinalPayload()
