@@ -275,6 +275,7 @@ class RotN(StringObfuscator):
             evalWrap=False
         )
 
+    # TODO: randomize +,- chars, replace base64 encoded blobs with chars that the incoming char is rotated by
     def mutate(self, userCmd):
         rotd = []
         rotn = []
@@ -298,13 +299,14 @@ class RotN(StringObfuscator):
                     plus = True
                 if minus and plus:
                     numsign = self.randGen.randSelect(signarr)
+                # the rotated character can't be a single quote, 'E', or a null byte
                 if (minus or plus) and (ord(ch) + gen != 39) and (ord(ch) - gen != 39) and (ord(ch) + gen != 69) and (ord(ch) - gen != 69) and (ord(ch) + gen != 0) and (ord(ch) - gen != 0):
                     badrot = False
-            
+
             sign.append(numsign)
             rotd.append(ord(ch))
             rotn.append(gen)
-        
+
         for i, num in enumerate(rotd):
             if sign[i] == "+":
                 rotd[i] += rotn[i]
@@ -314,7 +316,7 @@ class RotN(StringObfuscator):
             final.append(chr(rotd[i]))
             final.append(b64encode(str(rotn[i]).encode("utf-8")).decode("utf-8"))
             final.append(sign[i])
-        
+
         encpayload = escapeQuotes("".join(final))
         caesar = self.randGen.randGenVar()
         count = self.randGen.randGenVar()
@@ -325,17 +327,17 @@ class RotN(StringObfuscator):
         new = self.randGen.randGenVar()
         done = self.randGen.randGenVar()
 
-        self.mangler.addPayloadLine(f"{caesar}='{encpayload}'END0")
-        self.mangler.addPayloadLine(f"for^ ^((* *{count}* *=* *0;* *{count}* *<* *${{#{caesar}}};* *{count}* *+=* *6))END")
-        self.mangler.addPayloadLine(f"do {chunk}=${{{caesar}\:{count}\:6}}END0") #COME BACK LATER ANDREW ;)
-        self.mangler.addPayloadLine(f"{char}=${{{chunk}\:0\:1}}END0")
-        self.mangler.addPayloadLine(f"{base}=$(printf ${{{chunk}\:1\:4}}* *|* *:base64:^ ^-d)END0")
-        self.mangler.addPayloadLine(f"{sign}=${{{chunk}\:5\:1}}END0")
-        self.mangler.addPayloadLine(f'if^ ^[[^ ^${sign}^ ^==^ ^"+"^ ^]]END')
-        self.mangler.addPayloadLine(rf"""then^ ^{new}=$(:printf:% %"\\$(:printf:% %%o% %"$(($(:printf:% %%d% %"'${char}")* *-* *${base}))")")END""")
+        self.mangler.addPayloadLine(f"? ?{caesar}='{encpayload}'* *END0")
+        self.mangler.addPayloadLine(f"? ?for^ ^((* *{count}* *=* *0;* *{count}* *<* *${{#{caesar}}};* *{count}* *+=* *6))? ?END")
+        self.mangler.addPayloadLine(f"do {chunk}=${{{caesar}\:{count}\:6}}* *END0") #COME BACK LATER ANDREW ;)
+        self.mangler.addPayloadLine(f"{char}=${{{chunk}\:0\:1}}* *END0")
+        self.mangler.addPayloadLine(f"{base}=$(printf ${{{chunk}\:1\:4}}* *|* *:base64:^ ^-d)* *END0")
+        self.mangler.addPayloadLine(f"{sign}=${{{chunk}\:5\:1}}* *END0")
+        self.mangler.addPayloadLine(f'? ?if^ ^[[^ ^${sign}^ ^==^ ^"+"^ ^]]? ?END')
+        self.mangler.addPayloadLine(rf"""? ?then^ ^{new}=$(:printf:% %"\\$(:printf:% %%o% %"$(($(:printf:% %%d% %"'${char}")* *-* *${base}))")")* *END""")
         self.mangler.addPayloadLine(f'elif^ ^[[^ ^${sign}^ ^==^ ^"-"^ ^]]END')
-        self.mangler.addPayloadLine(rf"""then^ ^{new}=$(:printf:% %"\\$(:printf:% %%o% %"$(($(:printf:% %%d% %"'${char}")* *+* *${base}))")");fi? ?END0""")
-        self.mangler.addPayloadLine(f"{done}+=${new};done? ?END0")
-        self.mangler.addPayloadLine(f':eval:% %"${done}"END')
-        
+        self.mangler.addPayloadLine(rf"""? ?then^ ^{new}=$(:printf:% %"\\$(:printf:% %%o% %"$(($(:printf:% %%d% %"'${char}")* *+* *${base}))")");fi? ?END0""")
+        self.mangler.addPayloadLine(f"? ?{done}+=${new};done? ?END0")
+        self.mangler.addPayloadLine(f'* *:eval:% %"${done}"END')
+
         return self.mangler.getFinalPayload()
