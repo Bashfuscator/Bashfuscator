@@ -323,7 +323,7 @@ class ObfuscationHandler(object):
 
         # if the Mutator evals itself, wrap it in a subshell so it doesn't pollute the parent shell environment
         elif not selMutator.postEncoder:
-            wrappedPayload = f"({payload})"
+            wrappedPayload = self.mangler._mangleLine(f"(DATA? ?)", payload)
 
         else:
             wrappedPayload = payload

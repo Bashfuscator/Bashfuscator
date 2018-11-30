@@ -7,6 +7,7 @@ import string
 
 from bashfuscator.common.helpers import escapeQuotes
 from bashfuscator.common.objects import Mutator
+from base64 import b64encode
 
 
 class StringObfuscator(Mutator):
@@ -259,5 +260,84 @@ class XorNonNull(StringObfuscator):
         self.mangler.addLinesInRandomOrder(perlEscapes)
         self.mangler.addPayloadLine(f'''? ?:perl:^ ^-e^ ^"? ?print^ ^'${cmdCharVar}'? ?^? ?'${keyCharVar}'? ?"* *END''')
         self.mangler.addPayloadLine("? ?done? ?END0")
+
+        return self.mangler.getFinalPayload()
+
+class RotN(StringObfuscator):
+    def __init__(self):
+        super().__init__(
+            name="RotN",
+            description="Offsets each character a random number of times across the ASCII charset",
+            sizeRating=1,
+            timeRating=1,
+            binariesUsed=["base64"],
+            author="343iChurch",
+            evalWrap=False
+        )
+
+    # TODO: randomize +,- chars, replace base64 encoded blobs with chars that the incoming char is rotated by
+    def mutate(self, userCmd):
+        rotd = []
+        rotn = []
+        sign = []
+        final = []
+        numsign = ""
+        for ch in userCmd:
+            badrot = True
+            gen = 0
+            while badrot:
+                minus = False
+                plus = False
+                signarr = ["+","-"]
+                gen = self.randGen.randGenNum(0, 127)
+
+                if ord(ch) - gen >= 0:
+                    numsign = "-"
+                    minus = True
+                if ord(ch) + gen <= 127:
+                    numsign = "+"
+                    plus = True
+                if minus and plus:
+                    numsign = self.randGen.randSelect(signarr)
+                # the rotated character can't be a single quote, 'E', or a null byte
+                if (minus or plus) and (ord(ch) + gen != 39) and (ord(ch) - gen != 39) and (ord(ch) + gen != 69) and (ord(ch) - gen != 69) and (ord(ch) + gen != 0) and (ord(ch) - gen != 0):
+                    badrot = False
+
+            sign.append(numsign)
+            rotd.append(ord(ch))
+            rotn.append(gen)
+
+        for i, num in enumerate(rotd):
+            if sign[i] == "+":
+                rotd[i] += rotn[i]
+            elif sign[i] == "-":
+                rotd[i] -= rotn[i]
+
+            final.append(chr(rotd[i]))
+            final.append(b64encode(str(rotn[i]).encode("utf-8")).decode("utf-8"))
+            final.append(sign[i])
+
+        encpayload = escapeQuotes("".join(final))
+        caesar = self.randGen.randGenVar()
+        count = self.randGen.randGenVar()
+        chunk = self.randGen.randGenVar()
+        char = self.randGen.randGenVar()
+        base = self.randGen.randGenVar()
+        sign = self.randGen.randGenVar()
+        new = self.randGen.randGenVar()
+        done = self.randGen.randGenVar()
+
+        self.mangler.addPayloadLine(f"? ?{caesar}='{encpayload}'* *END0")
+        self.mangler.addPayloadLine(f"? ?for^ ^((* *{count}* *=* *0;* *{count}* *<* *${{#{caesar}}};* *{count}* *+=* *6))? ?END")
+        self.mangler.addPayloadLine(f"do {chunk}=${{{caesar}\:{count}\:6}}* *END0") #COME BACK LATER ANDREW ;)
+        self.mangler.addPayloadLine(f"{char}=${{{chunk}\:0\:1}}* *END0")
+        self.mangler.addPayloadLine(f"{base}=$(printf ${{{chunk}\:1\:4}}* *|* *:base64:^ ^-d)* *END0")
+        self.mangler.addPayloadLine(f"{sign}=${{{chunk}\:5\:1}}* *END0")
+        self.mangler.addPayloadLine(f'? ?if^ ^[[^ ^${sign}^ ^==^ ^"+"^ ^]]? ?END')
+        self.mangler.addPayloadLine(rf"""? ?then^ ^{new}=$(:printf:% %"\\$(:printf:% %%o% %"$(($(:printf:% %%d% %"'${char}")* *-* *${base}))")")* *END""")
+        self.mangler.addPayloadLine(f'elif^ ^[[^ ^${sign}^ ^==^ ^"-"^ ^]]END')
+        self.mangler.addPayloadLine(rf"""? ?then^ ^{new}=$(:printf:% %"\\$(:printf:% %%o% %"$(($(:printf:% %%d% %"'${char}")* *+* *${base}))")");fi? ?END0""")
+        self.mangler.addPayloadLine(f"? ?{done}+=${new};done? ?END0")
+        self.mangler.addPayloadLine(f'* *:eval:% %"${done}"END')
 
         return self.mangler.getFinalPayload()
