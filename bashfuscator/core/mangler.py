@@ -30,22 +30,26 @@ class Mangler(object):
     optionalWhitespaceAndRandCharsRegex = re.compile(optionalWhitespaceAndRandCharsRegexStr)
     commandEndRegex = re.compile(commandEndRegexStr)
 
-    boblRegex = re.compile("{0}|{1}|{2}|{3}|{4}|{5}".format(
+    boblRegexStr = "{0}|{1}|{2}|{3}|{4}|{5}".format(
         binaryRegexStr,
         requiredWhitespaceRegexStr,
         optionalWhitespaceRegexStr,
         requiredWhitespaceAndRandCharsRegexStr,
         optionalWhitespaceAndRandCharsRegexStr,
         commandEndRegexStr
-    ))
+    )
 
-    escapedBoblRegex = re.compile("{0}|{1}|{2}|{3}|{4}".format(
+    escapedBoblRegexStr = "{0}|{1}|{2}|{3}|{4}".format(
         binaryEscapedRegexStr,
         requiredWhitespaceEscapedRegexStr,
         optionalWhitespaceEscapedRegexStr,
         requiredWhitespaceAndRandCharsEscapedRegexStr,
         optionalWhitespaceAndRandCharsEscapedRegexStr
-    ))
+    )
+
+    boblRegex = re.compile(boblRegexStr)
+    escapedBoblRegex = re.compile(escapedBoblRegexStr)
+    completeBoblRegex = re.compile(f"{boblRegexStr}|{escapedBoblRegexStr}")
 
 
     def __init__(self):
@@ -230,17 +234,10 @@ class Mangler(object):
         """
         mangledPayloadLine = payloadLine
 
-        escapedBoblSyntaxMatch = Mangler.escapedBoblRegex.search(mangledPayloadLine)
+        boblSyntaxMatch = Mangler.completeBoblRegex.search(mangledPayloadLine)
 
-        if not escapedBoblSyntaxMatch:
-            boblSyntaxMatch = Mangler.boblRegex.search(mangledPayloadLine)
-
-        while escapedBoblSyntaxMatch or boblSyntaxMatch:
-            if escapedBoblSyntaxMatch:
-                escapedData = mangledPayloadLine[escapedBoblSyntaxMatch.start() + 1:escapedBoblSyntaxMatch.end() - 2] + mangledPayloadLine[escapedBoblSyntaxMatch.end() - 1]
-                mangledPayloadLine = mangledPayloadLine[:escapedBoblSyntaxMatch.start()] + escapedData + mangledPayloadLine[escapedBoblSyntaxMatch.end():]
-
-            else:
+        while boblSyntaxMatch:
+            if Mangler.boblRegex.match(boblSyntaxMatch.group()):
                 if Mangler.binaryRegex.match(boblSyntaxMatch.group()):
                     mangledPayloadLine = self._mangleBinary(boblSyntaxMatch, mangledPayloadLine)
 
@@ -259,15 +256,16 @@ class Mangler(object):
                 elif Mangler.commandEndRegex.match(boblSyntaxMatch.group()):
                     mangledPayloadLine = self._getCommandTerminator(boblSyntaxMatch, mangledPayloadLine)
 
-            if escapedBoblSyntaxMatch:
-                searchPos = escapedBoblSyntaxMatch.end() - 1
-            else:
                 searchPos = boblSyntaxMatch.start()
 
-            escapedBoblSyntaxMatch = Mangler.escapedBoblRegex.search(mangledPayloadLine, pos=searchPos)
+            # we're dealing with escaped BOBL syntax, we need to unescape it
+            else:
+                escapedData = mangledPayloadLine[boblSyntaxMatch.start() + 1:boblSyntaxMatch.end() - 2] + mangledPayloadLine[boblSyntaxMatch.end() - 1]
+                mangledPayloadLine = mangledPayloadLine[:boblSyntaxMatch.start()] + escapedData + mangledPayloadLine[boblSyntaxMatch.end():]
 
-            if not escapedBoblSyntaxMatch:
-                boblSyntaxMatch = Mangler.boblRegex.search(mangledPayloadLine, pos=searchPos)
+                searchPos = boblSyntaxMatch.end() - 1
+
+            boblSyntaxMatch = Mangler.completeBoblRegex.search(mangledPayloadLine, pos=searchPos)
 
         if inputChunk:
             mangledPayloadLine = mangledPayloadLine.replace("DATA", inputChunk)
