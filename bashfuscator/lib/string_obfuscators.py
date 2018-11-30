@@ -290,15 +290,15 @@ class RotN(StringObfuscator):
                 signarr = ["+","-"]
                 gen = self.randGen.randGenNum(0, 127)
 
-                if (ord(ch) + gen > 127) and (ord(ch) - gen >= 0):
+                if ord(ch) - gen >= 0:
                     numsign = "-"
                     minus = True
-                if (ord(ch) - gen <= 0) and (ord(ch) + gen < 127):
+                if ord(ch) + gen <= 127:
                     numsign = "+"
                     plus = True
                 if minus and plus:
                     numsign = self.randGen.randSelect(signarr)
-                if (minus or plus) and (ord(ch) + gen != 39) and (ord(ch) - gen != 39) and (ord(ch) - gen != 0):
+                if (minus or plus) and (ord(ch) + gen != 39) and (ord(ch) - gen != 39) and (ord(ch) + gen != 69) and (ord(ch) - gen != 69) and (ord(ch) + gen != 0) and (ord(ch) - gen != 0):
                     badrot = False
             
             sign.append(numsign)
@@ -329,13 +329,13 @@ class RotN(StringObfuscator):
         self.mangler.addPayloadLine(f"for^ ^((* *{count}* *=* *0;* *{count}* *<* *${{#{caesar}}};* *{count}* *+=* *6))END")
         self.mangler.addPayloadLine(f"do {chunk}=${{{caesar}\:{count}\:6}}END0") #COME BACK LATER ANDREW ;)
         self.mangler.addPayloadLine(f"{char}=${{{chunk}\:0\:1}}END0")
-        self.mangler.addPayloadLine(f"{base}=$(printf ${{{chunk}\:1\:4}}* *|* *base64^ ^-d)END0")
+        self.mangler.addPayloadLine(f"{base}=$(printf ${{{chunk}\:1\:4}}* *|* *:base64:^ ^-d)END0")
         self.mangler.addPayloadLine(f"{sign}=${{{chunk}\:5\:1}}END0")
         self.mangler.addPayloadLine(f'if^ ^[[^ ^${sign}^ ^==^ ^"+"^ ^]]END')
-        self.mangler.addPayloadLine(rf"""then^ ^{new}=$(printf% %"\\$(printf% %%o% %"$(($(printf% %%d% %"'${char}")* *-* *${base}))")")END""")
+        self.mangler.addPayloadLine(rf"""then^ ^{new}=$(:printf:% %"\\$(:printf:% %%o% %"$(($(:printf:% %%d% %"'${char}")* *-* *${base}))")")END""")
         self.mangler.addPayloadLine(f'elif^ ^[[^ ^${sign}^ ^==^ ^"-"^ ^]]END')
-        self.mangler.addPayloadLine(rf"""then^ ^{new}=$(printf% %"\\$(printf% %%o% %"$(($(printf% %%d% %"'${char}")* *+* *${base}))")");fi? ?END0""")
+        self.mangler.addPayloadLine(rf"""then^ ^{new}=$(:printf:% %"\\$(:printf:% %%o% %"$(($(:printf:% %%d% %"'${char}")* *+* *${base}))")");fi? ?END0""")
         self.mangler.addPayloadLine(f"{done}+=${new};done? ?END0")
-        self.mangler.addPayloadLine(f'eval% %"${done}"END')
+        self.mangler.addPayloadLine(f':eval:% %"${done}"END')
         
         return self.mangler.getFinalPayload()
