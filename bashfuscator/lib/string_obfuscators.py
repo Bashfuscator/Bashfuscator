@@ -43,8 +43,8 @@ class StringObfuscator(Mutator):
     :type credits: str
     """
 
-    def __init__(self, name, description, sizeRating, timeRating, binariesUsed=[], fileWrite=False, notes=None, author=None, credits=None, evalWrap=True):
-        super().__init__(name, "string", description, notes, author, credits, evalWrap)
+    def __init__(self, name, description, sizeRating, timeRating, binariesUsed=[], fileWrite=False, notes=None, author=None, credits=None, evalWrap=True, unreadableOutput = False):
+        super().__init__(name, "string", description, notes, author, credits, evalWrap, unreadableOutput)
 
         self.sizeRating = sizeRating
         self.timeRating = timeRating
@@ -188,7 +188,8 @@ class XorNonNull(StringObfuscator):
             timeRating=5,
             binariesUsed=["perl"],
             notes="May contain non-printable Ascii characters",
-            author="Elijah-Barker"
+            author="Elijah-Barker",
+            unreadableOutput=True
         )
 
     def genXorKey(self, keyLen, userCmd):
@@ -272,7 +273,8 @@ class RotN(StringObfuscator):
             timeRating=1,
             binariesUsed=[],
             author="343iChurch",
-            evalWrap=False
+            evalWrap=False,
+            unreadableOutput=True
         )
 
     # TODO: randomize +,- chars, replace base64 encoded blobs with chars that the incoming char is rotated by

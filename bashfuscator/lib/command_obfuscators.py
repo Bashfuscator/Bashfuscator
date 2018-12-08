@@ -40,12 +40,11 @@ class CommandObfuscator(Mutator):
     :type credits: str
     """
 
-    def __init__(self, name, description, sizeRating, timeRating, reversible, fileWrite=False, notes=None, author=None, credits=None, evalWrap=True):
-        super().__init__(name, "command", description, notes, author, credits, evalWrap)
+    def __init__(self, name, description, sizeRating, timeRating, reversible, fileWrite=False, notes=None, author=None, credits=None, evalWrap=True, unreadableOutput=False):
+        super().__init__(name, "command", description, notes, author, credits, evalWrap, unreadableOutput, reversible)
 
         self.sizeRating = sizeRating
         self.timeRating = timeRating
-        self.reversible = reversible
         self.fileWrite = fileWrite
         self.stubs = []
         self.deobStub = None

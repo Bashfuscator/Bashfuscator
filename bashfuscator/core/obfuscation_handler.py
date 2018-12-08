@@ -55,7 +55,9 @@ class ObfuscationHandler(object):
             self.binaryPref = args.binaryPref
             self.filePref = args.no_file_write
             self.writeDir = args.write_dir
+            self.full_ascii_strings = args.full_ascii_strings
             self.debug = args.debug
+            self.clip = args.clip
             self.originalCmd = args.command
 
             if args.choose_mutators:
@@ -116,7 +118,9 @@ class ObfuscationHandler(object):
             self.binaryPref = None
             self.filePref = True
             self.writeDir = "/tmp/"
+            self.full_ascii_strings = False
             self.debug = False
+            self.clip = False
             self.userMutators = None
 
             self.enableMangling = None
@@ -166,6 +170,8 @@ class ObfuscationHandler(object):
             else:
                 self.mutatorList.append(self.getMutator(sizePref=self.sizePref, timePref=self.timePref, binaryPref=self.binaryPref, filePref=self.filePref))
 
+        self.checkMutatorList()
+
         for mutator in self.mutatorList:
             mutator.writeDir = self.writeDir
             mutator.mangler._initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange, self.debug)
@@ -176,6 +182,30 @@ class ObfuscationHandler(object):
             payload = self.evalWrap(payload, mutator)
 
         return payload
+
+    def checkMutatorList(self):
+        reverseableMutator = False
+        nonReadableWarning = False
+
+        for i, mutator in enumerate(self.mutatorList):
+            if self.clip and ((mutator.unreadableOutput and not nonReadableWarning) or self.full_ascii_strings):
+                printWarning("Output may consist of unreadable ASCII characters and probably won't execute from your clipboard correctly. Saving output with '-o' is recommended")
+                nonReadableWarning = True
+
+            if mutator.postEncoder and i != len(self.mutatorList) - 1:
+                printWarning(f"{mutator.longName} should only ever be used as the final Mutator, layering on top of it will probably break your payload")
+
+            if mutator.reversible:
+                if mutator.reversible and not reverseableMutator:
+                    reverseableMutator = True
+
+                elif mutator.reversible and reverseableMutator:
+                    printWarning(f"{mutator.longName} used twice in a row, part of the output may be in the clear")
+                    reverseableMutator = False
+
+            else:
+                reverseableMutator = False
+
 
     def getMutator(self, userMutator=None, userStub=None, sizePref=None, timePref=None, binaryPref=None, filePref=None):
         selMutator = None
