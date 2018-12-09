@@ -37,8 +37,8 @@ class Mutator(object):
         self.mutatorType = mutatorType
         self.description = description
         self.longName = self.mutatorType + "/" + self.name.replace(" ", "_").lower()
-        self.sizePref = sizeRating
-        self.timePref = timeRating
+        self.sizeRating = sizeRating
+        self.timeRating = timeRating
         self.notes = notes
         self.author = author
         self.credits = credits

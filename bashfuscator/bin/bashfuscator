@@ -83,8 +83,8 @@ def listMutatorType(mutators):
                 binariesUsedString = "None"
 
             print(f"Binaries used: {binariesUsedString}")
+            print(f"File write: {mutator.fileWrite}")
 
-        print(f"File write: {mutator.fileWrite}")
         if mutator.notes is not None: print(f"Notes: {mutator.notes}")
         if mutator.author is not None: print(f"Author: {mutator.author}")
         if mutator.credits is not None:
@@ -100,6 +100,9 @@ def listMutatorType(mutators):
             print("\nStubs:")
             for stub in mutator.stubs:
                 print(f"\n\tName: {stub.name}")
+                print(f"\tSize Rating: {stub.sizeRating}")
+                print(f"\tTime Rating: {stub.timeRating}")
+                print(f"\tFile write: {stub.fileWrite}")
 
                 if stub.binariesUsed:
                     binariesUsedString = "".join(b + ", " for b in stub.binariesUsed)[:-2]
@@ -107,8 +110,7 @@ def listMutatorType(mutators):
                     binariesUsedString = "None"
 
                 print(f"\tBinaries Used: {binariesUsedString}")
-                print(f"\tSize Rating: {stub.sizeRating}")
-                print(f"\tTime Rating: {stub.timeRating}")
+
 
 def printArgError(errorMsg):
     print(f"bashfuscator: error: {errorMsg}")
