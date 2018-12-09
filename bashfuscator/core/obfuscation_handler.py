@@ -401,17 +401,17 @@ class ObfuscationHandler(object):
 
             for mutator in mutators:
                 if mutator.longName == userMutator:
-                    if filePref is False and mutator.fileWrite != filePref:
+                    if filePref is False and mutator.mutatorType != "command" and mutator.fileWrite != filePref:
                         printWarning(f"'{userMutator}' mutator preforms file writes")
 
-                    elif binaryPref:
+                    elif binaryPref and mutator.mutatorType != "command":
                         for binary in mutator.binariesUsed:
                             if (binary in binList) != includeBinary:
                                 printWarning(f"'{userMutator}' mutator contains an unwanted binary")
 
                     selMutator = mutator
                     if selMutator.mutatorType == "command":
-                        selMutator.prefStubs = selMutator.stubs
+                        selMutator.prefStubs = self.getPrefStubs(selMutator.stubs, sizePref, timePref, binaryPref, filePref)
 
                     break
 
@@ -423,9 +423,13 @@ class ObfuscationHandler(object):
             selMutator = self.randGen.randSelect(prefMutators)
 
         if selMutator is not None and selMutator.mutatorType == "command":
-            selMutator.deobStub = self.choosePrefStub(selMutator.prefStubs, sizePref, timePref, binaryPref, userStub)
-            selMutator.deobStub.mangler = selMutator.mangler
-            selMutator.deobStub.randGen = selMutator.mangler.randGen
+            selMutator.deobStub = self.choosePrefStub(selMutator.prefStubs, sizePref, timePref, binaryPref, filePref, userStub)
+
+            if selMutator.deobStub:
+                selMutator.deobStub.mangler = selMutator.mangler
+                selMutator.deobStub.randGen = selMutator.mangler.randGen
+            else:
+                printError(f"All of '{selMutator.longName}'s Stubs do not fulfil your requirements")
 
         return selMutator
 
@@ -467,12 +471,15 @@ class ObfuscationHandler(object):
                 if prevCmdOb and prevCmdOb.reversible and prevCmdOb.name == mutator.name:
                     continue
 
-                prefStubs = self.getPrefStubs(mutator.stubs, sizePref, timePref, binaryPref)
+                prefStubs = self.getPrefStubs(mutator.stubs, sizePref, timePref, binaryPref, filePref)
 
                 if prefStubs:
                     mutator.prefStubs = prefStubs
                 else:
                     continue
+
+            elif filePref is False and mutator.mutatorType != "command" and mutator.fileWrite != filePref:
+                continue
 
             # don't choose special encoders that produce output that Bash can't parse
             elif mutator.mutatorType == "encode" and mutator.postEncoder:
@@ -498,68 +505,11 @@ class ObfuscationHandler(object):
                 if badBinary:
                     continue
 
-            elif filePref is False and mutator.fileWrite != filePref:
-                continue
-
             prefMutators.append(mutator)
 
         return prefMutators
 
-    def getPrefStubs(self, stubs, sizePref, timePref, binaryPref=None):
-        """
-        Get Stubs from a sequence which are suitable to use based
-        off the user's preferences.
-
-        :param seq: list of Mutators of Stubs
-        :type seq: list
-        :param sizePref: payload size user preference
-        :type sizePref: int
-        :param timePref: execution time user preference
-        :type timePref: int
-        :param binaryPref: list of binaries that the chosen Mutator
-            should or should not use
-        :type binaryPref: tuple containing a list of strs, and a bool
-        :returns: list of
-            :class:`bashfuscator.common.objects.Stub`
-            objects, or None if there are no preferable Stubs in the
-            'stubs' argument
-        """
-        prefStubs = self.getPrefItems(stubs, sizePref, timePref)
-
-        if binaryPref is not None:
-            binList = binaryPref[0]
-            includeBinary = binaryPref[1]
-
-        # weed out the stubs that don't use preferred binaries
-        stubsWithPrefBinaries = []
-        if binaryPref:
-            for stub in prefStubs:
-                badBinary = False
-                for binary in stub.binariesUsed:
-                    # don't pick a stub if it uses unwanted binaries, but allow stubs that aren't using
-                    # any binaries when the user is using the '--include-binaries' option
-                    if (binary in binList) != includeBinary:
-                        if includeBinary:
-                            if stub.binariesUsed:
-                                badBinary = True
-                                break
-                            else:
-                                continue
-
-                        else:
-                            badBinary = True
-                            break
-
-                if badBinary:
-                    continue
-
-                stubsWithPrefBinaries.append(stub)
-        else:
-            stubsWithPrefBinaries = prefStubs
-
-        return stubsWithPrefBinaries
-
-    def choosePrefStub(self, stubs, sizePref, timePref, binaryPref, userStub=None):
+    def choosePrefStub(self, stubs, sizePref, timePref, binaryPref, filePref, userStub=None):
         """
         Choose a stub which is of the desired sizeRating, timeRating,
         and uses desired binaries. If the userStub parameter is passed,
@@ -595,6 +545,9 @@ class ObfuscationHandler(object):
                             if (binary in binList) != includeBinary:
                                 printWarning(f"'{userStub}' stub contains an unwanted binary")
 
+                    if filePref is False and stub.fileWrite != filePref:
+                        printWarning(f"'{userStub}' stub preforms file writes")
+
                     selStub = stub
 
             if selStub is None:
@@ -604,6 +557,60 @@ class ObfuscationHandler(object):
             selStub = self.randGen.randSelect(stubs)
 
         return selStub
+
+    def getPrefStubs(self, stubs, sizePref, timePref, binaryPref, filePref):
+        """
+        Get Stubs from a sequence which are suitable to use based
+        off the user's preferences.
+
+        :param seq: list of Mutators of Stubs
+        :type seq: list
+        :param sizePref: payload size user preference
+        :type sizePref: int
+        :param timePref: execution time user preference
+        :type timePref: int
+        :param binaryPref: list of binaries that the chosen Mutator
+            should or should not use
+        :type binaryPref: tuple containing a list of strs, and a bool
+        :returns: list of
+            :class:`bashfuscator.common.objects.Stub`
+            objects, or None if there are no preferable Stubs in the
+            'stubs' argument
+        """
+        prefStubs = self.getPrefItems(stubs, sizePref, timePref)
+
+        if binaryPref is not None:
+            binList = binaryPref[0]
+            includeBinary = binaryPref[1]
+
+        compatibleStubs = []
+        for stub in prefStubs:
+            if filePref is False and stub.fileWrite != filePref:
+                continue
+
+            if binaryPref:
+                badBinary = False
+                for binary in stub.binariesUsed:
+                    # don't pick a stub if it uses unwanted binaries, but allow stubs that aren't using
+                    # any binaries when the user is using the '--include-binaries' option
+                    if (binary in binList) != includeBinary:
+                        if includeBinary:
+                            if stub.binariesUsed:
+                                badBinary = True
+                                break
+                            else:
+                                continue
+
+                        else:
+                            badBinary = True
+                            break
+
+                if badBinary:
+                    continue
+
+            compatibleStubs.append(stub)
+
+        return compatibleStubs
 
     def getPrefItems(self, seq, sizePref, timePref):
         """

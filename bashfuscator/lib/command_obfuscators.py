@@ -71,12 +71,13 @@ class Stub(object):
     :type stub: str
     """
 
-    def __init__(self, name, binariesUsed, sizeRating, timeRating, escapeQuotes, stub):
+    def __init__(self, name, sizeRating, timeRating, binariesUsed, fileWrite, escapeQuotes, stub):
         self.name = name
         self.longName = self.name.replace(" ", "_").lower()
-        self.binariesUsed = binariesUsed
         self.sizeRating = sizeRating
         self.timeRating = timeRating
+        self.binariesUsed = binariesUsed
+        self.fileWrite = fileWrite
         self.escapeQuotes = escapeQuotes
         self.stub = stub
 
@@ -124,9 +125,10 @@ class CaseSwap(CommandObfuscator):
         self.stubs = [
             Stub(
                 name="bash case swap expansion",
-                binariesUsed=[],
                 sizeRating=1,
                 timeRating=1,
+                binariesUsed=[],
+                fileWrite=False,
                 escapeQuotes=True,
                 stub='''? ?VAR1='CMD'* *END0* *:printf:^ ^%s^ ^"${VAR1~~}"* *END0* *'''
             )
@@ -152,17 +154,19 @@ class Reverse(CommandObfuscator):
         self.stubs = [
             Stub(
                 name="printf rev",
-                binariesUsed=["rev"],
                 sizeRating=1,
                 timeRating=1,
+                binariesUsed=["rev"],
+                fileWrite=False,
                 escapeQuotes=True,
                 stub="""* *:printf:^ ^%s^ ^'CMD'* *|* *:rev:* *END0* *"""
             ),
             Stub(
                 name="herestring rev",
-                binariesUsed=["rev"],
-                sizeRating=3,
+                sizeRating=1,
                 timeRating=1,
+                binariesUsed=["rev"],
+                fileWrite=False,
                 escapeQuotes=True,
                 stub="""* *:rev:^ ^<<<? ?'CMD'* *END0* *"""
             )
