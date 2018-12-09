@@ -184,7 +184,7 @@ class ObfuscationHandler(object):
         return payload
 
     def checkMutatorList(self):
-        reverseableMutator = False
+        reverseableMutator = ""
         nonReadableWarning = False
 
         for i, mutator in enumerate(self.mutatorList):
@@ -196,16 +196,15 @@ class ObfuscationHandler(object):
                 printWarning(f"{mutator.longName} should only be used as the final Mutator, layering on top of it will probably break your payload")
 
             if mutator.mutatorType == "command" and mutator.reversible:
-                if reverseableMutator:
+                if reverseableMutator == mutator.longName:
                     printWarning(f"{mutator.longName} used twice in a row, part of the output may be in the clear")
-                    reverseableMutator = False
+                    reverseableMutator = ""
 
                 else:
-                    reverseableMutator = True
+                    reverseableMutator = mutator.longName
 
             else:
-                reverseableMutator = False
-
+                reverseableMutator = ""
 
     def getMutator(self, userMutator=None, userStub=None, sizePref=None, timePref=None, binaryPref=None, filePref=None):
         selMutator = None
