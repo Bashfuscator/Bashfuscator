@@ -192,16 +192,16 @@ class ObfuscationHandler(object):
                 printWarning("Output may consist of unreadable ASCII characters and probably won't execute from your clipboard correctly. Saving output with '-o' is recommended")
                 nonReadableWarning = True
 
-            if mutator.postEncoder and i != len(self.mutatorList) - 1:
-                printWarning(f"{mutator.longName} should only ever be used as the final Mutator, layering on top of it will probably break your payload")
+            if mutator.mutatorType == "encode" and mutator.postEncoder and i != len(self.mutatorList) - 1:
+                printWarning(f"{mutator.longName} should only be used as the final Mutator, layering on top of it will probably break your payload")
 
-            if mutator.reversible:
-                if mutator.reversible and not reverseableMutator:
-                    reverseableMutator = True
-
-                elif mutator.reversible and reverseableMutator:
+            if mutator.mutatorType == "command" and mutator.reversible:
+                if reverseableMutator:
                     printWarning(f"{mutator.longName} used twice in a row, part of the output may be in the clear")
                     reverseableMutator = False
+
+                else:
+                    reverseableMutator = True
 
             else:
                 reverseableMutator = False
@@ -352,8 +352,8 @@ class ObfuscationHandler(object):
                 wrappedPayload = self.mangler._mangleLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
 
         # if the Mutator evals itself, wrap it in a subshell so it doesn't pollute the parent shell environment
-        elif not selMutator.postEncoder:
-            wrappedPayload = self.mangler._mangleLine(f"(DATA? ?)", payload)
+        elif selMutator.mutatorType == "encoder" and not selMutator.postEncoder:
+            wrappedPayload = self.mangler._mangleLine(f"* *(? ?DATA? ?)* *", payload)
 
         else:
             wrappedPayload = payload
@@ -399,8 +399,6 @@ class ObfuscationHandler(object):
                 binList = binaryPref[0]
                 includeBinary = binaryPref[1]
 
-            # TODO: warn user when using a reversible CommandObfuscator back to back
-            # TODO: warn when user uses a post Encoder as anything but the final layer
             for mutator in mutators:
                 if mutator.longName == userMutator:
                     if filePref is False and mutator.fileWrite != filePref:
@@ -480,14 +478,22 @@ class ObfuscationHandler(object):
             elif mutator.mutatorType == "encode" and mutator.postEncoder:
                 continue
 
-            # TODO: decide if TokenObfuscators should be allowed if the user chooses to only use certain binaries,
-            # TokenObfuscators don't use any binaries
             elif binaryPref:
                 badBinary = False
                 for binary in mutator.binariesUsed:
+                    # don't pick a mutator if it uses unwanted binaries, but allow mutators that aren't using
+                    # any binaries when the user is using the '--include-binaries' option
                     if (binary in binList) != includeBinary:
-                        badBinary = True
-                        break
+                        if includeBinary:
+                            if mutator.binariesUsed:
+                                badBinary = True
+                                break
+                            else:
+                                continue
+
+                        else:
+                            badBinary = True
+                            break
 
                 if badBinary:
                     continue
@@ -528,9 +534,26 @@ class ObfuscationHandler(object):
         stubsWithPrefBinaries = []
         if binaryPref:
             for stub in prefStubs:
+                badBinary = False
                 for binary in stub.binariesUsed:
-                    if (binary in binList) == includeBinary:
-                       stubsWithPrefBinaries.append(stub)
+                    # don't pick a stub if it uses unwanted binaries, but allow stubs that aren't using
+                    # any binaries when the user is using the '--include-binaries' option
+                    if (binary in binList) != includeBinary:
+                        if includeBinary:
+                            if stub.binariesUsed:
+                                badBinary = True
+                                break
+                            else:
+                                continue
+
+                        else:
+                            badBinary = True
+                            break
+
+                if badBinary:
+                    continue
+
+                stubsWithPrefBinaries.append(stub)
         else:
             stubsWithPrefBinaries = prefStubs
 

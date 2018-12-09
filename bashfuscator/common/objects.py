@@ -32,7 +32,7 @@ class Mutator(object):
     :type credits: str
     """
 
-    def __init__(self, name, mutatorType, description, notes, author, credits, evalWrap, unreadableOutput=False, reversible=False, postEncoder=False):
+    def __init__(self, name, mutatorType, description, notes, author, credits, evalWrap, unreadableOutput=False):
         self.name = name
         self.mutatorType = mutatorType
         self.description = description
@@ -42,8 +42,6 @@ class Mutator(object):
         self.credits = credits
         self.evalWrap = evalWrap
         self.unreadableOutput = unreadableOutput
-        self.reversible = reversible
-        self.postEncoder = postEncoder
 
         self.sizePref = None
         self.timePref = None

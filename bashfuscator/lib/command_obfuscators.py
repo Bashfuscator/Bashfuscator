@@ -40,12 +40,13 @@ class CommandObfuscator(Mutator):
     :type credits: str
     """
 
-    def __init__(self, name, description, sizeRating, timeRating, reversible, fileWrite=False, notes=None, author=None, credits=None, evalWrap=True, unreadableOutput=False):
-        super().__init__(name, "command", description, notes, author, credits, evalWrap, unreadableOutput, reversible)
+    def __init__(self, name, description, sizeRating, timeRating, fileWrite=False, notes=None, author=None, credits=None, evalWrap=True, unreadableOutput=False, reversible=False):
+        super().__init__(name, "command", description, notes, author, credits, evalWrap, unreadableOutput)
 
         self.sizeRating = sizeRating
         self.timeRating = timeRating
         self.fileWrite = fileWrite
+        self.reversible = reversible
         self.stubs = []
         self.deobStub = None
 
@@ -119,8 +120,8 @@ class CaseSwap(CommandObfuscator):
             description="Flips the case of all alpha chars",
             sizeRating=1,
             timeRating=1,
-            reversible=True,
-            author="capnspacehook"
+            author="capnspacehook",
+            reversible=True
         )
 
         self.stubs = [
@@ -147,8 +148,8 @@ class Reverse(CommandObfuscator):
             description="Reverses a command",
             sizeRating=1,
             timeRating=1,
-            reversible=True,
-            author="capnspacehook"
+            author="capnspacehook",
+            reversible=True
         )
 
         self.stubs = [
