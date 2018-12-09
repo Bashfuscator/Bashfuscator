@@ -40,10 +40,8 @@ class Compressor(Mutator):
     """
 
     def __init__(self, name, description, sizeRating, timeRating, binariesUsed=[], fileWrite=False, notes=None, author=None, credits=None, evalWrap=True, unreadableOutput=False):
-        super().__init__(name, "compress", description, notes, author, credits, evalWrap, unreadableOutput)
+        super().__init__(name, "compress", description, sizeRating, timeRating, notes, author, credits, evalWrap, unreadableOutput)
 
-        self.sizeRating = sizeRating
-        self.timeRating = timeRating
         self.binariesUsed = binariesUsed
         self.fileWrite = fileWrite
 

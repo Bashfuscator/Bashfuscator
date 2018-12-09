@@ -32,19 +32,19 @@ class Mutator(object):
     :type credits: str
     """
 
-    def __init__(self, name, mutatorType, description, notes, author, credits, evalWrap, unreadableOutput=False):
+    def __init__(self, name, mutatorType, description, sizeRating, timeRating, notes, author, credits, evalWrap, unreadableOutput=False):
         self.name = name
         self.mutatorType = mutatorType
         self.description = description
         self.longName = self.mutatorType + "/" + self.name.replace(" ", "_").lower()
+        self.sizePref = sizeRating
+        self.timePref = timeRating
         self.notes = notes
         self.author = author
         self.credits = credits
         self.evalWrap = evalWrap
         self.unreadableOutput = unreadableOutput
 
-        self.sizePref = None
-        self.timePref = None
         self.writeDir = None
         self._originalCmd = ""
         self._obfuscatedCmd = ""

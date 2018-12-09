@@ -38,10 +38,8 @@ class Encoder(Mutator):
     """
 
     def __init__(self, name, description, sizeRating, timeRating, binariesUsed=[], fileWrite=False, notes=None, author=None, credits=None, evalWrap=True, unreadableOutput=False, postEncoder=False):
-        super().__init__(name, "encode", description, notes, author, credits, evalWrap, unreadableOutput)
+        super().__init__(name, "encode", description, sizeRating, timeRating, notes, author, credits, evalWrap, unreadableOutput)
 
-        self.sizeRating = sizeRating
-        self.timeRating = timeRating
         self.binariesUsed = binariesUsed
         self.fileWrite = fileWrite
         self.postEncoder = postEncoder
