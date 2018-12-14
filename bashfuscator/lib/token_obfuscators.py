@@ -105,7 +105,6 @@ class SpecialCharOnly(TokenObfuscator):
         self.indexCounter = 0
         self.mainArrayName = self.randGen.randUniqueStr(3, 26, "_")
 
-        # test with BOBL syntax
         # build list of different commands that will return '0'
         zeroCmdSyntax = [":", "${__}", "_=END", "_=()", "${__[@]}", "${!__[@]}", ":(){ :; }END", \
             "_(){ _END }END", "_(){ _END }END:", "_(){ :END }END", "_(){ :END }END_", "_(){ :END }END:"]

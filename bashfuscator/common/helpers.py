@@ -9,6 +9,7 @@ def escapeQuotes(inCmd):
 
 def strToArrayElements(inCmd):
     # escape all Ascii unprintable chars, as well as all special chars and space chars
+    # TODO: ANSI-C quote 0a, 0b, maybe more unreadable chars
     escapeChars = string.punctuation + "".join(chr(i) for i in range(1, 33)) + chr(127)
     arrayElementsStr = "* *"
 
