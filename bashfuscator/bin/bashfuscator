@@ -11,8 +11,7 @@ import pyperclip
 
 from bashfuscator.common.colors import bold, yellow
 from bashfuscator.common.messages import activateQuietMode, printInfo, printWarning, printError, printExitMsg
-from bashfuscator.core.mutator_list import commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors
-from bashfuscator.core.obfuscation_handler import ObfuscationHandler
+from bashfuscator.core.engine.obfuscation_handler import ObfuscationHandler
 
 
 def check_positive(value):
@@ -174,7 +173,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     progOpts = parser.add_argument_group("Program Options")
     inptOpts = progOpts.add_mutually_exclusive_group()
-    progOpts.add_argument("-l", "--list", action="store_true", help="List all the availible obfuscators, compressors, encoders, and encryptors")
+    progOpts.add_argument("-l", "--list", action="store_true", help="List all the availible obfuscators, compressors, and encoders")
     inptOpts.add_argument("-c", "--command", type=str, help="Command to obfuscate")
     inptOpts.add_argument("-f", "--file", type=str, help="Name of the script to obfuscate. Use '-' if you want to obfuscate stdin")
     progOpts.add_argument("-o", "--outfile", type=str, help="File to write payload to")
@@ -281,7 +280,7 @@ if __name__ == "__main__":
 
     if args.misleading_commands_range:
         if not args.no_mangling or not args.no_misleading_commands:
-            printWarning("misleading command insertion is disabled --misleading-commands-range argument will not take effect")
+            printWarning("misleading command insertion is disabled, --misleading-commands-range argument will not take effect")
         else:
             args.misleading_commands_range = checkRangeArgs("--misleading_commands_range", args.misleading_commands_range)
 

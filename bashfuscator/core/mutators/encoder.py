@@ -1,10 +1,7 @@
 """
-Encoders used by the framework.
+Base class for Encoders used by the framework
 """
-from base64 import b64encode
-from urllib.parse import quote_plus
-
-from bashfuscator.common.objects import Mutator
+from bashfuscator.core.mutators.mutator import Mutator
 
 
 class Encoder(Mutator):
@@ -43,43 +40,3 @@ class Encoder(Mutator):
         self.binariesUsed = binariesUsed
         self.fileWrite = fileWrite
         self.postEncoder = postEncoder
-
-
-class Base64(Encoder):
-    def __init__(self):
-        super().__init__(
-            name="Base64",
-            description="Base64 encode command",
-            sizeRating=2,
-            timeRating=1,
-            binariesUsed=["base64"],
-            author="capnspacehook"
-        )
-
-    def mutate(self, userCmd):
-
-        b64EncodedBlob = b64encode(userCmd.encode("utf-8"))
-        b64EncodedBlob = b64EncodedBlob.decode("utf-8").replace("\n", "")
-        self.mangler.addPayloadLine(f'* *:printf:^ ^"{b64EncodedBlob}"* *|* *:base64:^ ^-d* *')
-
-        return self.mangler.getFinalPayload()
-
-
-class UrlEncode(Encoder):
-    def __init__(self):
-        super().__init__(
-            name="UrlEncode",
-            description="Url encode command",
-            sizeRating=3,
-            timeRating=1,
-            author="capnspacehook",
-            evalWrap=False,
-            postEncoder=True,
-        )
-
-    def mutate(self, userCmd):
-        self.originalCmd = userCmd
-
-        self.payload = quote_plus(userCmd)
-
-        return self.payload

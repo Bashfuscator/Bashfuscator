@@ -1,10 +1,10 @@
 """
-Base classes used throughout the framework.
+Base class all modules inherit from
 """
-import re
+import string
 
-from bashfuscator.common.random import RandomGen
-from bashfuscator.core.mangler import Mangler
+from bashfuscator.core.engine.mangler import Mangler
+from bashfuscator.core.engine.random import RandomGen
 
 
 class Mutator(object):
@@ -45,9 +45,30 @@ class Mutator(object):
         self.evalWrap = evalWrap
         self.unreadableOutput = unreadableOutput
 
+        self.sizePref = None
+        self.timePref = None
         self.writeDir = None
-        self._originalCmd = ""
-        self._obfuscatedCmd = ""
+        self._obfuscatedCmd = None
 
         self.mangler = Mangler()
         self.randGen = self.mangler.randGen
+
+    def escapeQuotes(self, inCmd):
+        return inCmd.replace("'", "'\"'\"'")
+
+    def strToArrayElements(self, inCmd):
+        # escape all Ascii unprintable chars, as well as all special chars and space chars
+        escapeChars = [string.punctuation + "".join(chr(i) for i in range(1, 33)) + chr(127)]
+        ansicQuoteChars = [10, 11]
+        arrayElementsStr = "* *"
+
+        for char in inCmd:
+            if char in escapeChars:
+                if char in ansicQuoteChars:
+                    char = self.mangler._getAnsiCQuotedStr(char)
+                else:
+                    char = "\\" + char
+
+            arrayElementsStr += char + "% %"
+
+        return arrayElementsStr[:-3] + "* *"

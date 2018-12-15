@@ -3,7 +3,7 @@ Class to manage obfuscation technuqies that are applied on all Mutators
 """
 import re
 
-from bashfuscator.common.random import RandomGen
+from bashfuscator.core.engine.random import RandomGen
 
 
 class Mangler(object):

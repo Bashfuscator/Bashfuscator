@@ -1,11 +1,7 @@
 """
-Compressors used by the framework.
+Base class for Compressors used by the framework
 """
-import bz2
-from base64 import b64encode
-import gzip
-
-from bashfuscator.common.objects import Mutator
+from bashfuscator.core.mutators.mutator import Mutator
 
 
 class Compressor(Mutator):
@@ -44,41 +40,3 @@ class Compressor(Mutator):
 
         self.binariesUsed = binariesUsed
         self.fileWrite = fileWrite
-
-
-class Bzip2(Compressor):
-    def __init__(self):
-        super().__init__(
-            name="Bzip2",
-            description="Compress command with bzip2",
-            sizeRating=3,
-            timeRating=3,
-            binariesUsed=["base64", "bunzip2"],
-            author="capnspacehook"
-        )
-
-    def mutate(self, userCmd):
-        compressedCmd = bz2.compress(userCmd.encode("utf-8"))
-        compressedCmd = b64encode(compressedCmd).decode("utf-8")
-        self.mangler.addPayloadLine(f'''* *:printf:^ ^'{compressedCmd}'* *|* *:base64:^ ^-d* *|* *:bunzip2:^ ^-c* *''')
-
-        return self.mangler.getFinalPayload()
-
-
-class Gzip(Compressor):
-    def __init__(self):
-        super().__init__(
-            name="Gzip",
-            description="Compress command with gzip",
-            sizeRating=3,
-            timeRating=3,
-            binariesUsed=["base64", "gunzip"],
-            author="capnspacehook"
-        )
-
-    def mutate(self, userCmd):
-        compressedCmd = gzip.compress(userCmd.encode("utf-8"))
-        compressedCmd = b64encode(compressedCmd).decode("utf-8")
-        self.mangler.addPayloadLine(f'''* *:printf:^ ^'{compressedCmd}'* *|* *:base64:^ ^-d* *|* *:gunzip:^ ^-c* *''')
-
-        return self.mangler.getFinalPayload()

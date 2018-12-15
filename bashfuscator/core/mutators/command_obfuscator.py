@@ -1,11 +1,11 @@
 """
-Command Obfuscators used by the framework.
+Base class for Command Obfuscators used by the framework
 """
 import re
 
 from bashfuscator.common.helpers import escapeQuotes
 from bashfuscator.common.messages import printError
-from bashfuscator.common.objects import Mutator
+from bashfuscator.core.mutators.mutator import Mutator
 
 
 class CommandObfuscator(Mutator):
@@ -109,70 +109,3 @@ class Stub(object):
             genStub = genStub.replace("CMD", userCmd)
 
         return genStub
-
-
-class CaseSwap(CommandObfuscator):
-    def __init__(self):
-        super().__init__(
-            name="Case Swapper",
-            description="Flips the case of all alpha chars",
-            sizeRating=1,
-            timeRating=1,
-            author="capnspacehook",
-            reversible=True
-        )
-
-        self.stubs = [
-            Stub(
-                name="bash case swap expansion",
-                sizeRating=1,
-                timeRating=1,
-                binariesUsed=[],
-                fileWrite=False,
-                escapeQuotes=True,
-                stub='''? ?VAR1='CMD'* *END0* *:printf:^ ^%s^ ^"${VAR1~~}"* *END0* *'''
-            )
-        ]
-
-    def mutate(self, userCmd):
-        obCmd = userCmd.swapcase()
-
-        return self.deobStub.genStub(obCmd)
-
-
-class Reverse(CommandObfuscator):
-    def __init__(self):
-        super().__init__(
-            name="Reverse",
-            description="Reverses a command",
-            sizeRating=1,
-            timeRating=1,
-            author="capnspacehook",
-            reversible=True
-        )
-
-        self.stubs = [
-            Stub(
-                name="printf rev",
-                sizeRating=1,
-                timeRating=1,
-                binariesUsed=["rev"],
-                fileWrite=False,
-                escapeQuotes=True,
-                stub="""* *:printf:^ ^%s^ ^'CMD'* *|* *:rev:* *END0* *"""
-            ),
-            Stub(
-                name="herestring rev",
-                sizeRating=1,
-                timeRating=1,
-                binariesUsed=["rev"],
-                fileWrite=False,
-                escapeQuotes=True,
-                stub="""* *:rev:^ ^<<<? ?'CMD'* *END0* *"""
-            )
-        ]
-
-    def mutate(self, userCmd):
-        obCmd = userCmd[::-1]
-
-        return self.deobStub.genStub(obCmd)
