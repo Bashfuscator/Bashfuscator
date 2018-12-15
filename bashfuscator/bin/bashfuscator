@@ -12,6 +12,10 @@ import pyperclip
 from bashfuscator.common.colors import bold, yellow
 from bashfuscator.common.messages import activateQuietMode, printInfo, printWarning, printError, printExitMsg
 from bashfuscator.core.engine.obfuscation_handler import ObfuscationHandler
+from bashfuscator.core.utils import import_mutators
+
+
+commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors = import_mutators()
 
 
 def check_positive(value):
@@ -287,7 +291,7 @@ if __name__ == "__main__":
     if args.write_dir[-1:] != "/":
         args.write_dir += "/"
 
-    obHandler = ObfuscationHandler(args=args)
+    obHandler = ObfuscationHandler(commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors, args)
     try:
         payload = obHandler.generatePayload()
     except KeyboardInterrupt:

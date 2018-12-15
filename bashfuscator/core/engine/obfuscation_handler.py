@@ -13,16 +13,43 @@ class ObfuscationHandler(object):
     user options and preferences. This class is the heart of the
     framework.
 
+    :param cmdObfuscators: CommandObfuscators useable during execution
+    :type cmdObfuscators: list of
+        :class:`bashfuscator.lib.command_mutators.CommandObfuscator`
+    :param strObfuscators: StringObfuscators useable during execution
+    :type strObfuscators: list of
+        :class:`bashfuscator.lib.string_mutators.StringObfuscator`
+    :param tokObfuscators: TokenObfuscators useable during execution
+    :type tokObfuscators: list of
+        :class:`bashfuscator.lib.token_mutators.TokenObfuscator`
+    :param encoders: Encoders useable during execution
+    :type encoders: list of
+        :class:`bashfuscator.lib.encoders.Encoder`
+    :param compressors: Compressors useable during execution
+    :type compressors: list of
+        :class:`bashfuscator.lib.compressors.Compressor`
     :param args: arguments specified on the command line. If this
         parameter is not supplied, default values will be set for
         ObfuscationHandler's attributes.
     :type args: arguments parsed from
         :py:meth:`argparse.ArgumentParser.parse_args` in
         :mod:`bashfuscator.bin.bashfuscator`
+
+    .. note::
+        If not set, the cmdObfuscators, cmdObfuscators, tokObfuscators,
+        encoders, and compressors arguments will default to all of the
+        respective Mutator Types contained by the framework.
     """
 
-    def __init__(self, args=None):
-        self.cmdObfuscators, self.strObfuscators, self.tokObfuscators, self.encoders, self.compressors = import_mutators()
+    def __init__(self, cmdObfuscators=None, strObfuscators=None, tokObfuscators=None, encoders=None, compressors=None, args=None):
+        if cmdObfuscators and strObfuscators and tokObfuscators and encoders and compressors:
+            self.cmdObfuscators = cmdObfuscators
+            self.strObfuscators = strObfuscators
+            self.tokObfuscators = tokObfuscators
+            self.encoders = encoders
+            self.compressors = compressors
+        else:
+            self.cmdObfuscators, self.strObfuscators, self.tokObfuscators, self.encoders, self.compressors = import_mutators()
 
         if args:
             self.layers = args.layers

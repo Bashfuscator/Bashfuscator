@@ -37,4 +37,4 @@ def import_mutators():
         elif currModule.mutatorType == "compress":
             compressors.append(currModule)
 
-    return commandObfuscators, stringObfuscators, tokenObfuscators, compressors, encoders
+    return commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors
