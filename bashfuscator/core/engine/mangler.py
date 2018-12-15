@@ -323,9 +323,17 @@ class Mangler(object):
                         lastCharAnsiCQuoted = False
 
                     elif choice == 2:
+                        # if the last character wasn't mangled, and we are going to ANSI-C quote, we can shove the
+                        # previous character in the beginning of the expansion. ie a$'\x65' -> $'a\x65'
                         if lastCharNotMangled and mangledBinary[-1] not in ["'", '"'] and self.randGen.probibility(50):
                             ansiCQuotedChar = self._getAnsiCQuotedStr(char)
                             mangledBinary = mangledBinary[:-1] + "$'" + mangledBinary[-1] + ansiCQuotedChar[2:]
+
+                        # if the last character was ANSI-C quoted, and we're going to do that again, we can just add
+                        # the new expansion as part of the previous one. ie $'\x65'$'\101' -> $'\x65\101'
+                        elif lastCharAnsiCQuoted and self.randGen.probibility(50):
+                            ansiCQuotedChar = self._getAnsiCQuotedStr(char)
+                            mangledBinary = mangledBinary[:-1] + ansiCQuotedChar[2:]
 
                         else:
                             mangledBinary += self._getAnsiCQuotedStr(char)
@@ -339,11 +347,12 @@ class Mangler(object):
                     lastCharNotMangled = False
 
                 else:
+                    # if the last character was ANSI-C quoted, we can show the current character into the
+                    # end of the last ANSI-C quoted expansion. ie $'\x65'y -> $'\x65y'
                     if lastCharAnsiCQuoted and self.randGen.probibility(50):
                         mangledBinary = mangledBinary[:-1] + char + "'"
                         lastCharNotMangled = False
                         lastCharAnsiCQuoted = True
-                        print(mangledBinary)
 
                     else:
                         mangledBinary += char
