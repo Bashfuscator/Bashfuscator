@@ -293,27 +293,63 @@ class Mangler(object):
 
         """
         mangledBinary = ""
+        lastCharNotMangled = False
+        lastCharAnsiCQuoted = False
         binaryStr = payloadLine[binaryMatch.start() + 1:binaryMatch.end() - 1]
 
         if self.mangleBinaries:
             for char in binaryStr:
-                if self.randGen.probibility(self.binaryManglePercent / 2):
+                if self.randGen.probibility(self.binaryManglePercent / 3):
                     if self.randGen.probibility(50):
                         mangledBinary += '""'
                     else:
                         mangledBinary += "''"
 
+                    lastCharAnsiCQuoted = False
+
                 if self.randGen.probibility(self.binaryManglePercent):
-                    choice = self.randGen.randChoice(3)
+                    choice = self.randGen.randChoice(4)
+
                     if choice == 0:
                         mangledBinary += "\\" + char
+                        lastCharAnsiCQuoted = False
+
                     elif choice == 1:
-                        mangledBinary += self._getAnsiCQuotedStr(char)
-                    else:
+                        if self.randGen.probibility(50):
+                            mangledBinary += '"' + char + '"'
+                        else:
+                            mangledBinary += "'" + char + "'"
+
+                        lastCharAnsiCQuoted = False
+
+                    elif choice == 2:
+                        if lastCharNotMangled and mangledBinary[-1] not in ["'", '"'] and self.randGen.probibility(50):
+                            ansiCQuotedChar = self._getAnsiCQuotedStr(char)
+                            mangledBinary = mangledBinary[:-1] + "$'" + mangledBinary[-1] + ansiCQuotedChar[2:]
+
+                        else:
+                            mangledBinary += self._getAnsiCQuotedStr(char)
+
+                        lastCharAnsiCQuoted = True
+
+                    elif choice == 3:
                         mangledBinary += self._getRandChars() + char
+                        lastCharAnsiCQuoted = False
+
+                    lastCharNotMangled = False
 
                 else:
-                    mangledBinary += char
+                    if lastCharAnsiCQuoted and self.randGen.probibility(50):
+                        mangledBinary = mangledBinary[:-1] + char + "'"
+                        lastCharNotMangled = False
+                        lastCharAnsiCQuoted = True
+                        print(mangledBinary)
+
+                    else:
+                        mangledBinary += char
+                        lastCharNotMangled = True
+                        lastCharAnsiCQuoted = False
+
 
         else:
             mangledBinary = binaryStr
@@ -352,7 +388,9 @@ class Mangler(object):
             else:
                 encodedStr += "U000000" + hex(ord(char))[2:] + "\\"
 
-        return encodedStr[:-1] + "'"
+        encodedStr = encodedStr[:-1] + "'"
+
+        return encodedStr
 
     def _insertWhitespaceAndRandChars(self, whitespaceMatch, payloadLine, whitespaceRequired, insertRandChars):
         randCharsAndWhitespace = self._getWhitespaceAndRandChars(whitespaceRequired, insertRandChars)
