@@ -3,7 +3,6 @@ Base class for Command Obfuscators used by the framework
 """
 import re
 
-from bashfuscator.common.helpers import escapeQuotes
 from bashfuscator.common.messages import printError
 from bashfuscator.core.mutators.mutator import Mutator
 
@@ -94,7 +93,7 @@ class Stub(object):
         :type userCmd: str
         """
         if self.escapeQuotes:
-            userCmd = escapeQuotes(userCmd)
+            userCmd = userCmd.replace("'", "'\"'\"'")
 
         genStub = self.stub
         for var in re.findall(r"VAR\d+", genStub):
