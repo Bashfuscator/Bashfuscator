@@ -2,6 +2,7 @@
 Class to manage obfuscation technuqies that are applied on all Mutators
 """
 import re
+import string
 
 from bashfuscator.core.engine.random import RandomGen
 
@@ -15,6 +16,7 @@ class Mangler(object):
     optionalWhitespaceRegexStr = r"\? \?"
     requiredWhitespaceAndRandCharsRegexStr = "% %"
     optionalWhitespaceAndRandCharsRegexStr = r"\* \*"
+    integerRegexStr = r"#\d+#"
     commandEndRegexStr = "END[01]?"
 
     binaryEscapedRegexStr = r"\\:\w+\\:"
@@ -22,29 +24,33 @@ class Mangler(object):
     optionalWhitespaceEscapedRegexStr = r"\\\? \\\?"
     requiredWhitespaceAndRandCharsEscapedRegexStr = r"\\% \\%"
     optionalWhitespaceAndRandCharsEscapedRegexStr = r"\\\* \\\*"
+    integerEscapedRegexStr = r"\\#\d+\\#"
 
     binaryRegex = re.compile(binaryRegexStr)
     requiredWhitespaceRegex = re.compile(requiredWhitespaceRegexStr)
     optionalWhitespaceRegex = re.compile(optionalWhitespaceRegexStr)
     requiredWhitespaceAndRandCharsRegex = re.compile(requiredWhitespaceAndRandCharsRegexStr)
     optionalWhitespaceAndRandCharsRegex = re.compile(optionalWhitespaceAndRandCharsRegexStr)
+    integerRegex = re.compile(integerRegexStr)
     commandEndRegex = re.compile(commandEndRegexStr)
 
-    boblRegexStr = "{0}|{1}|{2}|{3}|{4}|{5}".format(
+    boblRegexStr = "{0}|{1}|{2}|{3}|{4}|{5}|{6}".format(
         binaryRegexStr,
         requiredWhitespaceRegexStr,
         optionalWhitespaceRegexStr,
         requiredWhitespaceAndRandCharsRegexStr,
         optionalWhitespaceAndRandCharsRegexStr,
+        integerRegexStr,
         commandEndRegexStr
     )
 
-    escapedBoblRegexStr = "{0}|{1}|{2}|{3}|{4}".format(
+    escapedBoblRegexStr = "{0}|{1}|{2}|{3}|{4}|{5}".format(
         binaryEscapedRegexStr,
         requiredWhitespaceEscapedRegexStr,
         optionalWhitespaceEscapedRegexStr,
         requiredWhitespaceAndRandCharsEscapedRegexStr,
-        optionalWhitespaceAndRandCharsEscapedRegexStr
+        optionalWhitespaceAndRandCharsEscapedRegexStr,
+        integerEscapedRegexStr
     )
 
     boblRegex = re.compile(boblRegexStr)
@@ -252,6 +258,9 @@ class Mangler(object):
 
                 elif Mangler.optionalWhitespaceAndRandCharsRegex.match(boblSyntaxMatch.group()):
                     mangledPayloadLine = self._insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, True)
+
+                elif Mangler.integerRegex.match(boblSyntaxMatch.group()):
+                    mangledPayloadLine = self._mangleInteger(boblSyntaxMatch, mangledPayloadLine)
 
                 elif Mangler.commandEndRegex.match(boblSyntaxMatch.group()):
                     mangledPayloadLine = self._getCommandTerminator(boblSyntaxMatch, mangledPayloadLine)
@@ -498,6 +507,38 @@ class Mangler(object):
             randChars += '"'
 
         return randChars
+
+    def _mangleInteger(self, integerMatch, payloadLine):
+        integerStr = int(payloadLine[integerMatch.start() + 1:integerMatch.end() - 1])
+
+        randBase = self.randGen.randGenNum(2, 64)
+        while randBase == 10:
+            randBase = self.randGen.randGenNum(2, 64)
+
+        mangledInt = self._intToBaseN(randBase, integerStr)
+
+        mangledPayloadLine = payloadLine[:integerMatch.start()] + mangledInt + payloadLine[integerMatch.end():]
+
+        return mangledPayloadLine
+
+    def _intToBaseN(self, base, x):
+        """
+        Borrowed from https://stackoverflow.com/questions/2267362/how-to-convert-an-integer-in-any-base-to-a-string
+        """
+        baseCharList = string.digits + string.ascii_letters + "@" + "_"
+
+        if x == 0:
+            return str(base) + "#" + baseCharList[0]
+
+        digits = []
+
+        while x:
+            digits.append(baseCharList[x % base])
+            x = x // base
+
+        digits.reverse()
+
+        return str(base) + "#" + "".join(digits)
 
     def _getCommandTerminator(self, terminatorMatch, payloadLine):
         endDigit = False
