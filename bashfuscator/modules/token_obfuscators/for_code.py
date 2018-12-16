@@ -25,7 +25,7 @@ class ForCode(TokenObfuscator):
         for char in userCmd:
             ogCmdIdxes.append(shuffledCmd.find(char))
 
-        cmdIndexes = "".join([str(i) + "% %" for i in ogCmdIdxes])[:-3]
+        cmdIndexes = "".join([f"#{str(i)}#% %" for i in ogCmdIdxes])[:-3]
 
         shuffledCmd = self.strToArrayElements(shuffledCmd)
 
