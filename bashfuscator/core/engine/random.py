@@ -30,7 +30,7 @@ class RandomGen(object):
     _reservedVars = {"auto_resume", "BASH", "BASH_ENV", "BASH_VERSINFO", "BASH_VERSION", "CDPATH", "COLUMNS", "COMP_CWORD", "COMP_LINE", "COMP_POINT", "COMPREPLY", "COMP_WORDS", "DIRSTACK", "EUID", "FCEDIT", "FIGNORE", "FUNCNAME", "GLOBIGNORE", "GROUPS", "histchars", "HISTCMD", "HISTCONTROL", "HISTFILE", "HISTFILESIZE", "HISTIGNORE", "HISTSIZE", "HOME", "HOSTFILE", "HOSTNAME", "HOSTTYPE", "IFS", "IGNOREEOF", "INPUTRC", "LANG", "LC_ALL", "LC_COLLATE", "LC_CTYPE", "LC_MESSAGES", "LC_NUMERIC", "LINENO", "LINES", "MACHTYPE", "MAIL", "MAILCHECK", "MAILPATH", "OLDPWD", "OPTARG", "OPTERR", "OPTIND", "OSTYPE", "PATH", "PIPESTATUS", "POSIXLY_CORRECT", "PPID", "PROMPT_COMMAND", "PS1", "PS2", "PS3", "PS4", "PWD", "RANDOM", "REPLY", "SECONDS", "SHELLOPTS", "SHLVL", "TIMEFORMAT", "TMOUT", "UID"}
     _boblReservedStrsRegex = re.compile("DATA|END")
 
-    _boblSyntaxRegex = re.compile(r":\w+:|\^ \^|\? \?|% %|\* \*|DATA|END")
+    _boblSyntaxRegex = re.compile(r":\w+:|\^ \^|\? \?|% %|\* \*|#\d+#|DATA|END")
 
     def __init__(self):
         self.sizePref = None
@@ -155,7 +155,7 @@ class RandomGen(object):
 
         return randomVar
 
-    def randUniqueStr(self, minStrLen=None, maxStrLen=None, charList=None, escapeChars=""):
+    def randUniqueStr(self, minStrLen=None, maxStrLen=None, charList=None, escapeChars="", noBOBL=True):
         """
         Generate a random string that is guaranteed to be unique.
 
@@ -182,7 +182,7 @@ class RandomGen(object):
         commonStrNum = 0
 
         while True:
-            randStr = self.randGenStr(minStrLen, maxStrLen, charList)
+            randStr = self.randGenStr(minStrLen, maxStrLen, charList, noBOBL)
 
             if randStr not in RandomGen._uniqueRandStrs:
                 break
@@ -199,7 +199,7 @@ class RandomGen(object):
 
         return randStr
 
-    def randGenStr(self, minStrLen=None, maxStrLen=None, charList=None, escapeChars=""):
+    def randGenStr(self, minStrLen=None, maxStrLen=None, charList=None, escapeChars="", noBOBL=True):
         """
         Generate a random string. Functions the same as
         :meth:`~RandomGen.randUniqueStr`, the only difference being
@@ -213,8 +213,9 @@ class RandomGen(object):
         randStrLen = RandomGen.randGen.randint(minStrLen, maxStrLen)
         randStr = "".join(self.randSelect(charList) for x in range(randStrLen))
 
-        while RandomGen._boblSyntaxRegex.search(randStr):
-            randStr = "".join(self.randSelect(charList) for x in range(randStrLen))
+        if noBOBL:
+            while RandomGen._boblSyntaxRegex.search(randStr):
+                randStr = "".join(self.randSelect(charList) for x in range(randStrLen))
 
         # escape 'escapeChars', making sure that an already escaped char isn't
         # accidentally un-escaped by adding an extra '\'

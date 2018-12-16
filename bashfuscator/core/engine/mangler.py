@@ -245,27 +245,25 @@ class Mangler(object):
         while boblSyntaxMatch:
             if Mangler.boblRegex.match(boblSyntaxMatch.group()):
                 if Mangler.binaryRegex.match(boblSyntaxMatch.group()):
-                    mangledPayloadLine = self._mangleBinary(boblSyntaxMatch, mangledPayloadLine)
+                    mangledPayloadLine, searchPos = self._mangleBinary(boblSyntaxMatch, mangledPayloadLine)
 
                 elif Mangler.requiredWhitespaceRegex.match(boblSyntaxMatch.group()):
-                    mangledPayloadLine = self._insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, True, False)
+                    mangledPayloadLine, searchPos = self._insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, True, False)
 
                 elif Mangler.optionalWhitespaceRegex.match(boblSyntaxMatch.group()):
-                    mangledPayloadLine = self._insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, False)
+                    mangledPayloadLine, searchPos = self._insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, False)
 
                 elif Mangler.requiredWhitespaceAndRandCharsRegex.match(boblSyntaxMatch.group()):
-                    mangledPayloadLine = self._insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, True, True)
+                    mangledPayloadLine, searchPos = self._insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, True, True)
 
                 elif Mangler.optionalWhitespaceAndRandCharsRegex.match(boblSyntaxMatch.group()):
-                    mangledPayloadLine = self._insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, True)
+                    mangledPayloadLine, searchPos = self._insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, True)
 
                 elif Mangler.integerRegex.match(boblSyntaxMatch.group()):
-                    mangledPayloadLine = self._mangleInteger(boblSyntaxMatch, mangledPayloadLine)
+                    mangledPayloadLine, searchPos = self._mangleInteger(boblSyntaxMatch, mangledPayloadLine, False)
 
                 elif Mangler.commandEndRegex.match(boblSyntaxMatch.group()):
-                    mangledPayloadLine = self._getCommandTerminator(boblSyntaxMatch, mangledPayloadLine)
-
-                searchPos = boblSyntaxMatch.start()
+                    mangledPayloadLine, searchPos = self._getCommandTerminator(boblSyntaxMatch, mangledPayloadLine)
 
             # we're dealing with escaped BOBL syntax, we need to unescape it
             else:
@@ -368,13 +366,13 @@ class Mangler(object):
                         lastCharNotMangled = True
                         lastCharAnsiCQuoted = False
 
-
         else:
             mangledBinary = binaryStr
 
         mangledPayloadLine = payloadLine[:binaryMatch.start()] + mangledBinary + payloadLine[binaryMatch.end():]
+        searchPos = len(payloadLine[:binaryMatch.start()] + mangledBinary)
 
-        return mangledPayloadLine
+        return mangledPayloadLine, searchPos
 
     def _getAnsiCQuotedStr(self, inStr):
         """
@@ -414,8 +412,9 @@ class Mangler(object):
         randCharsAndWhitespace = self._getWhitespaceAndRandChars(whitespaceRequired, insertRandChars)
 
         mangledPayloadLine = payloadLine[:whitespaceMatch.start()] + randCharsAndWhitespace + payloadLine[whitespaceMatch.end():]
+        searchPos = len(payloadLine[:whitespaceMatch.start()] + randCharsAndWhitespace)
 
-        return mangledPayloadLine
+        return mangledPayloadLine, searchPos
 
     def _getWhitespaceAndRandChars(self, whitespaceRequired, insertRandChars):
         randCharsAndWhitespace = ""
@@ -484,7 +483,7 @@ class Mangler(object):
 
         elif choice > 8 and choice <= 14:
             randParameterExpansionOperator = self.randGen.randSelect(["#", "##", "%", "%%", "/", "//"])
-            randStr = self.randGen.randGenStr(escapeChars=charsToEscape)
+            randStr = self.randGen.randGenStr(escapeChars=charsToEscape, noBOBL=False)
             randWhitespace = self._getRandWhitespace(False)
 
             if randStr[-1:] == "\\" and randWhitespace == "":
@@ -493,9 +492,9 @@ class Mangler(object):
             randChars += f"${{{varSymbol}{randParameterExpansionOperator}{randStr}{randWhitespace}}}"
 
         else:
-            randStr = self.randGen.randGenStr(escapeChars=charsToEscape)
+            randStr = self.randGen.randGenStr(escapeChars=charsToEscape, noBOBL=False)
             randParameterExpansionOperator = self.randGen.randSelect(["/", "//"])
-            randStr2 = self.randGen.randGenStr(escapeChars=charsToEscape)
+            randStr2 = self.randGen.randGenStr(escapeChars=charsToEscape, noBOBL=False)
             randWhitespace = self._getRandWhitespace(False)
 
             if randStr2[-1:] == "\\" and randWhitespace == "":
@@ -508,7 +507,7 @@ class Mangler(object):
 
         return randChars
 
-    def _mangleInteger(self, integerMatch, payloadLine):
+    def _mangleInteger(self, integerMatch, payloadLine, wrapExpression):
         integerStr = int(payloadLine[integerMatch.start() + 1:integerMatch.end() - 1])
 
         randBase = self.randGen.randGenNum(2, 64)
@@ -518,8 +517,9 @@ class Mangler(object):
         mangledInt = self._intToBaseN(randBase, integerStr)
 
         mangledPayloadLine = payloadLine[:integerMatch.start()] + mangledInt + payloadLine[integerMatch.end():]
+        searchPos = len(payloadLine[:integerMatch.start()] + mangledInt)
 
-        return mangledPayloadLine
+        return mangledPayloadLine, searchPos
 
     def _intToBaseN(self, base, x):
         """
@@ -584,8 +584,9 @@ class Mangler(object):
         self.cmdTerminatorPos = terminatorMatch.start()
 
         mangledPayloadLine = payloadLine[:terminatorMatch.start()] + cmdTerminator + payloadLine[terminatorMatch.end():]
+        searchPos = len(payloadLine[:terminatorMatch.start()] + cmdTerminator)
 
-        return mangledPayloadLine
+        return mangledPayloadLine, searchPos
 
     def getFinalPayload(self):
         """
