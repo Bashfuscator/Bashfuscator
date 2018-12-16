@@ -59,7 +59,7 @@ class Mutator(object):
     def strToArrayElements(self, inCmd):
         # escape all Ascii unprintable chars, as well as all special chars and space chars
         escapeChars = string.punctuation + " " + "".join(chr(i) for i in range(1, 33)) + chr(127)
-        ansicQuoteChars = [chr(10), chr(11)]
+        ansicQuoteChars = [chr(10), chr(11), chr(12), chr(13)]
         arrayElementsStr = "* *"
 
         for char in inCmd:
