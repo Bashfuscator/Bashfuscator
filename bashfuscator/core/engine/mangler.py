@@ -70,6 +70,11 @@ class Mangler(object):
         self.insertCharsRange = None
         self.misleadingCmds = None
         self.misleadingCmdsRange = None
+        self.mangleIntegers = None
+        self.expandIntegers = None
+        self.randomizeIntegerBases = None
+        self.integerExpansionDepth = None
+        self.randomizeTerminators = None
 
         self.cmdTerminatorPos = 0
         self.booleanCmdTerminator = False
@@ -86,7 +91,7 @@ class Mangler(object):
         self.randGen = RandomGen()
 
 
-    def _initialize(self, sizePref=None, enableMangling=None, mangleBinaries=None, binaryManglePercent=None, randWhitespace=None, randWhitespaceRange=None, insertChars=None, insertCharsRange=None, misleadingCmds=None, misleadingCmdsRange=None, debug=None):
+    def _initialize(self, sizePref=None, enableMangling=None, mangleBinaries=None, binaryManglePercent=None, randWhitespace=None, randWhitespaceRange=None, insertChars=None, insertCharsRange=None, misleadingCmds=None, misleadingCmdsRange=None, mangleIntegers=None, expandIntegers=None, randomizeIntegerBases=None, integerExpansionDepth=None, randomizeTerminators=None, debug=None):
         self.sizePref = sizePref
         self.randGen.sizePref = self.sizePref
 
@@ -161,6 +166,36 @@ class Mangler(object):
                 self.misleadingCmdsRange = (1, 2)
             else:
                 self.misleadingCmdsRange = (1, 3)
+
+        if mangleIntegers is not None:
+            self.mangleIntegers = mangleIntegers
+        else:
+            self.mangleIntegers = True
+
+        if expandIntegers is not None:
+            self.expandIntegers = expandIntegers
+        else:
+            self.expandIntegers = True
+
+        if randomizeIntegerBases is not None:
+            self.randomizeIntegerBases = randomizeIntegerBases
+        else:
+            self.randomizeIntegerBases = True
+
+        if integerExpansionDepth:
+            self.integerExpansionDepth = integerExpansionDepth
+        else:
+            if self.sizePref == 1:
+                self.integerExpansionDepth = 1
+            elif self.sizePref == 2:
+                self.integerExpansionDepth = 1
+            else:
+                self.integerExpansionDepth = 2
+
+        if randomizeTerminators is not None:
+            self.randomizeTerminators = randomizeTerminators
+        else:
+            self.randomizeTerminators = True
 
     def addLinesInRandomOrder(self, payloadLines):
         """
@@ -316,7 +351,7 @@ class Mangler(object):
 
                 if self.randGen.probibility(self.binaryManglePercent):
                     # if the current character is a digit, we can do integer mangling on it
-                    if char.isdigit():
+                    if char.isdigit() and self.mangleIntegers:
                         choiceNum = 5
                     else:
                         choiceNum = 4
@@ -528,22 +563,31 @@ class Mangler(object):
         return mangledPayloadLine, searchPos
 
     def _getMangledInteger(self, integer, wrapExpression):
-        # choose a base that will obfuscate the integer better
-        # when the integer is small. ie 7#4 is 4, too easy
-        if 2 < integer and integer < 10:
-            randBase = self.randGen.randGenNum(2, integer)
+        if self.mangleIntegers:
+            if self.randomizeIntegerBases:
+                # choose a base that will obfuscate the integer better
+                # when the integer is small. ie 7#4 is 4, too easy
+                if 2 < integer and integer < 10:
+                    randBase = self.randGen.randGenNum(2, integer)
+
+                else:
+                    randBase = self.randGen.randGenNum(2, 64)
+
+                    # make sure base isn't decimal
+                    while randBase == 10:
+                        randBase = self.randGen.randGenNum(2, 64)
+
+                mangledInt = self._intToBaseN(randBase, integer)
+
+                if wrapExpression:
+                    mangledInt = self._wrapArithmeticExpression(mangledInt)
+
+            else:
+                # TODO: add integer arithmetic expansion
+                mangledInt = str(integer)
 
         else:
-            randBase = self.randGen.randGenNum(2, 64)
-
-            # make sure base isn't decimal
-            while randBase == 10:
-                randBase = self.randGen.randGenNum(2, 64)
-
-        mangledInt = self._intToBaseN(randBase, integer)
-
-        if wrapExpression:
-            mangledInt = self._wrapArithmeticExpression(mangledInt)
+            mangledInt = str(integer)
 
         return mangledInt
 
@@ -601,7 +645,7 @@ class Mangler(object):
                 cmdTerminator = "\n"
 
             else:
-                if not self.nonBooleanCmdTerminator and self.randGen.probibility(50):
+                if self.randomizeTerminators and not self.nonBooleanCmdTerminator and self.randGen.probibility(50):
                     self.booleanCmdTerminator = True
 
                     if cmdReturnsTrue:

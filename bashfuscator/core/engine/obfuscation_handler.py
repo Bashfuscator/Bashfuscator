@@ -115,6 +115,31 @@ class ObfuscationHandler(object):
             else:
                 self.misleadingCmdsRange = None
 
+            if args.no_integer_mangling is not None:
+                self.mangleIntegers = args.no_integer_mangling
+            else:
+                self.mangleIntegers = None
+
+            if args.no_integer_expansion is not None:
+                self.expandIntegers = args.no_integer_expansion
+            else:
+                self.expandIntegers = None
+
+            if args.no_integer_base_randomization is not None:
+                self.randomizeIntegerBases = args.no_integer_base_randomization
+            else:
+                self.randomizeIntegerBases = None
+
+            if args.integer_expansion_depth:
+                self.integerExpansionDepth = args.integer_expansion_depth
+            else:
+                self.integerExpansionDepth = None
+
+            if args.no_terminator_randomization is not None:
+                self.randomizeTerminators = args.no_terminator_randomization
+            else:
+                self.randomizeTerminators = None
+
         else:
             self.sizePref = 2
             self.timePref = 2
@@ -135,6 +160,11 @@ class ObfuscationHandler(object):
             self.insertCharsRange = None
             self.misleadingCmds = None
             self.misleadingCmdsRange = None
+            self.mangleIntegers = None
+            self.expandIntegers = None
+            self.randomizeIntegerBases = None
+            self.integerExpansionDepth = None
+            self.randomizeTerminators = None
 
         self.prevCmdOb = None
         self.mutatorList = []
@@ -142,7 +172,7 @@ class ObfuscationHandler(object):
         self.mangler = Mangler()
         self.randGen = self.mangler.randGen
 
-        self.mangler._initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange, self.debug)
+        self.mangler._initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange, self.mangleIntegers, self.expandIntegers, self.randomizeIntegerBases, self.integerExpansionDepth, self.randomizeTerminators, self.debug)
 
         if args and args.full_ascii_strings:
             self.randGen.setFullAsciiStrings()
@@ -177,7 +207,7 @@ class ObfuscationHandler(object):
 
         for mutator in self.mutatorList:
             mutator.writeDir = self.writeDir
-            mutator.mangler._initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange, self.debug)
+            mutator.mangler._initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange, self.mangleIntegers, self.expandIntegers, self.randomizeIntegerBases, self.integerExpansionDepth, self.randomizeTerminators, self.debug)
             payload = mutator.mutate(payload)
             mutator._obfuscatedCmd = payload
 
@@ -256,7 +286,7 @@ class ObfuscationHandler(object):
         return selMutator
 
     # TODO: update docs
-    def genObfuscationLayer(self, payload, userMutator=None, userStub=None, sizePref=None, timePref=None, binaryPref=None, filePref=None, enableMangling=None, mangleBinaries=None, binaryManglePercent=None, randWhitespace=None, randWhitespaceRange=None, insertChars=None, insertCharsRange=None, misleadingCmds=None, misleadingCmdsRange=None, writeDir=None, debug=None):
+    def genObfuscationLayer(self, payload, userMutator=None, userStub=None, sizePref=None, timePref=None, binaryPref=None, filePref=None, writeDir=None, enableMangling=None, mangleBinaries=None, binaryManglePercent=None, randWhitespace=None, randWhitespaceRange=None, insertChars=None, insertCharsRange=None, misleadingCmds=None, misleadingCmdsRange=None, mangleIntegers=None, expandIntegers=None, randomizeIntegerBases=None, integerExpansionDepth=None, randomizeTerminators=None, debug=None):
         """
         Generate one layer of obfuscation. If called with the
         userMutator or userStub parameters, the Mutator and/or Stub
@@ -298,6 +328,8 @@ class ObfuscationHandler(object):
             binaryPref = self.binaryPref
         if filePref is None:
             filePref = self.filePref
+        if writeDir is None:
+            writeDir = self.writeDir
         if enableMangling is None:
             enableMangling = self.enableMangling
         if mangleBinaries is None:
@@ -316,15 +348,24 @@ class ObfuscationHandler(object):
             misleadingCmds = self.misleadingCmds
         if misleadingCmdsRange is None:
             misleadingCmdsRange = self.misleadingCmdsRange
+        if mangleIntegers is None:
+            mangleIntegers = self.mangleIntegers
+        if expandIntegers is None:
+            expandIntegers = self.expandIntegers
+        if randomizeIntegerBases is None:
+            randomizeIntegerBases = self.randomizeIntegerBases
+        if integerExpansionDepth is None:
+            integerExpansionDepth = self.integerExpansionDepth
+        if randomizeTerminators is None:
+            randomizeTerminators = self.randomizeTerminators
         if debug is None:
             debug = self.debug
-        if writeDir is None:
-            writeDir = self.writeDir
+
 
         selMutator = self.getMutator(userMutator, userStub, sizePref, timePref, binaryPref, filePref)
 
         selMutator.writeDir = writeDir
-        selMutator.mangler._initialize(sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange, debug)
+        selMutator.mangler._initialize(sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange, mangleIntegers, expandIntegers, randomizeIntegerBases, integerExpansionDepth, randomizeTerminators, debug)
         payload = selMutator.mutate(payload)
         selMutator._obfuscatedCmd = payload
 

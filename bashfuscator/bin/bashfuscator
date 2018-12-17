@@ -119,6 +119,65 @@ def printArgError(errorMsg):
     print(f"bashfuscator: error: {errorMsg}")
     sys.exit(1)
 
+
+def checkArguments(args):
+    if not args.command and not args.file and not args.stdin:
+        parser.print_usage()
+        printArgError("one of the arguments -c/--command, -f/--file, or --stdin is required")
+
+    if args.quiet and args.test:
+        parser.print_usage()
+        printArgError("--test is not allowed with -q/--quiet")
+
+    if not args.no_mangling:
+        if not args.no_binary_mangling:
+            printWarning("--no-mangling implies --no-binary-mangling")
+        if not args.no_random_whitespace:
+            printWarning("--no-mangling implies --no-random-whitespace")
+        if not args.no_insert_chars:
+            printWarning("--no-mangling implies --no-insert-chars")
+        if not args.no_integer_mangling:
+            printWarning("--no-mangling implies --no-integer-mangling")
+        if not args.no_integer_expansion:
+            printWarning("--no-mangling implies --no-integer-expansion")
+        if not args.no_integer_base_randomization:
+            printWarning("--no-mangling implies --no-integer-base-randomization")
+        if not args.no_terminator_randomization:
+            printWarning("--no-mangling implies --no-terminator-randomization")
+
+    elif not args.no_integer_mangling:
+        if not args.no_integer_base_randomization:
+            printWarning("--no-integer-mangling implies --no-integer-base-randomization")
+        if not args.no_integer_expansion:
+            printWarning("--no-integer-mangling implies --no-integer-expansion")
+
+    if args.binary_mangle_percent:
+        if not args.no_mangling or not args.no_binary_mangling:
+            printWarning("binary mangling is disabled, --binary-mangle-percent argument will not take effect")
+
+    if args.random_whitespace_range:
+        if not args.no_mangling or not args.no_random_whitespace:
+            printWarning("random whitespace is disabled, --random-whitespace-range argument will not take effect")
+        else:
+            args.random_whitespace_range = checkRangeArgs("--random-whitespace-range", args.random_whitespace_range)
+
+    if args.insert_chars_range:
+        if not args.no_mangling or not args.no_insert_chars:
+            printWarning("random character insertion is disabled, --insert-char-range argument will not take effect")
+        else:
+            args.insert_chars_range = checkRangeArgs("--insert_chars_range", args.insert_chars_range)
+
+    if args.misleading_commands_range:
+        if not args.no_mangling or not args.no_misleading_commands:
+            printWarning("misleading command insertion is disabled, --misleading-commands-range argument will not take effect")
+        else:
+            args.misleading_commands_range = checkRangeArgs("--misleading_commands_range", args.misleading_commands_range)
+
+    if args.integer_expansion_depth:
+        if not args.no_mangling or not args.no_integer_mangling or not args.no_integer_expansion:
+            printWarning("integer arithmetic expansion is disabled, --integer-expansion-depth argument will not take effect")
+
+
 def checkRangeArgs(argName, argValue):
     if argValue.find(",") == -1:
         printArgError(f"Invalid value for {argName} option: format is NUM,NUM")
@@ -135,6 +194,7 @@ def checkRangeArgs(argName, argValue):
         printArgError(f"Invalid value for {argName} option: invalid range")
 
     return rangeValues
+
 
 def printPayload(payload, args):
     rows, columns = check_output(["stty", "size"]).decode().split()
@@ -179,7 +239,8 @@ if __name__ == "__main__":
     inptOpts = progOpts.add_mutually_exclusive_group()
     progOpts.add_argument("-l", "--list", action="store_true", help="List all the availible obfuscators, compressors, and encoders")
     inptOpts.add_argument("-c", "--command", type=str, help="Command to obfuscate")
-    inptOpts.add_argument("-f", "--file", type=str, help="Name of the script to obfuscate. Use '-' if you want to obfuscate stdin")
+    inptOpts.add_argument("-f", "--file", type=str, help="Name of the script to obfuscate")
+    inptOpts.add_argument("--stdin", action="store_true", help="Obfuscate stdin")
     progOpts.add_argument("-o", "--outfile", type=str, help="File to write payload to")
     progOpts.add_argument("-q", "--quiet", action="store_true", help="Print only the payload")
     progOpts.add_argument("--clip", action="store_true", help="Copy the payload to clipboard")
@@ -193,6 +254,7 @@ if __name__ == "__main__":
     binOpts.add_argument("--include-binaries", nargs="+", type=str, metavar="BINARIES", help="Binaries you exclusively want used in the generated payload")
     binOpts.add_argument("--exclude-binaries", nargs="+", type=str, metavar="BINARIES", help="Binaries you don't want to be used in the generated payload")
     obOpts.add_argument("--no-file-write", action="store_false", help="Don't use obfuscators that require writing to files")
+    obOpts.add_argument("--write-dir", default="/tmp/", type=str, help="Directory to use if Mutators need to write to or create files")
 
     advancedOpts = parser.add_argument_group("Advanced Options")
     chooseOpts = advancedOpts.add_mutually_exclusive_group()
@@ -207,7 +269,11 @@ if __name__ == "__main__":
     advancedOpts.add_argument("--insert-chars-range", type=str, metavar="NUM,NUM", help="The range of random variables and characters to add")
     advancedOpts.add_argument("--no-misleading-commands", action="store_false", help="Don't randomly insert misleading commands that do nothing")
     advancedOpts.add_argument("--misleading-commands-range", type=str, metavar="NUM,NUM", help="The range of random misleading commands to add")
-    advancedOpts.add_argument("--write-dir", default="/tmp/", type=str, help="Directory to use if Mutators need to write to or create files")
+    advancedOpts.add_argument("--no-integer-mangling", action="store_false", help="Don't expand integers into arithmetic expressions with multiple number bases")
+    advancedOpts.add_argument("--no-integer-expansion", action="store_false", help="Don't expand integers into arithmetic expressions")
+    advancedOpts.add_argument("--no-integer-base-randomization", action="store_false", help="Don't randomize the number bases of integers")
+    advancedOpts.add_argument("--integer-expansion-depth", type=check_positive, help="Number of times to recursively expand integers into arithmetic expansions")
+    advancedOpts.add_argument("--no-terminator-randomization", action="store_false", help="Don't randomize the symbols that terminate commands")
     advancedOpts.add_argument("--full-ascii-strings", action="store_true", help="Use the full ASCII character set (with a few exceptions) when generating random strings")
 
     debugOpts = parser.add_argument_group("Debugging Options")
@@ -216,20 +282,15 @@ if __name__ == "__main__":
     autocomplete(parser)
     args = parser.parse_args()
 
+
     if args.list:
         listMutators()
         exit(0)
 
-    if not args.command and not args.file:
-        parser.print_usage()
-        printArgError("one of the arguments -c/--command -f/--file is required")
-
-    if args.quiet and args.test:
-        parser.print_usage()
-        printArgError("--test is not allowed with -q/--quiet")
-
     if args.quiet:
         activateQuietMode()
+
+    checkArguments(args)
 
     if args.layers is None:
         if args.choose_mutators is not None or args.choose_all is not None:
@@ -245,48 +306,20 @@ if __name__ == "__main__":
         args.binaryPref = None
 
     shebang = "#!/bin/bash\n"
-    if args.file:
-        if args.file == "-":
-            args.command = sys.stdin.read()
-        else:
-            with open(args.file, "rb") as infile:
-                firstLine = infile.readline().decode("utf-8")
-                if re.match(r"\s*#!", firstLine) is not None:
-                    shebang = firstLine
-                else:
-                    infile.seek(0)
 
-                args.command = infile.read().decode("utf-8")
+    if args.stdin:
+        args.command = sys.stdin.read()
+        sys.stdin.close()
 
-    if not args.no_mangling:
-        if not args.no_binary_mangling:
-            printWarning("--no-mangling implies --no-binary-mangling")
-        elif not args.no_random_whitespace:
-            printWarning("--no-mangling implies --no-random-whitespace")
-        elif not args.no_insert_chars:
-            printWarning("--no-mangling impiles --no-insert-chars")
+    elif args.file:
+        with open(args.file, "rb") as infile:
+            firstLine = infile.readline().decode("utf-8")
+            if re.match(r"\s*#!", firstLine) is not None:
+                shebang = firstLine
+            else:
+                infile.seek(0)
 
-    if args.binary_mangle_percent:
-        if not args.no_mangling or not args.no_binary_mangling:
-            printWarning("binary mangling is disabled, --binary-mangle-percent argument will not take effect")
-
-    if args.random_whitespace_range:
-        if not args.no_mangling or not args.no_random_whitespace:
-            printWarning("random whitespace is disabled, --random-whitespace-range argument will not take effect")
-        else:
-            args.random_whitespace_range = checkRangeArgs("--random-whitespace-range", args.random_whitespace_range)
-
-    if args.insert_chars_range:
-        if not args.no_mangling or not args.no_insert_chars:
-            printWarning("random character insertion is disabled, --insert-char-range argument will not take effect")
-        else:
-            args.insert_chars_range = checkRangeArgs("--insert_chars_range", args.insert_chars_range)
-
-    if args.misleading_commands_range:
-        if not args.no_mangling or not args.no_misleading_commands:
-            printWarning("misleading command insertion is disabled, --misleading-commands-range argument will not take effect")
-        else:
-            args.misleading_commands_range = checkRangeArgs("--misleading_commands_range", args.misleading_commands_range)
+            args.command = infile.read().decode("utf-8")
 
     if args.write_dir[-1:] != "/":
         args.write_dir += "/"
