@@ -182,7 +182,7 @@ class RandomGen(object):
         commonStrNum = 0
 
         while True:
-            randStr = self.randGenStr(minStrLen, maxStrLen, charList, noBOBL)
+            randStr = self.randGenStr(minStrLen, maxStrLen, charList, escapeChars, noBOBL)
 
             if randStr not in RandomGen._uniqueRandStrs:
                 break
