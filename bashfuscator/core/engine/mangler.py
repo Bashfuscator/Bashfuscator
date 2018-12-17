@@ -313,7 +313,7 @@ class Mangler(object):
                 escapedData = mangledPayloadLine[boblSyntaxMatch.start() + 1:boblSyntaxMatch.end() - 2] + mangledPayloadLine[boblSyntaxMatch.end() - 1]
                 mangledPayloadLine = mangledPayloadLine[:boblSyntaxMatch.start()] + escapedData + mangledPayloadLine[boblSyntaxMatch.end():]
 
-                searchPos = boblSyntaxMatch.end() - 1
+                searchPos = boblSyntaxMatch.end() - 2
 
             boblSyntaxMatch = Mangler.completeBoblRegex.search(mangledPayloadLine, pos=searchPos)
 
