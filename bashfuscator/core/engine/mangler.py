@@ -16,7 +16,8 @@ class Mangler(object):
     optionalWhitespaceRegexStr = r"\? \?"
     requiredWhitespaceAndRandCharsRegexStr = "% %"
     optionalWhitespaceAndRandCharsRegexStr = r"\* \*"
-    integerRegexStr = r"#\d+#"
+    integerNoWrapperRegexStr = r"#\d+#"
+    integerWithWrapperRegexStr = r"&\d+&"
     commandEndRegexStr = "END[01]?"
 
     binaryEscapedRegexStr = r"\\:\w+\\:"
@@ -24,33 +25,37 @@ class Mangler(object):
     optionalWhitespaceEscapedRegexStr = r"\\\? \\\?"
     requiredWhitespaceAndRandCharsEscapedRegexStr = r"\\% \\%"
     optionalWhitespaceAndRandCharsEscapedRegexStr = r"\\\* \\\*"
-    integerEscapedRegexStr = r"\\#\d+\\#"
+    integerNoWrapperEscapedRegexStr = r"\\#\d+\\#"
+    integerWithWrapperEscapedRegexStr = r"\\&\d+\\&"
 
     binaryRegex = re.compile(binaryRegexStr)
     requiredWhitespaceRegex = re.compile(requiredWhitespaceRegexStr)
     optionalWhitespaceRegex = re.compile(optionalWhitespaceRegexStr)
     requiredWhitespaceAndRandCharsRegex = re.compile(requiredWhitespaceAndRandCharsRegexStr)
     optionalWhitespaceAndRandCharsRegex = re.compile(optionalWhitespaceAndRandCharsRegexStr)
-    integerRegex = re.compile(integerRegexStr)
+    integerNoWrapperRegex = re.compile(integerNoWrapperRegexStr)
+    integerWithWrapperRegex = re.compile(integerWithWrapperRegexStr)
     commandEndRegex = re.compile(commandEndRegexStr)
 
-    boblRegexStr = "{0}|{1}|{2}|{3}|{4}|{5}|{6}".format(
+    boblRegexStr = "{0}|{1}|{2}|{3}|{4}|{5}|{6}|{7}".format(
         binaryRegexStr,
         requiredWhitespaceRegexStr,
         optionalWhitespaceRegexStr,
         requiredWhitespaceAndRandCharsRegexStr,
         optionalWhitespaceAndRandCharsRegexStr,
-        integerRegexStr,
+        integerNoWrapperRegexStr,
+        integerWithWrapperRegexStr,
         commandEndRegexStr
     )
 
-    escapedBoblRegexStr = "{0}|{1}|{2}|{3}|{4}|{5}".format(
+    escapedBoblRegexStr = "{0}|{1}|{2}|{3}|{4}|{5}|{6}".format(
         binaryEscapedRegexStr,
         requiredWhitespaceEscapedRegexStr,
         optionalWhitespaceEscapedRegexStr,
         requiredWhitespaceAndRandCharsEscapedRegexStr,
         optionalWhitespaceAndRandCharsEscapedRegexStr,
-        integerEscapedRegexStr
+        integerNoWrapperEscapedRegexStr,
+        integerWithWrapperEscapedRegexStr
     )
 
     boblRegex = re.compile(boblRegexStr)
@@ -294,8 +299,11 @@ class Mangler(object):
                 elif Mangler.optionalWhitespaceAndRandCharsRegex.match(boblSyntaxMatch.group()):
                     mangledPayloadLine, searchPos = self._insertWhitespaceAndRandChars(boblSyntaxMatch, mangledPayloadLine, False, True)
 
-                elif Mangler.integerRegex.match(boblSyntaxMatch.group()):
+                elif Mangler.integerNoWrapperRegex.match(boblSyntaxMatch.group()):
                     mangledPayloadLine, searchPos = self._mangleInteger(boblSyntaxMatch, mangledPayloadLine, False)
+
+                elif Mangler.integerWithWrapperRegex.match(boblSyntaxMatch.group()):
+                    mangledPayloadLine, searchPos = self._mangleInteger(boblSyntaxMatch, mangledPayloadLine, True)
 
                 elif Mangler.commandEndRegex.match(boblSyntaxMatch.group()):
                     mangledPayloadLine, searchPos = self._getCommandTerminator(boblSyntaxMatch, mangledPayloadLine)
