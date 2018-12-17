@@ -355,8 +355,8 @@ class ObfuscationHandler(object):
                 wrappedPayload = self.mangler._mangleLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
 
         # if the Mutator evals itself, wrap it in a subshell so it doesn't pollute the parent shell environment
-        elif selMutator.mutatorType == "encoder" and not selMutator.postEncoder:
-            wrappedPayload = self.mangler._mangleLine(f"* *(? ?DATA? ?)* *", payload)
+        elif not selMutator.evalWrap and not (selMutator.mutatorType == "encode" and selMutator.postEncoder):
+            wrappedPayload = self.mangler._mangleLine(f"? ?(? ?DATA? ?)", payload)
 
         else:
             wrappedPayload = payload
