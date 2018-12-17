@@ -57,7 +57,7 @@ Adding new obfuscation methods to the framework is simple, as Bashfuscator was b
 
 - Andrew LeFevre ([capnspacehook](https://github.com/capnspacehook)): project lead and creator
 - Charity Barker ([cpbarker](https://github.com/cpbarker)): team member
-- Nathaniel Hatfield ([343iChurch](https://github.com/343iChurch)): team member
+- Nathaniel Hatfield ([343iChurch](https://github.com/343iChurch)): writing the RotN obfuscator
 - Elijah Barker ([elijah-barker](https://github.com/elijah-barker)): writing the Hex Hash, Folder and File Glob Mutators
 - Sam Kreischer: the awesome logo
 
