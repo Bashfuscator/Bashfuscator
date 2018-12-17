@@ -315,7 +315,13 @@ class Mangler(object):
                     lastCharAnsiCQuoted = False
 
                 if self.randGen.probibility(self.binaryManglePercent):
-                    choice = self.randGen.randChoice(4)
+                    # if the current character is a digit, we can do integer mangling on it
+                    if char.isdigit():
+                        choiceNum = 5
+                    else:
+                        choiceNum = 4
+
+                    choice = self.randGen.randChoice(choiceNum)
 
                     if choice == 0:
                         mangledBinary += "\\" + char
@@ -332,7 +338,7 @@ class Mangler(object):
                     elif choice == 2:
                         # if the last character wasn't mangled, and we are going to ANSI-C quote, we can shove the
                         # previous character in the beginning of the expansion. ie a$'\x65' -> $'a\x65'
-                        if lastCharNotMangled and mangledBinary[-1] not in ["'", '"'] and self.randGen.probibility(50):
+                        if lastCharNotMangled and mangledBinary[-1] not in ["'", '"'] and self.randGen.probibility(self.binaryManglePercent):
                             ansiCQuotedChar = self._getAnsiCQuotedStr(char)
                             mangledBinary = mangledBinary[:-1] + "$'" + mangledBinary[-1] + ansiCQuotedChar[2:]
 
@@ -351,12 +357,16 @@ class Mangler(object):
                         mangledBinary += self._getRandChars() + char
                         lastCharAnsiCQuoted = False
 
+                    elif choice == 4:
+                        mangledBinary += self._getMangledInteger(int(char), True)
+                        lastCharAnsiCQuoted = False
+
                     lastCharNotMangled = False
 
                 else:
                     # if the last character was ANSI-C quoted, we can show the current character into the
                     # end of the last ANSI-C quoted expansion. ie $'\x65'y -> $'\x65y'
-                    if lastCharAnsiCQuoted and self.randGen.probibility(50):
+                    if lastCharAnsiCQuoted and self.randGen.probibility(self.binaryManglePercent):
                         mangledBinary = mangledBinary[:-1] + char + "'"
                         lastCharNotMangled = False
                         lastCharAnsiCQuoted = True
@@ -453,7 +463,7 @@ class Mangler(object):
 
     def _getRandChars(self):
         randChars = ""
-        charsToEscape = "[!(){}'`" + '"'
+        charsToEscape = "[]!(){}'`" + '"'
 
         varSymbol = self.randGen.randSelect(["@", "*"])
         choice = self.randGen.randChoice(17)
@@ -508,18 +518,34 @@ class Mangler(object):
         return randChars
 
     def _mangleInteger(self, integerMatch, payloadLine, wrapExpression):
-        integerStr = int(payloadLine[integerMatch.start() + 1:integerMatch.end() - 1])
+        integer = int(payloadLine[integerMatch.start() + 1:integerMatch.end() - 1])
 
-        randBase = self.randGen.randGenNum(2, 64)
-        while randBase == 10:
-            randBase = self.randGen.randGenNum(2, 64)
-
-        mangledInt = self._intToBaseN(randBase, integerStr)
+        mangledInt = self._getMangledInteger(integer, wrapExpression)
 
         mangledPayloadLine = payloadLine[:integerMatch.start()] + mangledInt + payloadLine[integerMatch.end():]
         searchPos = len(payloadLine[:integerMatch.start()] + mangledInt)
 
         return mangledPayloadLine, searchPos
+
+    def _getMangledInteger(self, integer, wrapExpression):
+        # choose a base that will obfuscate the integer better
+        # when the integer is small. ie 7#4 is 4, too easy
+        if 2 < integer and integer < 10:
+            randBase = self.randGen.randGenNum(2, integer)
+
+        else:
+            randBase = self.randGen.randGenNum(2, 64)
+
+            # make sure base isn't decimal
+            while randBase == 10:
+                randBase = self.randGen.randGenNum(2, 64)
+
+        mangledInt = self._intToBaseN(randBase, integer)
+
+        if wrapExpression:
+            mangledInt = self._wrapArithmeticExpression(mangledInt)
+
+        return mangledInt
 
     def _intToBaseN(self, base, x):
         """
@@ -540,8 +566,19 @@ class Mangler(object):
 
         return str(base) + "#" + "".join(digits)
 
+    def _wrapArithmeticExpression(self, expression):
+        randSpaceAndChars1 = self._getWhitespaceAndRandChars(False, True)
+        randSpaceAndChars2 = self._getWhitespaceAndRandChars(False, True)
+
+        if self.randGen.probibility(50):
+            wrappedExpr = f"$(({randSpaceAndChars1}{expression}{randSpaceAndChars2}))"
+
+        else:
+            wrappedExpr = f"$[{randSpaceAndChars1}{expression}{randSpaceAndChars2}]"
+
+        return wrappedExpr
+
     def _getCommandTerminator(self, terminatorMatch, payloadLine):
-        endDigit = False
         cmdReturnsTrue = False
         self.booleanCmdTerminator = False
         self.nonBooleanCmdTerminator = True
@@ -551,10 +588,6 @@ class Mangler(object):
 
             if payloadLine[terminatorMatch.end() - 1] == "0":
                 cmdReturnsTrue = True
-                endDigit = True
-
-            if payloadLine[terminatorMatch.end() - 1] == "1":
-                endDigit = True
 
         if self.debug:
             cmdTerminator = "\n"
