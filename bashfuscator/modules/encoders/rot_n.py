@@ -75,12 +75,12 @@ class RotN(Encoder):
 
         # TODO: put signVar in random position in encpayload
         self.mangler.addPayloadLine(f"? ?{caesar}='{encpayload}'* *END0")
-        self.mangler.addPayloadLine(f"""? ?{signVar}=$(* *:printf:% %%d% %"'${{{caesar}\:0\:1}}"* *)* *END0""")
-        self.mangler.addPayloadLine(f"? ?for^ ^((* *{count}* *=* *1;* *{count}* *<* *${{#{caesar}}};* *{count}* *+=* *3))? ?END")
-        self.mangler.addPayloadLine(f"? ?do^ ^{chunk}=${{{caesar}\:{count}\:3}}* *END0")
-        self.mangler.addPayloadLine(f"? ?{char}=${{{chunk}\:0\:1}}* *END0")
-        self.mangler.addPayloadLine(f"""? ?{base}=$(* *:printf:% %%d% %"'${{{chunk}\:1\:1}}"* *)* *END0""")
-        self.mangler.addPayloadLine(f"""? ?{sign}=$(* *:printf:% %%d% %"'${{{chunk}\:2\:1}}"* *)* *END0""")
+        self.mangler.addPayloadLine(f"""? ?{signVar}=$(* *:printf:% %%d% %"'${{{caesar}:#0#:#1#}}"* *)* *END0""")
+        self.mangler.addPayloadLine(f"? ?for^ ^((* *{count}* *=* *#1#;* *{count}* *<* *${{#{caesar}}};* *{count}* *+=* *#3#))? ?END")
+        self.mangler.addPayloadLine(f"? ?do^ ^{chunk}=${{{caesar}\:{count}\:#3#}}* *END0")
+        self.mangler.addPayloadLine(f"? ?{char}=${{{chunk}:#0#:#1#}}* *END0")
+        self.mangler.addPayloadLine(f"""? ?{base}=$(* *:printf:% %%d% %"'${{{chunk}:#1#:#1#}}"* *)* *END0""")
+        self.mangler.addPayloadLine(f"""? ?{sign}=$(* *:printf:% %%d% %"'${{{chunk}:#2#:#1#}}"* *)* *END0""")
         self.mangler.addPayloadLine(f'? ?if^ ^((* *${sign}* *>=* *${signVar}* *))? ?END')
         self.mangler.addPayloadLine(rf"""? ?then^ ^{new}=$(* *:printf:% %"\\$(* *:printf:% %%o% %"$((* *$(* *:printf:% %%d% %"'${char}"* *)* *-* *${base}* *))"* *)"* *)* *END""")
         self.mangler.addPayloadLine(f'? ?elif^ ^((* *${sign}* *<* *${signVar}* *))? ?END')
