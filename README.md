@@ -16,9 +16,7 @@ This framework was also developed with Blue Team in mind. With this framework, B
 
 Though Bashfuscator does work on UNIX systems, many of the payloads it generates will not. This is because most UNIX systems use BSD style utilities, and Bashfuscator was built to work with GNU style utilities. In the future BSD payload support may be added, but for now payloads generated with Bashfuscator should work on GNU Linux systems with Bash 4.0 or newer.
 
-## Installation
-
-### Python Version
+## Installation & Requirements
 
 Bashfuscator requires Python 3.6+.
 
@@ -92,7 +90,7 @@ Adding new obfuscation methods to the framework is simple, as Bashfuscator was b
 
 - Andrew LeFevre ([capnspacehook](https://github.com/capnspacehook)): project lead and creator
 - Charity Barker ([cpbarker](https://github.com/cpbarker)): team member
-- Nathaniel Hatfield ([343iChurch](https://github.com/343iChurch)): writing the RotN obfuscator
+- Nathaniel Hatfield ([343iChurch](https://github.com/343iChurch)): writing the RotN Mutator
 - Elijah Barker ([elijah-barker](https://github.com/elijah-barker)): writing the Hex Hash, Folder and File Glob Mutators
 - Sam Kreischer: the awesome logo
 
