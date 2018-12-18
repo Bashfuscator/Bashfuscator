@@ -330,6 +330,14 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         printExitMsg("\nCtrl-C caught... stopping payload generation...")
 
+    if not args.choose_mutators and not args.choose_all:
+        mutatorChainStr = "Mutators used: "
+        for mutator in obHandler.mutatorList:
+            mutatorChainStr += f"{mutator.mutatorType.title()}/{mutator.name} -> "
+
+        mutatorChainStr = mutatorChainStr[:-4]
+        printInfo(mutatorChainStr)
+
     if args.outfile:
         with open(args.outfile, "wb") as outfile:
             outfile.write(shebang.encode("utf-8"))
