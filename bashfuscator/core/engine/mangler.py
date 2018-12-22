@@ -584,28 +584,26 @@ class Mangler(object):
 
         elif choice > 2 and choice <= 8:
             randParameterExpansionOperator = self.randGen.randSelect(["^", "^^", ",", ",,", "~", "~~"])
-            randChars += f"${{{varSymbol}{randParameterExpansionOperator}{self._getRandWhitespace(False)}}}"
+            randChars += f"${{{varSymbol}{randParameterExpansionOperator}}}"
 
         elif choice > 8 and choice <= 14:
             randParameterExpansionOperator = self.randGen.randSelect(["#", "##", "%", "%%", "/", "//"])
             randStr = self.randGen.randGenStr(escapeChars=charsToEscape, noBOBL=False)
-            randWhitespace = self._getRandWhitespace(False)
 
-            if randStr[-1:] == "\\" and randWhitespace == "":
+            if randStr[-1:] == "\\":
                 randStr += "\\"
 
-            randChars += f"${{{varSymbol}{randParameterExpansionOperator}{randStr}{randWhitespace}}}"
+            randChars += f"${{{varSymbol}{randParameterExpansionOperator}{randStr}}}"
 
         else:
             randStr = self.randGen.randGenStr(escapeChars=charsToEscape, noBOBL=False)
             randParameterExpansionOperator = self.randGen.randSelect(["/", "//"])
             randStr2 = self.randGen.randGenStr(escapeChars=charsToEscape, noBOBL=False)
-            randWhitespace = self._getRandWhitespace(False)
 
-            if randStr2[-1:] == "\\" and randWhitespace == "":
+            if randStr2[-1:] == "\\":
                 randStr2 += "\\"
 
-            randChars += f"${{{varSymbol}{randParameterExpansionOperator}{randStr}/{randStr2}{randWhitespace}}}"
+            randChars += f"${{{varSymbol}{randParameterExpansionOperator}{randStr}/{randStr2}}}"
 
         if self.quoted:
             randChars += '"'
