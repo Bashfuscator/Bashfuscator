@@ -4,6 +4,7 @@
 from subprocess import run
 from tempfile import NamedTemporaryFile
 import timeit
+from argparse import ArgumentTypeError, ArgumentParser
 
 import plotly
 import plotly.graph_objs as go
@@ -12,13 +13,19 @@ from numpy import linspace
 from bashfuscator.core.obfuscation_handler import ObfuscationHandler
 
 
-#Globals
+#Arg Parsing & Global Declarations
+parser =ArgumentParser()
+parser.add_argument("-m", "--mutator", help="Path of the mutator to test.  For example, string/hex_hash")
+parser.add_argument("-r", "--repeat", type=int, help="Number of times to repeat the test.")
 
-longObfName="string/hex_hash"
+args=parser.parse_args()
+
+longObfName=args.mutator
+repeater=args.repeat
+
 repeat_cmd=":\n"
 unobfTimeData=[]
 obfTimeData=[]
-obfTimeMSCHAR=[]
 unobfSizeData=[]
 obfSizeData=[]
 
@@ -29,10 +36,10 @@ iterations = linspace(1, 1000, num=20)
 #Functions used to generate and process data#
 #-------------------------------------------#
 
-def timeRun(payload): #Returns double: time it took to run payload in bash subprocess
-	repeater=3		#Set to 1 for testing, 5 or higher for actual analysis (It will take forever if you go much higher than 7, but it returns "smoother" results)
-	t=timeit.timeit(stmt=lambda: run(payload, executable="/bin/bash", shell=True), number=repeater)
-	return t/repeater	#Return the average runtime
+def timeRun(payload, repeater): #Returns double: time it took to run payload in bash subprocess
+	numRepeats=repeater		#Set to 1 for testing, 5 or higher for actual analysis (It will take forever if you go much higher than 7, but it returns "smoother" results)
+	t=timeit.timeit(stmt=lambda: run(payload, executable="/bin/bash", shell=True), number=numRepeats)
+	return t/numRepeats	#Return the average runtime
 
 def generateTimeDelta(obfuscatedData):	#Depending on how I store obfuscated execution times, may have to ms/char maniputlation in this function.
 	timeDeltaData=[]
@@ -89,7 +96,7 @@ for i in iterations:		#Yo Dawg, I heard you liked iterations.  So I iterated ove
 
 	unobfSizeData.append(len(inputCmd))
 	#Generate a baseline time (how long it takes to run unobfuscated)
-	unobfTimeData.append(timeRun(inputCmd))
+	unobfTimeData.append(timeRun(inputCmd, repeater))
 	print("Baseline time for {0} Iterations: {1}".format(i, unobfTimeData[-1]))
 
 	#Obfuscate the command
@@ -100,11 +107,10 @@ for i in iterations:		#Yo Dawg, I heard you liked iterations.  So I iterated ove
 	print("Running Obfuscated code...")
 	with NamedTemporaryFile(mode="w") as payloadFile:
 		payloadFile.write(obfCommand)
-		obfTime=timeRun(f"bash {payloadFile.name}")
+		obfTime=timeRun(f"bash {payloadFile.name}", repeater)
 
 	print(obfTime)
 	obfTimeData.append(obfTime)
-	obfTimeMSCHAR.append((obfTime)-unobfTimeData[-1]/(i*len(repeat_cmd)*1000))
 
 #Plot Total Obfuscated & Unobfuscated run time and Size Increase
 plotRunTime(iterations, obfTimeData, unobfTimeData)
