@@ -42,6 +42,7 @@ def timeRun(payload, repeater): #Returns double: time it took to run payload in 
 	t=timeit.timeit(stmt=lambda: run(payload, executable="/bin/bash", shell=True), number=numRepeats)
 	return t/numRepeats	#Return the average runtime
 
+
 #---------------------------#
 #Functions used to plot data#
 #---------------------------#
@@ -52,8 +53,8 @@ def plotRunTime(iterations, obfExecutionTime, unObfExecutionTime):
 	plotly.offline.plot({
     "data": [trace0, trace1],
     "layout": go.Layout(title=longObfName+": Obfuscated Run Time",
-		xaxis=dict(autorange=True),
-		yaxis=dict(autorange=True)
+		xaxis=dict(autorange=True, title='Command Length (Characters)'),
+		yaxis=dict(autorange=True, title='Execution Time (Seconds)')
 	)
 	}, auto_open=True, filename='RunTime.html')
 
@@ -61,33 +62,13 @@ def plotSizeIncrease(iterations, unobfuscatedData, obfuscatedData):	#Does not re
 	sizeDelta=[]
 	for obfuscated in obfuscatedData:
 		sizeDelta.append(obfuscated)
-def generateTimeDelta(obfuscatedData):	#Depending on how I store obfuscated execution times, may have to ms/char maniputlation in this function.
-	timeDeltaData=[]
-	i=0 #Counter
-	for obfuscated in obfuscatedData:
-		if not timeDeltaData:
-			timeDeltaData.append(0)		#First value in the list is always zero
-		else:
-			timeDeltaData.append(obfuscated-obfuscatedData[i-1])
-		i+=1
-	return timeDeltaData
 
-	trace0=go.Scatter(x = iterations
-def generateTimeDelta(obfuscatedData):	#Depending on how I store obfuscated execution times, may have to ms/char maniputlation in this function.
-	timeDeltaData=[]
-	i=0 #Counter
-	for obfuscated in obfuscatedData:
-		if not timeDeltaData:
-			timeDeltaData.append(0)		#First value in the list is always zero
-		else:
-			timeDeltaData.append(obfuscated-obfuscatedData[i-1])
-		i+=1
-	return timeDeltaData
+	trace0=go.Scatter(x = iterations, y=sizeDelta, mode='lines', name= 'Size Difference Ratio')
 	plotly.offline.plot({
     "data": [trace0],
     "layout": go.Layout(title=longObfName+": Obfuscated Size Growth",
-		xaxis=dict(autorange=True),
-		yaxis=dict(autorange=True)
+		xaxis=dict(autorange=True, title='Original Command Length (Characters)'),
+		yaxis=dict(autorange=True, title='Obfuscated Command Length (Characters)')
 	)
 	}, auto_open=True, filename='SizeDelta.html')
 
@@ -98,7 +79,7 @@ def generateTimeDelta(obfuscatedData):	#Depending on how I store obfuscated exec
 #Add try catch
 obHandler = ObfuscationHandler()
 
-for i in iterations:	#Yo Dawg, I heard you liked iterations.  So I iterated over your iterations.
+for i in iterations:		#Yo Dawg, I heard you liked iterations.  So I iterated over your iterations.
 	#j=0 #Index counter for list maniputlation
 	i=int(i)
 	inputCmd = repeat_cmd * i
