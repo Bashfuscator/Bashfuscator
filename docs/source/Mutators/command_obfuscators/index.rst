@@ -1,5 +1,5 @@
-Command Obfuscators Documentation
-=================================
+Command Obfuscators
+===================
 
 .. toctree::
    case_swapper

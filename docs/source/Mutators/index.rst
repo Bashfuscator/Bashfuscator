@@ -1,5 +1,5 @@
-Mutators Documentation
-======================
+Mutator Documentation
+=====================
 
 .. toctree::
 
@@ -7,4 +7,3 @@ Mutators Documentation
    string_obfuscators/index
    token_obfuscators/index
    encoders/index
-   compressors/index

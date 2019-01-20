@@ -1,5 +1,5 @@
-Encoders Documentation
-======================
+Encoders
+========
 
 .. toctree::
    base64

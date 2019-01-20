@@ -1,5 +1,5 @@
-Token Obfuscators Documentation
-===============================
+Token Obfuscators
+=================
 
 .. toctree::
    for_code

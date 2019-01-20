@@ -1,5 +1,5 @@
-String Obfuscators Documentation
-================================
+String Obfuscators
+==================
 
 .. toctree::
    file_glob
