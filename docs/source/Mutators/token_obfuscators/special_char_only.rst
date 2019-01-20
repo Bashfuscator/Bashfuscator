@@ -22,7 +22,7 @@ Runtime Graph
 
 .. raw:: html
 
-    <iframe src="../_static/graphs/token_obfuscators/special_char_only/runtime_graph.html" height="500px" width="100%"></iframe>
+    <iframe src="../../_static/graphs/token_obfuscators/special_char_only/runtime_graph.html" height="750px" width="100%"></iframe>
 
 
 Size Graph
@@ -30,4 +30,4 @@ Size Graph
 
 .. raw:: html
 
-    <iframe src="../_static/graphs/token_obfuscators/special_char_only/size_graph.html" height="500px" width="100%"></iframe>
+    <iframe src="../../_static/graphs/token_obfuscators/special_char_only/size_graph.html" height="750px" width="100%"></iframe>

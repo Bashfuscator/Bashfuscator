@@ -2,5 +2,5 @@ Command Obfuscators Documentation
 =================================
 
 .. toctree::
-   case_swap
+   case_swapper
    reverse
