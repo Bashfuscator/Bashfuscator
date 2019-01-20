@@ -1,11 +1,10 @@
 """
-Command Obfuscators used by the framework.
+Base class for Command Obfuscators used by the framework
 """
 import re
 
-from bashfuscator.common.helpers import escapeQuotes
 from bashfuscator.common.messages import printError
-from bashfuscator.common.objects import Mutator
+from bashfuscator.core.mutators.mutator import Mutator
 
 
 class CommandObfuscator(Mutator):
@@ -16,10 +15,10 @@ class CommandObfuscator(Mutator):
 
     :param name: name of the CommandObfuscator
     :type name: str
-    :param description: short description of what the CommandObfuscator 
+    :param description: short description of what the CommandObfuscator
         does
     :type description: str
-    :param sizeRating: rating from 1 to 5 of how much the 
+    :param sizeRating: rating from 1 to 5 of how much the
         CommandObfuscator increases the size of the overall payload
     :type sizeRating: int
     :param timeRating: rating from 1 to 5 of how much the
@@ -29,7 +28,7 @@ class CommandObfuscator(Mutator):
     :param reversible: True if the obfuscator cancels itself out when
         run twice in a row on a command/script, False otherwise
     :type reversible: bool
-    :param fileWrite: True if the Command Obfuscator requires 
+    :param fileWrite: True if the Command Obfuscator requires
         creating/writing to files, False otherwise
     :type fileWrite: bool
     :param notes: see :class:`bashfuscator.common.objects.Mutator`
@@ -40,13 +39,10 @@ class CommandObfuscator(Mutator):
     :type credits: str
     """
 
-    def __init__(self, name, description, sizeRating, timeRating, reversible, fileWrite=False, notes=None, author=None, credits=None, evalWrap=True):
-        super().__init__(name, "command", description, notes, author, credits, evalWrap)
+    def __init__(self, name, description, sizeRating, timeRating, notes=None, author=None, credits=None, evalWrap=True, unreadableOutput=False, reversible=False):
+        super().__init__(name, "command", description, sizeRating, timeRating, notes, author, credits, evalWrap, unreadableOutput)
 
-        self.sizeRating = sizeRating
-        self.timeRating = timeRating
         self.reversible = reversible
-        self.fileWrite = fileWrite
         self.stubs = []
         self.deobStub = None
 
@@ -74,12 +70,13 @@ class Stub(object):
     :type stub: str
     """
 
-    def __init__(self, name, binariesUsed, sizeRating, timeRating, escapeQuotes, stub):
+    def __init__(self, name, sizeRating, timeRating, binariesUsed, fileWrite, escapeQuotes, stub):
         self.name = name
         self.longName = self.name.replace(" ", "_").lower()
-        self.binariesUsed = binariesUsed
         self.sizeRating = sizeRating
         self.timeRating = timeRating
+        self.binariesUsed = binariesUsed
+        self.fileWrite = fileWrite
         self.escapeQuotes = escapeQuotes
         self.stub = stub
 
@@ -96,7 +93,7 @@ class Stub(object):
         :type userCmd: str
         """
         if self.escapeQuotes:
-            userCmd = escapeQuotes(userCmd)
+            userCmd = userCmd.replace("'", "'\"'\"'")
 
         genStub = self.stub
         for var in re.findall(r"VAR\d+", genStub):
@@ -111,67 +108,3 @@ class Stub(object):
             genStub = genStub.replace("CMD", userCmd)
 
         return genStub
-
-
-class CaseSwap(CommandObfuscator):
-    def __init__(self):
-        super().__init__(
-            name="Case Swapper",
-            description="Flips the case of all alpha chars",
-            sizeRating=1,
-            timeRating=1,
-            reversible=True,
-            author="capnspacehook"
-        )
-
-        self.stubs = [
-            Stub(
-                name="bash case swap expansion",
-                binariesUsed=[],
-                sizeRating=1,
-                timeRating=1,
-                escapeQuotes=True,
-                stub='''? ?VAR1='CMD'* *END* *:printf:^ ^%s^ ^"${VAR1~~}"* *END* *'''
-            )
-        ]
-
-    def mutate(self, userCmd):
-        obCmd = userCmd.swapcase()
-
-        return self.deobStub.genStub(obCmd)
-
-
-class Reverse(CommandObfuscator):
-    def __init__(self):
-        super().__init__(
-            name="Reverse",
-            description="Reverses a command",
-            sizeRating=1,
-            timeRating=1,
-            reversible=True,
-            author="capnspacehook"
-        )
-
-        self.stubs = [
-            Stub(
-                name="printf rev",
-                binariesUsed=["rev"],
-                sizeRating=1,
-                timeRating=1,
-                escapeQuotes=True,
-                stub="""* *:printf:^ ^%s^ ^'CMD'* *|* *:rev:* *END* *"""
-            ),
-            Stub(
-                name="herestring rev",
-                binariesUsed=["rev"],
-                sizeRating=3,
-                timeRating=1,
-                escapeQuotes=True,
-                stub="""* *:rev:^ ^<<<? ?'CMD'* *END* *"""
-            )
-        ]
-
-    def mutate(self, userCmd):
-        obCmd = userCmd[::-1]
-        
-        return self.deobStub.genStub(obCmd)

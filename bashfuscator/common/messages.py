@@ -1,7 +1,7 @@
 """
 Helper functions to print output to the terminal.
 """
-from sys import exit
+import sys
 
 from bashfuscator.common.colors import blue, yellow, red, bold
 
@@ -30,4 +30,12 @@ def printWarning(msg):
 def printError(msg):
     """Format and print error messages to the terminal."""
     print(bold(red(f"[ERROR] {msg}")))
-    exit(1)
+    sys.exit(1)
+
+
+def printExitMsg(msg):
+    """Format and print exit messages to the terminal."""
+    if not QUIET_OUTPUT:
+        print(bold(red(msg)))
+
+    sys.exit(1)

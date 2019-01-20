@@ -1,10 +1,10 @@
 """
-Base classes used throughout the framework.
+Base class all modules inherit from
 """
-import re
+import string
 
-from bashfuscator.common.random import RandomGen
-from bashfuscator.core.mangler import Mangler
+from bashfuscator.core.engine.mangler import Mangler
+from bashfuscator.core.engine.random import RandomGen
 
 
 class Mutator(object):
@@ -32,21 +32,43 @@ class Mutator(object):
     :type credits: str
     """
 
-    def __init__(self, name, mutatorType, description, notes, author, credits, evalWrap):
+    def __init__(self, name, mutatorType, description, sizeRating, timeRating, notes, author, credits, evalWrap, unreadableOutput=False):
         self.name = name
         self.mutatorType = mutatorType
         self.description = description
         self.longName = self.mutatorType + "/" + self.name.replace(" ", "_").lower()
+        self.sizeRating = sizeRating
+        self.timeRating = timeRating
         self.notes = notes
         self.author = author
         self.credits = credits
         self.evalWrap = evalWrap
+        self.unreadableOutput = unreadableOutput
 
         self.sizePref = None
         self.timePref = None
         self.writeDir = None
-        self._originalCmd = ""
-        self._obfuscatedCmd = ""
+        self._obfuscatedCmd = None
 
         self.mangler = Mangler()
         self.randGen = self.mangler.randGen
+
+    def escapeQuotes(self, inCmd):
+        return inCmd.replace("'", "'\"'\"'")
+
+    def strToArrayElements(self, inCmd):
+        # escape all Ascii unprintable chars, as well as all special chars and space chars
+        escapeChars = string.punctuation + " " + "".join(chr(i) for i in range(1, 33)) + chr(127)
+        ansicQuoteChars = [chr(10), chr(11), chr(12), chr(13)]
+        arrayElementsStr = "* *"
+
+        for char in inCmd:
+            if char in escapeChars:
+                if char in ansicQuoteChars:
+                    char = self.mangler._getAnsiCQuotedStr(char)
+                else:
+                    char = "\\" + char
+
+            arrayElementsStr += char + "% %"
+
+        return arrayElementsStr[:-3] + "* *"

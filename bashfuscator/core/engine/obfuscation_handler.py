@@ -2,9 +2,9 @@
 Defines ObufscationHandler, which manages the obfuscation process.
 """
 from bashfuscator.common.messages import printError, printWarning
-from bashfuscator.core.mutator_list import commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors
-from bashfuscator.common.random import RandomGen
-from bashfuscator.core.mangler import Mangler
+from bashfuscator.core.engine.mangler import Mangler
+from bashfuscator.core.engine.random import RandomGen
+from bashfuscator.core.utils import import_mutators
 
 
 class ObfuscationHandler(object):
@@ -41,13 +41,15 @@ class ObfuscationHandler(object):
         respective Mutator Types contained by the framework.
     """
 
-    def __init__(self, cmdObfuscators=commandObfuscators, strObfuscators=stringObfuscators, tokObfuscators=tokenObfuscators, encoders=encoders, compressors=compressors, args=None):
-        self.cmdObfuscators = cmdObfuscators
-        self.strObfuscators = strObfuscators
-        self.tokObfuscators = tokObfuscators
-        self.encoders = encoders
-        self.compressors = compressors
-        self.randGen = RandomGen()
+    def __init__(self, cmdObfuscators=None, strObfuscators=None, tokObfuscators=None, encoders=None, compressors=None, args=None):
+        if cmdObfuscators and strObfuscators and tokObfuscators and encoders and compressors:
+            self.cmdObfuscators = cmdObfuscators
+            self.strObfuscators = strObfuscators
+            self.tokObfuscators = tokObfuscators
+            self.encoders = encoders
+            self.compressors = compressors
+        else:
+            self.cmdObfuscators, self.strObfuscators, self.tokObfuscators, self.encoders, self.compressors = import_mutators()
 
         if args:
             self.layers = args.layers
@@ -56,6 +58,9 @@ class ObfuscationHandler(object):
             self.binaryPref = args.binaryPref
             self.filePref = args.no_file_write
             self.writeDir = args.write_dir
+            self.full_ascii_strings = args.full_ascii_strings
+            self.debug = args.debug
+            self.clip = args.clip
             self.originalCmd = args.command
 
             if args.choose_mutators:
@@ -110,14 +115,42 @@ class ObfuscationHandler(object):
             else:
                 self.misleadingCmdsRange = None
 
+            if args.no_integer_mangling is not None:
+                self.mangleIntegers = args.no_integer_mangling
+            else:
+                self.mangleIntegers = None
+
+            if args.no_integer_expansion is not None:
+                self.expandIntegers = args.no_integer_expansion
+            else:
+                self.expandIntegers = None
+
+            if args.no_integer_base_randomization is not None:
+                self.randomizeIntegerBases = args.no_integer_base_randomization
+            else:
+                self.randomizeIntegerBases = None
+
+            if args.integer_expansion_depth:
+                self.integerExpansionDepth = args.integer_expansion_depth
+            else:
+                self.integerExpansionDepth = None
+
+            if args.no_terminator_randomization is not None:
+                self.randomizeTerminators = args.no_terminator_randomization
+            else:
+                self.randomizeTerminators = None
+
         else:
             self.sizePref = 2
             self.timePref = 2
             self.binaryPref = None
             self.filePref = True
             self.writeDir = "/tmp/"
+            self.full_ascii_strings = False
+            self.debug = False
+            self.clip = False
             self.userMutators = None
-        
+
             self.enableMangling = None
             self.mangleBinaries = None
             self.binaryManglePercent = None
@@ -127,13 +160,19 @@ class ObfuscationHandler(object):
             self.insertCharsRange = None
             self.misleadingCmds = None
             self.misleadingCmdsRange = None
-        
+            self.mangleIntegers = None
+            self.expandIntegers = None
+            self.randomizeIntegerBases = None
+            self.integerExpansionDepth = None
+            self.randomizeTerminators = None
+
         self.prevCmdOb = None
+        self.mutatorList = []
 
         self.mangler = Mangler()
         self.randGen = self.mangler.randGen
 
-        self.mangler.initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange)
+        self.mangler._initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange, self.mangleIntegers, self.expandIntegers, self.randomizeIntegerBases, self.integerExpansionDepth, self.randomizeTerminators, self.debug)
 
         if args and args.full_ascii_strings:
             self.randGen.setFullAsciiStrings()
@@ -142,33 +181,112 @@ class ObfuscationHandler(object):
         """
         Generate the final payload. Obfuscates the original input by
         feeding it into Mutators a number of times as specified by the
-        '--layers' option. 
+        '--layers' option.
 
         :returns: a str containing the final obfuscated payload
         """
         payload = self.originalCmd
-        
+
         for i in range(self.layers):
             if self.userMutators:
                 for userMutator in self.userMutators:
+                    userStub = None
                     if userMutator.count("/") == 2:
                         if userMutator[-1] == "/":
                             userMutator = userMutator[:-1]
-                            payload = self.genObfuscationLayer(payload, userMutator)
                         else:
                             userStub = userMutator.split("/")[2]
                             userMutator = userMutator[:-int(len(userStub) + 1)]
-                            payload = self.genObfuscationLayer(payload, userMutator, userStub)
-                    else:
-                        payload = self.genObfuscationLayer(payload, userMutator)
-                    
+
+                    self.mutatorList.append(self.getMutator(userMutator, userStub, self.sizePref, self.timePref, self.binaryPref, self.filePref))
+
             else:
-                payload = self.genObfuscationLayer(payload)
+                self.mutatorList.append(self.getMutator(sizePref=self.sizePref, timePref=self.timePref, binaryPref=self.binaryPref, filePref=self.filePref))
+
+        self.checkMutatorList()
+
+        for mutator in self.mutatorList:
+            mutator.writeDir = self.writeDir
+            mutator.mangler._initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange, self.mangleIntegers, self.expandIntegers, self.randomizeIntegerBases, self.integerExpansionDepth, self.randomizeTerminators, self.debug)
+            payload = mutator.mutate(payload)
+            mutator._obfuscatedCmd = payload
+
+            self.randGen.forgetUniqueStrs()
+            payload = self.evalWrap(payload, mutator)
 
         return payload
 
+    def checkMutatorList(self):
+        reverseableMutator = ""
+        nonReadableWarning = False
+
+        for i, mutator in enumerate(self.mutatorList):
+            if self.clip and ((mutator.unreadableOutput and not nonReadableWarning) or self.full_ascii_strings):
+                printWarning("Output may consist of unreadable ASCII characters and probably won't execute from your clipboard correctly. Saving output with '-o' is recommended")
+                nonReadableWarning = True
+
+            if mutator.mutatorType == "encode" and mutator.postEncoder and i != len(self.mutatorList) - 1:
+                printWarning(f"{mutator.longName} should only be used as the final Mutator, layering on top of it will probably break your payload")
+
+            if mutator.mutatorType == "command" and mutator.reversible:
+                if reverseableMutator == mutator.longName:
+                    printWarning(f"{mutator.longName} used twice in a row, part of the output may be in the clear")
+                    reverseableMutator = ""
+
+                else:
+                    reverseableMutator = mutator.longName
+
+            else:
+                reverseableMutator = ""
+
+    def getMutator(self, userMutator=None, userStub=None, sizePref=None, timePref=None, binaryPref=None, filePref=None):
+        selMutator = None
+
+        if userMutator:
+            mutatorType = userMutator.split("/")[0]
+
+            if mutatorType == "command":
+                selMutator = self.choosePrefMutator(self.cmdObfuscators, sizePref, timePref,
+                    binaryPref, filePref, self.prevCmdOb, userMutator, userStub)
+                self.prevCmdOb = selMutator
+
+            elif mutatorType == "string":
+                selMutator = self.choosePrefMutator(self.strObfuscators, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
+
+            elif mutatorType == "token":
+                selMutator = self.choosePrefMutator(self.tokObfuscators, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
+
+            elif mutatorType == "encode":
+                selMutator = self.choosePrefMutator(self.encoders, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
+
+            elif mutatorType == "compress":
+                selMutator = self.choosePrefMutator(self.compressors, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
+
+            else:
+                printError(f"{mutatorType} isn't a valid mutator type")
+        else:
+            # TODO: handle case when no mutators of chosen type are compatible with user's preferences
+            obChoice = self.randGen.randChoice(3)
+
+            if obChoice == 0:
+                selMutator = self.choosePrefMutator(self.cmdObfuscators, sizePref, timePref,
+                    binaryPref, filePref, self.prevCmdOb)
+                self.prevCmdOb = selMutator
+
+            elif obChoice == 1:
+                selMutator = self.choosePrefMutator(self.strObfuscators, sizePref, timePref,
+                    binaryPref, filePref)
+
+            else:
+                selMutator = self.choosePrefMutator(self.tokObfuscators, sizePref, timePref)
+
+        selMutator.sizePref = sizePref
+        selMutator.timePref = timePref
+
+        return selMutator
+
     # TODO: update docs
-    def genObfuscationLayer(self, payload, userMutator=None, userStub=None, sizePref=None, timePref=None, binaryPref=None, filePref=None, enableMangling=None, mangleBinaries=None, binaryManglePercent=None, randWhitespace=None, randWhitespaceRange=None, insertChars=None, insertCharsRange=None, misleadingCmds=None, misleadingCmdsRange=None, writeDir=None):
+    def genObfuscationLayer(self, payload, userMutator=None, userStub=None, sizePref=None, timePref=None, binaryPref=None, filePref=None, writeDir=None, enableMangling=None, mangleBinaries=None, binaryManglePercent=None, randWhitespace=None, randWhitespaceRange=None, insertChars=None, insertCharsRange=None, misleadingCmds=None, misleadingCmdsRange=None, mangleIntegers=None, expandIntegers=None, randomizeIntegerBases=None, integerExpansionDepth=None, randomizeTerminators=None, debug=None):
         """
         Generate one layer of obfuscation. If called with the
         userMutator or userStub parameters, the Mutator and/or Stub
@@ -177,9 +295,9 @@ class ObfuscationHandler(object):
         Stub (if appropriate) will be chosen automatically.
 
         .. note::
-            If not set, the sizePref, timePref, binaryPref, filePref, 
-            and writeDir parameters will be set to the coresponding 
-            attributes of the ObfuscationHandler object being called 
+            If not set, the sizePref, timePref, binaryPref, filePref,
+            and writeDir parameters will be set to the coresponding
+            attributes of the ObfuscationHandler object being called
             from.
 
         :param payload: input command(s) to obfuscate
@@ -193,7 +311,7 @@ class ObfuscationHandler(object):
         :param sizePref: payload size user preference
         :type sizePref: int
         :param timePref: execution time user preference
-        :type timePref: int 
+        :type timePref: int
         :param binaryPref: list of binaries that the chosen Mutator
             should or should not use
         :type binaryPref: tuple containing a list of strs, and a bool
@@ -210,6 +328,8 @@ class ObfuscationHandler(object):
             binaryPref = self.binaryPref
         if filePref is None:
             filePref = self.filePref
+        if writeDir is None:
+            writeDir = self.writeDir
         if enableMangling is None:
             enableMangling = self.enableMangling
         if mangleBinaries is None:
@@ -228,54 +348,24 @@ class ObfuscationHandler(object):
             misleadingCmds = self.misleadingCmds
         if misleadingCmdsRange is None:
             misleadingCmdsRange = self.misleadingCmdsRange
-        if writeDir is None:
-            writeDir = self.writeDir
+        if mangleIntegers is None:
+            mangleIntegers = self.mangleIntegers
+        if expandIntegers is None:
+            expandIntegers = self.expandIntegers
+        if randomizeIntegerBases is None:
+            randomizeIntegerBases = self.randomizeIntegerBases
+        if integerExpansionDepth is None:
+            integerExpansionDepth = self.integerExpansionDepth
+        if randomizeTerminators is None:
+            randomizeTerminators = self.randomizeTerminators
+        if debug is None:
+            debug = self.debug
 
-        selMutator = None
 
-        if userMutator:
-            mutatorType = userMutator.split("/")[0]
+        selMutator = self.getMutator(userMutator, userStub, sizePref, timePref, binaryPref, filePref)
 
-            if mutatorType == "command":
-                selMutator = self.choosePrefMutator(self.cmdObfuscators, sizePref, timePref, 
-                    binaryPref, filePref, self.prevCmdOb, userMutator, userStub)
-                self.prevCmdOb = selMutator
-
-            elif mutatorType == "string":
-                selMutator = self.choosePrefMutator(self.strObfuscators, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
-
-            elif mutatorType == "token":
-                selMutator = self.choosePrefMutator(self.tokObfuscators, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
-
-            elif mutatorType == "encode":
-                selMutator = self.choosePrefMutator(self.encoders, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
-
-            elif mutatorType == "compress":
-                selMutator = self.choosePrefMutator(self.compressors, binaryPref=binaryPref, filePref=filePref, userMutator=userMutator)
-
-            else:
-                printError(f"ERROR: {mutatorType} isn't a valid mutator type")
-        else:
-            # TODO: handle case when no mutators of chosen type are compatible with user's preferences
-            obChoice = self.randGen.randChoice(3)
-
-            if obChoice == 0:
-                selMutator = self.choosePrefMutator(self.cmdObfuscators, sizePref, timePref, 
-                    binaryPref, filePref, self.prevCmdOb)
-                self.prevCmdOb = selMutator
-
-            elif obChoice == 1:
-                selMutator = self.choosePrefMutator(self.strObfuscators, sizePref, timePref, 
-                    binaryPref, filePref)
-
-            else:
-                selMutator = self.choosePrefMutator(self.tokObfuscators, sizePref, timePref)
-
-        selMutator.sizePref = sizePref
-        selMutator.timePref = timePref
         selMutator.writeDir = writeDir
-        selMutator._originalCmd = payload
-        selMutator.mangler.initialize(sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange)
+        selMutator.mangler._initialize(sizePref, enableMangling, mangleBinaries, binaryManglePercent, randWhitespace, randWhitespaceRange, insertChars, insertCharsRange, misleadingCmds, misleadingCmdsRange, mangleIntegers, expandIntegers, randomizeIntegerBases, integerExpansionDepth, randomizeTerminators, debug)
         payload = selMutator.mutate(payload)
         selMutator._obfuscatedCmd = payload
 
@@ -293,7 +383,7 @@ class ObfuscationHandler(object):
 
         :param payload: input command(s) to wrap
         :type payload: str
-        :param selMutator: Mutator used by 
+        :param selMutator: Mutator used by
             :meth:`~ObfuscationHandler.genObfuscationLayer` to generate
             the most recent layer of obfuscation
         :type selMutator: :class:`bashfuscator.common.objects.Mutator`
@@ -301,9 +391,14 @@ class ObfuscationHandler(object):
         """
         if selMutator.evalWrap:
             if self.randGen.probibility(50):
-                wrappedPayload = self.mangler.mangleLine('* *:eval:^ ^"$(? ?DATA? ?)"* *', payload)
+                wrappedPayload = self.mangler._mangleLine('* *:eval:^ ^"$(? ?DATA? ?)"* *', payload)
             else:
-                wrappedPayload = self.mangler.mangleLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
+                wrappedPayload = self.mangler._mangleLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
+
+        # if the Mutator evals itself, wrap it in a subshell so it doesn't pollute the parent shell environment
+        elif not selMutator.evalWrap and not (selMutator.mutatorType == "encode" and selMutator.postEncoder):
+            wrappedPayload = self.mangler._mangleLine(f"? ?(? ?DATA? ?)", payload)
+
         else:
             wrappedPayload = payload
 
@@ -311,9 +406,9 @@ class ObfuscationHandler(object):
 
     def choosePrefMutator(self, mutators, sizePref=None, timePref=None, binaryPref=None, filePref=None, prevCmdOb=None, userMutator=None, userStub=None):
         """
-        Chooses a Mutator from a list of mutators which is of the 
+        Chooses a Mutator from a list of mutators which is of the
         desired preferences, with a stub that uses desired binaries if
-        appropriate. If called with the userMutator or userStub 
+        appropriate. If called with the userMutator or userStub
         parameters, the Mutator and/or Stub specified by userMutator
         and/or userStub will be chosen. If those parameters are not
         used, a Mutator and Stub (if appropriate) will be chosen
@@ -323,7 +418,7 @@ class ObfuscationHandler(object):
         :param sizePref: payload size user preference
         :type sizePref: int
         :param timePref: execution time user preference
-        :type timePref: int 
+        :type timePref: int
         :param binaryPref: list of binaries that the chosen Mutator
             should or should not use
         :type binaryPref: tuple containing a list of strs, and a bool
@@ -348,35 +443,37 @@ class ObfuscationHandler(object):
                 binList = binaryPref[0]
                 includeBinary = binaryPref[1]
 
-            # TODO: warn user when using a reversible CommandObfuscator back to back
-            # TODO: warn when user uses a post Encoder as anything but the final layer
             for mutator in mutators:
                 if mutator.longName == userMutator:
-                    if filePref is False and mutator.fileWrite != filePref:
+                    if filePref is False and mutator.mutatorType != "command" and mutator.fileWrite != filePref:
                         printWarning(f"'{userMutator}' mutator preforms file writes")
 
-                    elif binaryPref:
+                    elif binaryPref and mutator.mutatorType != "command":
                         for binary in mutator.binariesUsed:
                             if (binary in binList) != includeBinary:
                                 printWarning(f"'{userMutator}' mutator contains an unwanted binary")
 
                     selMutator = mutator
                     if selMutator.mutatorType == "command":
-                        selMutator.prefStubs = selMutator.stubs
+                        selMutator.prefStubs = self.getPrefStubs(selMutator.stubs, sizePref, timePref, binaryPref, filePref)
 
                     break
-            
+
             if selMutator is None:
                 printError(f"Selected mutator '{userMutator}' not found")
-        
+
         else:
             prefMutators = self.getPrefMutators(mutators, sizePref, timePref, binaryPref, filePref, prevCmdOb)
             selMutator = self.randGen.randSelect(prefMutators)
 
         if selMutator is not None and selMutator.mutatorType == "command":
-            selMutator.deobStub = self.choosePrefStub(selMutator.prefStubs, sizePref, timePref, binaryPref, userStub)
-            selMutator.deobStub.mangler = selMutator.mangler
-            selMutator.deobStub.randGen = selMutator.mangler.randGen
+            selMutator.deobStub = self.choosePrefStub(selMutator.prefStubs, sizePref, timePref, binaryPref, filePref, userStub)
+
+            if selMutator.deobStub:
+                selMutator.deobStub.mangler = selMutator.mangler
+                selMutator.deobStub.randGen = selMutator.mangler.randGen
+            else:
+                printError(f"All of '{selMutator.longName}'s Stubs do not fulfil your requirements")
 
         return selMutator
 
@@ -418,37 +515,94 @@ class ObfuscationHandler(object):
                 if prevCmdOb and prevCmdOb.reversible and prevCmdOb.name == mutator.name:
                     continue
 
-                prefStubs = self.getPrefStubs(mutator.stubs, sizePref, timePref, binaryPref)
-                
+                prefStubs = self.getPrefStubs(mutator.stubs, sizePref, timePref, binaryPref, filePref)
+
                 if prefStubs:
                     mutator.prefStubs = prefStubs
                 else:
                     continue
 
+            elif filePref is False and mutator.mutatorType != "command" and mutator.fileWrite != filePref:
+                continue
+
             # don't choose special encoders that produce output that Bash can't parse
             elif mutator.mutatorType == "encode" and mutator.postEncoder:
                 continue
 
-            # TODO: decide if TokenObfuscators should be allowed if the user chooses to only use certain binaries,
-            # TokenObfuscators don't use any binaries 
             elif binaryPref:
                 badBinary = False
                 for binary in mutator.binariesUsed:
+                    # don't pick a mutator if it uses unwanted binaries, but allow mutators that aren't using
+                    # any binaries when the user is using the '--include-binaries' option
                     if (binary in binList) != includeBinary:
-                        badBinary = True
-                        break
-                
+                        if includeBinary:
+                            if mutator.binariesUsed:
+                                badBinary = True
+                                break
+                            else:
+                                continue
+
+                        else:
+                            badBinary = True
+                            break
+
                 if badBinary:
                     continue
 
-            elif filePref is False and mutator.fileWrite != filePref:
-                continue
-            
             prefMutators.append(mutator)
 
         return prefMutators
 
-    def getPrefStubs(self, stubs, sizePref, timePref, binaryPref=None):
+    def choosePrefStub(self, stubs, sizePref, timePref, binaryPref, filePref, userStub=None):
+        """
+        Choose a stub which is of the desired sizeRating, timeRating,
+        and uses desired binaries. If the userStub parameter is passed,
+        the specific stub defined by userStub is searched for and is
+        checked to make sure it aligns with the users preferences for
+        used binaries.
+
+        :param stubs: list of Stubs to choose from
+        :param sizePref: payload size user preference
+        :type sizePref: int
+        :param timePref: execution time user preference
+        :type timePref: int
+        :param binaryPref: list of binaries that the chosen Mutator
+            should or should not use
+        :type binaryPref: tuple containing a list of strs, and a bool
+        :param userStub: the specific Stub the user chose to use
+        :type userStub: lowercase str
+        :returns: a :class:`bashfuscator.common.objects.Stub`
+            object
+        """
+        selStub = None
+
+        if binaryPref is not None:
+            binList = binaryPref[0]
+            includeBinary = binaryPref[1]
+
+        # attempt to find the specific stub the user wants
+        if userStub is not None:
+            for stub in stubs:
+                if stub.longName == userStub:
+                    if binaryPref is not None:
+                        for binary in stub.binariesUsed:
+                            if (binary in binList) != includeBinary:
+                                printWarning(f"'{userStub}' stub contains an unwanted binary")
+
+                    if filePref is False and stub.fileWrite != filePref:
+                        printWarning(f"'{userStub}' stub preforms file writes")
+
+                    selStub = stub
+
+            if selStub is None:
+                printError(f"'{userStub}' stub not found")
+
+        else:
+            selStub = self.randGen.randSelect(stubs)
+
+        return selStub
+
+    def getPrefStubs(self, stubs, sizePref, timePref, binaryPref, filePref):
         """
         Get Stubs from a sequence which are suitable to use based
         off the user's preferences.
@@ -472,68 +626,39 @@ class ObfuscationHandler(object):
         if binaryPref is not None:
             binList = binaryPref[0]
             includeBinary = binaryPref[1]
-        
-        # weed out the stubs that don't use preferred binaries
-        stubsWithPrefBinaries = []
-        if binaryPref:
-            for stub in prefStubs:
+
+        compatibleStubs = []
+        for stub in prefStubs:
+            if filePref is False and stub.fileWrite != filePref:
+                continue
+
+            if binaryPref:
+                badBinary = False
                 for binary in stub.binariesUsed:
-                    if (binary in binList) == includeBinary:
-                       stubsWithPrefBinaries.append(stub)
-        else:
-            stubsWithPrefBinaries = prefStubs
+                    # don't pick a stub if it uses unwanted binaries, but allow stubs that aren't using
+                    # any binaries when the user is using the '--include-binaries' option
+                    if (binary in binList) != includeBinary:
+                        if includeBinary:
+                            if stub.binariesUsed:
+                                badBinary = True
+                                break
+                            else:
+                                continue
 
-        return stubsWithPrefBinaries
+                        else:
+                            badBinary = True
+                            break
 
-    def choosePrefStub(self, stubs, sizePref, timePref, binaryPref, userStub=None):
-        """
-        Choose a stub which is of the desired sizeRating, timeRating,
-        and uses desired binaries. If the userStub parameter is passed,
-        the specific stub defined by userStub is searched for and is
-        checked to make sure it aligns with the users preferences for 
-        used binaries.
+                if badBinary:
+                    continue
 
-        :param stubs: list of Stubs to choose from
-        :param sizePref: payload size user preference
-        :type sizePref: int
-        :param timePref: execution time user preference
-        :type timePref: int 
-        :param binaryPref: list of binaries that the chosen Mutator
-            should or should not use
-        :type binaryPref: tuple containing a list of strs, and a bool
-        :param userStub: the specific Stub the user chose to use
-        :type userStub: lowercase str
-        :returns: a :class:`bashfuscator.common.objects.Stub`
-            object
-        """
-        selStub = None
+            compatibleStubs.append(stub)
 
-        if binaryPref is not None:
-            binList = binaryPref[0]
-            includeBinary = binaryPref[1]
-        
-        # attempt to find the specific stub the user wants
-        if userStub is not None:
-            for stub in stubs:
-                if stub.longName == userStub:
-                    if binaryPref is not None:
-                        for binary in stub.binariesUsed:
-                            if (binary in binList) != includeBinary:
-                                printWarning(f"'{userStub}' stub contains an unwanted binary")
-                    
-                    selStub = stub
-
-            if selStub is None:     
-                printError(f"'{userStub}' stub not found")
-
-        else:
-            selStub = self.randGen.randSelect(stubs)
-
-        return selStub
+        return compatibleStubs
 
     def getPrefItems(self, seq, sizePref, timePref):
         """
-        Get Mutators or Stubs from a sequence which 
+        Get Mutators or Stubs from a sequence which
         sizeRatings and timeRatings.
 
         :param seq: list of Mutators of Stubs
@@ -544,7 +669,7 @@ class ObfuscationHandler(object):
         :type timePref: int
         :returns: a list of Mutators or Stubs
         """
-        minSize, maxSize = self.getPrefRange(sizePref)        
+        minSize, maxSize = self.getPrefRange(sizePref)
         minTime, maxTime = self.getPrefRange(timePref)
 
         foundItem = False
@@ -556,7 +681,7 @@ class ObfuscationHandler(object):
                     if timePref is None or (minTime <= item.timeRating <= maxTime):
                         prefItems.append(item)
                         foundItem = True
-            
+
             if not foundItem:
                 if not foundItem:
                     if minSize > 1:
@@ -574,7 +699,7 @@ class ObfuscationHandler(object):
 
     def getPrefRange(self, pref):
         """
-        Get the minimum and maximum sizeRatings or timeRatings that 
+        Get the minimum and maximum sizeRatings or timeRatings that
         should be used to select obfuscator and stubs
 
         :param pref: sizePref or timePref options

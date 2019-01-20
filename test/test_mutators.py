@@ -3,18 +3,19 @@ import os
 import pytest
 from subprocess import STDOUT, PIPE, Popen
 
-from bashfuscator.core.mutator_list import commandObfuscators, stringObfuscators, tokenObfuscators, encoders, compressors
-from bashfuscator.core.obfuscation_handler import ObfuscationHandler
+from bashfuscator.core.engine.obfuscation_handler import ObfuscationHandler
 
 
 inputCommand = "echo 'It works!'"
 expectedOutput = "It works!\n"
 
-commandObNames = [(c.longName, s.longName) for c in commandObfuscators for s in c.stubs]
-stringObNames = [(s.longName, None) for s in stringObfuscators]
-tokenObNames = [(t.longName, None) for t in tokenObfuscators]
-encoderObNames = [(e.longName, None) for e in encoders if not e.postEncoder]
-compressorObNames = [(c.longName, None) for c in compressors]
+obHandler = ObfuscationHandler()
+
+commandObNames = [(c.longName, s.longName) for c in obHandler.cmdObfuscators for s in c.stubs]
+stringObNames = [(s.longName, None) for s in obHandler.strObfuscators]
+tokenObNames = [(t.longName, None) for t in obHandler.tokObfuscators]
+encoderObNames = [(e.longName, None) for e in obHandler.encoders if not e.postEncoder]
+compressorObNames = [(c.longName, None) for c in obHandler.compressors]
 
 mutators = commandObNames + stringObNames + tokenObNames + encoderObNames + compressorObNames
 
