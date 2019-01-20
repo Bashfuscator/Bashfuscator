@@ -169,10 +169,7 @@ class ObfuscationHandler(object):
         self.prevCmdOb = None
         self.mutatorList = []
 
-        self.mangler = Mangler()
-        self.randGen = self.mangler.randGen
-
-        self.mangler._initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange, self.mangleIntegers, self.expandIntegers, self.randomizeIntegerBases, self.integerExpansionDepth, self.randomizeTerminators, self.debug)
+        self.randGen = RandomGen()
 
         if args and args.full_ascii_strings:
             self.randGen.setFullAsciiStrings()
@@ -391,13 +388,13 @@ class ObfuscationHandler(object):
         """
         if selMutator.evalWrap:
             if self.randGen.probibility(50):
-                wrappedPayload = self.mangler._mangleLine('* *:eval:^ ^"$(? ?DATA? ?)"* *', payload)
+                wrappedPayload = selMutator.mangler._mangleLine('* *:eval:^ ^"$(? ?DATA? ?)"* *', payload)
             else:
-                wrappedPayload = self.mangler._mangleLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
+                wrappedPayload = selMutator.mangler._mangleLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
 
         # if the Mutator evals itself, wrap it in a subshell so it doesn't pollute the parent shell environment
         elif not selMutator.evalWrap and not (selMutator.mutatorType == "encode" and selMutator.postEncoder):
-            wrappedPayload = self.mangler._mangleLine(f"? ?(? ?DATA? ?)", payload)
+            wrappedPayload = selMutator.mangler._mangleLine(f"? ?(? ?DATA? ?)", payload)
 
         else:
             wrappedPayload = payload
