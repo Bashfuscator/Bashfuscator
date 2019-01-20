@@ -110,6 +110,12 @@ class Mangler(object):
             self.debug = False
 
         if enableMangling is False:
+            self.mangleBinaries = False
+            self.randWhitespace = False
+            self.insertChars = False
+            self.misleadingCmds = False
+            self.mangleIntegers = False
+            self.randomizeTerminators = False
             return
 
         if mangleBinaries is not None:
