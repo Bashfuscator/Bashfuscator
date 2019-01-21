@@ -222,9 +222,6 @@ class ObfuscationHandler(object):
                 printWarning("Output may consist of unreadable ASCII characters and probably won't execute from your clipboard correctly. Saving output with '-o' is recommended")
                 nonReadableWarning = True
 
-            if mutator.mutatorType == "encode" and mutator.postEncoder and i != len(self.mutatorList) - 1:
-                printWarning(f"{mutator.longName} should only be used as the final Mutator, layering on top of it will probably break your payload")
-
             if mutator.mutatorType == "command" and mutator.reversible:
                 if reverseableMutator == mutator.longName:
                     printWarning(f"{mutator.longName} used twice in a row, part of the output may be in the clear")
@@ -393,11 +390,8 @@ class ObfuscationHandler(object):
                 wrappedPayload = selMutator.mangler._mangleLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
 
         # if the Mutator evals itself, wrap it in a subshell so it doesn't pollute the parent shell environment
-        elif not selMutator.evalWrap and not (selMutator.mutatorType == "encode" and selMutator.postEncoder):
-            wrappedPayload = selMutator.mangler._mangleLine(f"? ?(? ?DATA? ?)", payload)
-
         else:
-            wrappedPayload = payload
+            wrappedPayload = selMutator.mangler._mangleLine(f"? ?(? ?DATA? ?)", payload)
 
         return wrappedPayload
 
@@ -520,10 +514,6 @@ class ObfuscationHandler(object):
                     continue
 
             elif filePref is False and mutator.mutatorType != "command" and mutator.fileWrite != filePref:
-                continue
-
-            # don't choose special encoders that produce output that Bash can't parse
-            elif mutator.mutatorType == "encode" and mutator.postEncoder:
                 continue
 
             elif binaryPref:
