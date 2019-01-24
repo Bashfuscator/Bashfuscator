@@ -572,30 +572,134 @@ class Mangler(object):
 
     def _getMangledInteger(self, integer, wrapExpression):
         if self.mangleIntegers:
-            if self.randomizeIntegerBases:
-                # choose a base that will obfuscate the integer better
-                # when the integer is small. ie 7#4 is 4, too easy
-                if 2 < integer and integer < 10:
-                    randBase = self.randGen.randGenNum(2, integer)
+            if self.expandIntegers:
+                exprStr, baseExprPieces = self._genSimpleExpr(integer, True)
+                mangledInt = exprStr.format(baseExprPieces[0], baseExprPieces[1], baseExprPieces[2])
+                mangledInt = self._wrapArithmeticExpression(mangledInt)
 
-                else:
-                    randBase = self.randGen.randGenNum(2, 64)
-
-                    # make sure base isn't decimal
-                    while randBase == 10:
-                        randBase = self.randGen.randGenNum(2, 64)
-
-                mangledInt = self._intToBaseN(randBase, integer)
+            elif self.randomizeIntegerBases:
+                mangledInt = self._getIntegerWithRandBase(integer)
 
                 if wrapExpression:
                     mangledInt = self._wrapArithmeticExpression(mangledInt)
 
             else:
-                # TODO: add integer arithmetic expansion
                 mangledInt = str(integer)
 
         else:
             mangledInt = str(integer)
+
+        return mangledInt
+
+    def _genSimpleExpr(self, n, randomizeBases):
+        """
+        Generates a simple mathematical expression of 3 terms
+        that equal the number passed. Returns a template
+        expression string, and a tuple of the values of the
+        terms in the generated expression.
+        """
+        if type(n) == str:
+            n = int(eval(n))
+        if n == 0:
+            N = 0
+            while N == 0:
+                N = self.randGen.randGenNum(-99999, 99999)
+        else:
+            N = n
+        choice = self.randGen.randGenNum(0, 2)
+        left = 0
+        if choice == 0:
+            if N < 0:
+                left = self.randGen.randGenNum(N * 2, -N + 1)
+                right = self.randGen.randGenNum(N - 1, -N * 2)
+            else:
+                left = self.randGen.randGenNum(-N * 2, N - 1)
+                right = self.randGen.randGenNum(-N + 1, N * 2)
+            if left + right < n:
+                offset = n - (left + right)
+                expr = "(({0}+{1})+{2})"
+            else:
+                offset = (left + right) - n
+                expr = "(-(-({0}+{1})+{2}))"
+        elif choice == 1:
+            if N < 0:
+                left = self.randGen.randGenNum(N - 1, -N * 2)
+                right = self.randGen.randGenNum(N * 2, N - 1)
+            else:
+                left = self.randGen.randGenNum(-N + 1, N * 2)
+                right = self.randGen.randGenNum(-N * 2, N + 1)
+            if left - right < n:
+                offset = n - (left - right)
+                expr = "(({0}-{1})+{2})"
+            else:
+                offset = (left - right) - n
+                expr = "(-(-({0}-{1})+{2}))"
+        elif choice == 2:
+            if N < 0:
+                left = self.randGen.randGenNum(int(N / 2), -int(N / 2) - 2)
+                right = self.randGen.randGenNum(int(N / 3), -int(N / 3))
+            else:
+                left = self.randGen.randGenNum(-int(n / 2), int(n / 2) + 2)
+                right = self.randGen.randGenNum(-int(n / 3), int(n / 3))
+            if left * right < n:
+                offset = n - (left * right)
+                expr = "(({0}*{1})+{2})"
+            else:
+                offset = (left * right) - n
+                expr = "(-(-({0}*{1})+{2}))"
+
+        # Replace all zeros with an expression. Zeros make arithmetic easy
+        if self.sizePref >= 2:
+            if left == 0:
+                zeroExpr, terms = self._genSimpleExpr(0, False)
+                left = zeroExpr.format(terms[0], terms[1], terms[2])
+            if right == 0:
+                zeroExpr, terms = self._genSimpleExpr(0, False)
+                right = zeroExpr.format(terms[0], terms[1], terms[2])
+            if offset == 0:
+                zeroExpr, terms = self._genSimpleExpr(0, False)
+                offset = zeroExpr.format(terms[0], terms[1], terms[2])
+
+        if randomizeBases and self.randomizeIntegerBases:
+            if type(left) == str:
+                left = int(eval(left))
+            if type(right) == str:
+                right = int(eval(right))
+            if type(offset) == str:
+                offset = int(eval(offset))
+
+            left = self._getIntegerWithRandBase(left)
+            right = self._getIntegerWithRandBase(right)
+            offset = self._getIntegerWithRandBase(offset)
+
+        return (expr, [left, right, offset])
+
+    def _getIntegerWithRandBase(self, integer):
+        isNegative = False
+        if integer < 0:
+            integer = integer * -1
+            isNegative = True
+
+        # choose a base that will obfuscate the integer better
+        # when the integer is small. ie 7#4 is 4, too easy
+        if 2 < integer and integer < 10:
+            randBase = self.randGen.randGenNum(2, integer)
+
+        else:
+            randBase = self.randGen.randGenNum(2, 64)
+
+            # make sure base isn't decimal
+            while randBase == 10:
+                randBase = self.randGen.randGenNum(2, 64)
+
+        mangledInt = self._intToBaseN(randBase, integer)
+
+        if isNegative:
+            sepOffset = mangledInt.find("#") + 1
+            if mangledInt[sepOffset:].isnumeric() and self.randGen.probibility(50):
+                mangledInt = mangledInt[:sepOffset] + "-" + mangledInt[sepOffset:]
+            else:
+                mangledInt = "-" + mangledInt
 
         return mangledInt
 
