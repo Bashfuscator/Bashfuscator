@@ -21,15 +21,15 @@ class XorNonNull(Encoder):
             nullchars = set(userCmd[i::keyLen])
             if chr(xorKeyBytes[i]) in nullchars:
                 # copies the current char set for initialization of blacklist
-                charBlackList = self.randGen._randStrCharList[:]
+                charWhiteList = self.randGen._randStrCharList[:]
 
                 for char in nullchars:
-                    if char in charBlackList:
-                        charBlackList.remove(char)
+                    if char in charWhiteList:
+                        charWhiteList.remove(char)
 
-                if len(charBlackList) > 0:
+                if len(charWhiteList) > 0:
                     # Replace character that would cause a null byte
-                    xorKeyBytes[i] = int.from_bytes(bytes(self.randGen.randSelect(charBlackList), "utf-8"), byteorder='big')
+                    xorKeyBytes[i] = int.from_bytes(bytes(self.randGen.randSelect(charWhiteList), "utf-8"), byteorder='big')
                 else:
                     # Die: Impossible key length modulus (there are no
                     # characters that don't cause a null byte)
