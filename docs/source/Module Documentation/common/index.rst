@@ -5,5 +5,3 @@ common - Modules used all over the framework
 
     colors
     messages
-    objects
-    random

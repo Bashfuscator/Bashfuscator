@@ -19,7 +19,7 @@ Size Ratings Table:
 ###################
 
 +----------------------------------------+----------------------------+
-| Size Rating                            | Obfuscator                 | 
+| Size Rating                            | Obfuscator                 |
 +========================================+============================+
 | 1: O(1), Little to no size increase    | Case Swapper, Reverse      |
 +----------------------------------------+----------------------------+
@@ -30,12 +30,11 @@ Size Ratings Table:
 | 4: O(kn), Linnear with constant k > 5  | Hex Hash, Special Char Only|
 +----------------------------------------+----------------------------+
 | 5: O(n^2), exponential or worse        |                            |
-+----------------------------------------+----------------------------+ 
++----------------------------------------+----------------------------+
 
 
 Example:
 ########
-
 The String/HexHash mutator adds a constant number of characters for every character in the original command, so it has a linnear growth rate.  Because HexHash adds a relatively large amount of additional characters, it is given the "Large Linnear" growth rate and assigned the size rating of 4.
 
 Time Ratings
@@ -46,6 +45,9 @@ The time rating system rates mutators based on the runtime increase caused by a 
 Time Ratings Table
 ##################
 
+
+Index
+-----
 
 .. toctree::
 

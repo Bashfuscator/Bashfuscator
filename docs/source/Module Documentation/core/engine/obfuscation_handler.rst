@@ -1,5 +1,5 @@
 `obfuscation_handler.py`
 ========================
 
-.. automodule:: bashfuscator.core.obfuscation_handler
+.. automodule:: bashfuscator.core.engine.obfuscation_handler
     :members:

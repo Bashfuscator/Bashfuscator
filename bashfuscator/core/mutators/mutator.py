@@ -1,5 +1,5 @@
 """
-Base class all modules inherit from
+Base class all Manglers inherit from
 """
 import string
 
@@ -12,7 +12,7 @@ class Mutator(object):
     Base class that all Mutators inherit from. Automatically generates
     a longName attribute that is used to choose Mutators on the
     command line, and stores a
-    :class:`bashfuscator.common.random.RandomGen` object.
+    :class:`bashfuscator.core.engine.random.RandomGen` object.
 
     :param name: Name of the Mutator
     :type name: str
@@ -26,9 +26,7 @@ class Mutator(object):
     :param credits: whom or where inpiration for or the complete method
         of mutation was found at. Should be the name/handle of the
         person who inspired you, and/or a link to where you got the
-        idea from. See
-        :class:`bashfuscator.lib.token_obfuscators.AnsiCQuote` for an
-        example
+        idea from
     :type credits: str
     """
 
