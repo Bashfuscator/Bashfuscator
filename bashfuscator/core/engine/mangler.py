@@ -623,8 +623,7 @@ class Mangler(object):
     def _getMangledInteger(self, integer, wrapExpression):
         if self.mangleIntegers:
             if self.expandIntegers:
-                exprStr, baseExprPieces = self._genSimpleExpr(integer, True)
-                mangledInt = exprStr.format(baseExprPieces[0], baseExprPieces[1], baseExprPieces[2])
+                mangledInt = self._expandInteger(integer, self.integerExpansionDepth)
                 mangledInt = self._wrapArithmeticExpression(mangledInt)
 
             elif self.randomizeIntegerBases:
@@ -641,7 +640,7 @@ class Mangler(object):
 
         return mangledInt
 
-    def _genSimpleExpr(self, n, randomizeBases):
+    def _expandInteger(self, n, expansionDepth, randomizeBases=True):
         """
         Generates a simple mathematical expression of 3 terms
         that equal the number passed. Returns a template
@@ -686,10 +685,10 @@ class Mangler(object):
                 expr = "(-(-({0}-{1})+{2}))"
         elif choice == 2:
             if N < 0:
-                left = self.randGen.randGenNum(int(N / 2), -int(N / 2) - 2)
+                left = self.randGen.randGenNum(int(N / 2), -int(N / 2))
                 right = self.randGen.randGenNum(int(N / 3), -int(N / 3))
             else:
-                left = self.randGen.randGenNum(-int(n / 2), int(n / 2) + 2)
+                left = self.randGen.randGenNum(-int(n / 2), int(n / 2))
                 right = self.randGen.randGenNum(-int(n / 3), int(n / 3))
             if left * right < n:
                 offset = n - (left * right)
@@ -701,16 +700,25 @@ class Mangler(object):
         # Replace all zeros with an expression. Zeros make arithmetic easy
         if self.sizePref >= 2:
             if left == 0:
-                zeroExpr, terms = self._genSimpleExpr(0, False)
-                left = zeroExpr.format(terms[0], terms[1], terms[2])
+                left = self._expandInteger(0, 1, False)
             if right == 0:
-                zeroExpr, terms = self._genSimpleExpr(0, False)
-                right = zeroExpr.format(terms[0], terms[1], terms[2])
+                right = self._expandInteger(0, 1, False)
             if offset == 0:
-                zeroExpr, terms = self._genSimpleExpr(0, False)
-                offset = zeroExpr.format(terms[0], terms[1], terms[2])
+                offset = self._expandInteger(0, 1, False)
 
-        if randomizeBases and self.randomizeIntegerBases:
+        if expansionDepth > 1:
+            if type(left) == str:
+                left = int(eval(left))
+            if type(right) == str:
+                right = int(eval(right))
+            if type(offset) == str:
+                offset = int(eval(offset))
+
+            left = self._expandInteger(left, expansionDepth - 1)
+            right = self._expandInteger(right, expansionDepth - 1)
+            offset = self._expandInteger(offset, expansionDepth - 1)
+
+        elif expansionDepth == 1 and randomizeBases and self.randomizeIntegerBases:
             if type(left) == str:
                 left = int(eval(left))
             if type(right) == str:
@@ -722,7 +730,7 @@ class Mangler(object):
             right = self._getIntegerWithRandBase(right)
             offset = self._getIntegerWithRandBase(offset)
 
-        return (expr, [left, right, offset])
+        return expr.format(left, right, offset)
 
     def _getIntegerWithRandBase(self, integer):
         isNegative = False
@@ -745,11 +753,20 @@ class Mangler(object):
         mangledInt = self._intToBaseN(randBase, integer)
 
         if isNegative:
-            sepOffset = mangledInt.find("#") + 1
-            if mangledInt[sepOffset:].isnumeric() and self.randGen.probibility(50):
-                mangledInt = mangledInt[:sepOffset] + "-" + mangledInt[sepOffset:]
-            else:
-                mangledInt = "-" + mangledInt
+            mangledInt = "-" + mangledInt
+
+        if self.sizePref >= 2:
+            moarMangledInt = ""
+            for char in mangledInt:
+                if self.randGen.probibility(33):
+                    if not self.insertChars or self.randGen.probibility(50):
+                        moarMangledInt += '"' + char + '"'
+                    else:
+                        moarMangledInt += self._getRandChars() + char
+                else:
+                    moarMangledInt += char
+
+            mangledInt = moarMangledInt
 
         return mangledInt
 
@@ -773,14 +790,14 @@ class Mangler(object):
         return str(base) + "#" + "".join(digits)
 
     def _wrapArithmeticExpression(self, expression):
-        randSpaceAndChars1 = self._getWhitespaceAndRandChars(False, True)
-        randSpaceAndChars2 = self._getWhitespaceAndRandChars(False, True)
+        randWhitespace1 = self._getRandWhitespace(False)
+        randWhitespace2 = self._getRandWhitespace(False)
 
         if self.randGen.probibility(50):
-            wrappedExpr = f"$(({randSpaceAndChars1}{expression}{randSpaceAndChars2}))"
+            wrappedExpr = f"$(({randWhitespace1}{expression}{randWhitespace2}))"
 
         else:
-            wrappedExpr = f"$[{randSpaceAndChars1}{expression}{randSpaceAndChars2}]"
+            wrappedExpr = f"$[{randWhitespace1}{expression}{randWhitespace2}]"
 
         return wrappedExpr
 
