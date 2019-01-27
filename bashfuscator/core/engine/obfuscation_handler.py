@@ -384,10 +384,23 @@ class ObfuscationHandler(object):
         :returns: a str containing the wrapped payload, if appropriate
         """
         if selMutator.evalWrap:
-            if self.randGen.probibility(50):
+            evalMethodChoice = self.randGen.randChoice(3)
+
+            if evalMethodChoice == 1:
                 wrappedPayload = selMutator.mangler._mangleLine('* *:eval:^ ^"$(? ?DATA? ?)"* *', payload)
             else:
-                wrappedPayload = selMutator.mangler._mangleLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
+                shellChoice = self.randGen.randChoice(3)
+                if shellChoice == 0:
+                    bashShell = ":bash:"
+                elif shellChoice == 1:
+                    bashShell = "$BASH"
+                else:
+                    bashShell = "${!#}"
+
+                if evalMethodChoice == 2:
+                    wrappedPayload = selMutator.mangler._mangleLine(f'* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *{bashShell}* *', payload)
+                else:
+                    wrappedPayload = selMutator.mangler._mangleLine(f'* *{bashShell}% %<<<^ ^"$(? ?DATA? ?)"* *', payload)
 
         # if the Mutator evals itself, wrap it in a subshell so it doesn't pollute the parent shell environment
         else:
