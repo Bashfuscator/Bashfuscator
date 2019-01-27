@@ -589,19 +589,16 @@ class Mangler(object):
         elif choice > 8 and choice <= 14:
             randParameterExpansionOperator = self.randGen.randSelect(["#", "##", "%", "%%", "/", "//"])
             randStr = self.randGen.randGenStr(escapeChars=charsToEscape, noBOBL=False)
-
-            if randStr[-1:] == "\\":
-                randStr += "\\"
+            randStr = self._sanatizeExpansionString(randStr)
 
             randChars += f"${{{varSymbol}{randParameterExpansionOperator}{randStr}}}"
 
         else:
             randStr = self.randGen.randGenStr(escapeChars=charsToEscape, noBOBL=False)
+            randStr = self._sanatizeExpansionString(randStr)
             randParameterExpansionOperator = self.randGen.randSelect(["/", "//"])
             randStr2 = self.randGen.randGenStr(escapeChars=charsToEscape, noBOBL=False)
-
-            if randStr2[-1:] == "\\":
-                randStr2 += "\\"
+            randStr2 = self._sanatizeExpansionString(randStr2)
 
             randChars += f"${{{varSymbol}{randParameterExpansionOperator}{randStr}/{randStr2}}}"
 
@@ -609,6 +606,19 @@ class Mangler(object):
             randChars += '"'
 
         return randChars
+
+    def _sanatizeExpansionString(self, exStr):
+        oddSlashes = False
+        for char in exStr[::-1]:
+            if char == "\\":
+                oddSlashes = not oddSlashes
+            else:
+                break
+
+        if oddSlashes:
+            exStr += "\\"
+
+        return exStr
 
     def _mangleInteger(self, integerMatch, payloadLine, wrapExpression):
         integer = int(payloadLine[integerMatch.start() + 1:integerMatch.end() - 1])
