@@ -8,7 +8,7 @@
 
 Bashfuscator is a modular and extendable Bash obfuscation framework written in Python 3. It provides numerous different ways of making Bash one-liners or scripts much more difficult to understand. It accomplishes this by generating convoluted, randomized Bash code that at runtime evaluates to the original input and executes it. Bashfuscator makes generating highly obfuscated Bash commands and scripts easy, both from the command line and as a Python library.
 
-The purpose of this project to give Red Team the ability to bypass static detections on a Linux system, and the knowledge and tools to write better Bash obfuscation techniques.
+The purpose of this project is to give Red Team the ability to bypass static detections on a Linux system, and the knowledge and tools to write better Bash obfuscation techniques.
 
 This framework was also developed with Blue Team in mind. With this framework, Blue Team can easily generate thousands of unique obfuscated scripts or commands to help create and test detections of Bash obfuscation.
 
