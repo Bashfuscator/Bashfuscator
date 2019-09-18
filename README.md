@@ -12,6 +12,12 @@ The purpose of this project is to give Red Team the ability to bypass static det
 
 This framework was also developed with Blue Team in mind. With this framework, Blue Team can easily generate thousands of unique obfuscated scripts or commands to help create and test detections of Bash obfuscation.
 
+### Media/slides
+
+This is a list of all the media (i.e. youtube videos) or links to slides about Bashfuscator.
+
+- [Bsides Charm](https://www.youtube.com/watch?v=zef422NDmpo)
+
 ### Payload support
 
 Though Bashfuscator does work on UNIX systems, many of the payloads it generates will not. This is because most UNIX systems use BSD style utilities, and Bashfuscator was built to work with GNU style utilities. In the future BSD payload support may be added, but for now payloads generated with Bashfuscator should work on GNU Linux systems with Bash 4.0 or newer.
