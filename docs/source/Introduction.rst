@@ -2,8 +2,9 @@ Introduction
 ============
 
 Bashfuscator is built to be a modular, flexible Bash obfuscation framework. It achieves this by organizing
-different obfuscation techniques and methods into modules within the framework, called Mutators. 
-Different obfuscation 'recipes' can be created by stacking different Mutators.
+different obfuscation techniques and methods into modules within the framework, called Mutators.
+Different obfuscation 'recipes' can be created by stacking different Mutators, giving the resulting payload
+varying characteristics and appearances.
 
 Mutator types
 -------------

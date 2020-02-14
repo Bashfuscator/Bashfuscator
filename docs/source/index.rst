@@ -12,6 +12,8 @@ Contents:
 
    Introduction
    Usage
+   Mutators/index
+   Development/index
    Module Documentation/index
 
 
