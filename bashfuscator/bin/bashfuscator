@@ -74,6 +74,8 @@ def listMutators():
 
 
 def listMutatorType(mutators):
+    mutators.sort(key=lambda x: x.name)
+
     for mutator in mutators:
         print(bold(f"\nName: {mutator.name}"))
         print(f"Description: {mutator.description}")

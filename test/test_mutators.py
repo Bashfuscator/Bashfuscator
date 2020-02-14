@@ -14,7 +14,7 @@ obHandler = ObfuscationHandler()
 commandObNames = [(c.longName, s.longName) for c in obHandler.cmdObfuscators for s in c.stubs]
 stringObNames = [(s.longName, None) for s in obHandler.strObfuscators]
 tokenObNames = [(t.longName, None) for t in obHandler.tokObfuscators]
-encoderObNames = [(e.longName, None) for e in obHandler.encoders if not e.postEncoder]
+encoderObNames = [(e.longName, None) for e in obHandler.encoders]
 compressorObNames = [(c.longName, None) for c in obHandler.compressors]
 
 mutators = commandObNames + stringObNames + tokenObNames + encoderObNames + compressorObNames

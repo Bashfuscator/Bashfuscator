@@ -110,6 +110,12 @@ class Mangler(object):
             self.debug = False
 
         if enableMangling is False:
+            self.mangleBinaries = False
+            self.randWhitespace = False
+            self.insertChars = False
+            self.misleadingCmds = False
+            self.mangleIntegers = False
+            self.randomizeTerminators = False
             return
 
         if mangleBinaries is not None:
@@ -339,12 +345,14 @@ class Mangler(object):
             self.extraJunk += randJunk
 
     def _mangleBinary(self, binaryMatch, payloadLine):
-        """
-
-        """
         mangledBinary = ""
+        ansiCQuotedChar = ""
+        ansiCHex = False
+        ansiCOctal = False
         lastCharNotMangled = False
         lastCharAnsiCQuoted = False
+        hexValues = string.digits + "abcdef"
+
         binaryStr = payloadLine[binaryMatch.start() + 1:binaryMatch.end() - 1]
 
         if self.mangleBinaries:
@@ -383,16 +391,49 @@ class Mangler(object):
                         # previous character in the beginning of the expansion. ie a$'\x65' -> $'a\x65'
                         if lastCharNotMangled and mangledBinary[-1] not in ["'", '"'] and self.randGen.probibility(self.binaryManglePercent):
                             ansiCQuotedChar = self._getAnsiCQuotedStr(char)
-                            mangledBinary = mangledBinary[:-1] + "$'" + mangledBinary[-1] + ansiCQuotedChar[2:]
+                            ansiCValue = ansiCQuotedChar[2:]
+                            mangledBinary = mangledBinary[:-1] + "$'" + mangledBinary[-1] + ansiCValue
+
+                            if ansiCValue[2] == "x":
+                                ansiCHex = True
+                                ansiCOctal = False
+                            elif ansiCValue[2] != "u" and ansiCValue[2] != "U":
+                                ansiCOctal = True
+                                ansiCHex = False
+                            else:
+                                ansiCHex = False
+                                ansiCOctal = False
 
                         # if the last character was ANSI-C quoted, and we're going to do that again, we can just add
                         # the new expansion as part of the previous one. ie $'\x65'$'\101' -> $'\x65\101'
                         elif lastCharAnsiCQuoted and self.randGen.probibility(50):
                             ansiCQuotedChar = self._getAnsiCQuotedStr(char)
-                            mangledBinary = mangledBinary[:-1] + ansiCQuotedChar[2:]
+                            ansiCValue = ansiCQuotedChar[2:]
+                            mangledBinary = mangledBinary[:-1] + ansiCValue
+
+                            if ansiCValue[1] == "x":
+                                ansiCHex = True
+                                ansiCOctal = False
+                            elif ansiCValue[1] != "u" and ansiCValue[1] != "U":
+                                ansiCOctal = True
+                                ansiCHex = False
+                            else:
+                                ansiCHex = False
+                                ansiCOctal = False
 
                         else:
-                            mangledBinary += self._getAnsiCQuotedStr(char)
+                            ansiCQuotedChar = self._getAnsiCQuotedStr(char)
+                            mangledBinary += ansiCQuotedChar
+
+                            if ansiCQuotedChar[3] == "x":
+                                ansiCHex = True
+                                ansiCOctal = False
+                            elif ansiCQuotedChar[3] != "u" and ansiCQuotedChar[3] != "U":
+                                ansiCOctal = True
+                                ansiCHex = False
+                            else:
+                                ansiCHex = False
+                                ansiCOctal = False
 
                         lastCharAnsiCQuoted = True
 
@@ -409,7 +450,18 @@ class Mangler(object):
                 else:
                     # if the last character was ANSI-C quoted, we can show the current character into the
                     # end of the last ANSI-C quoted expansion. ie $'\x65'y -> $'\x65y'
-                    if lastCharAnsiCQuoted and self.randGen.probibility(self.binaryManglePercent):
+                    appendChar = False
+                    if lastCharAnsiCQuoted:
+                        # make sure char to be appended won't be interpreted as hex; ie $'\x7' + a = $'\x7a'
+                        if ansiCHex and (len(ansiCQuotedChar) == 7 or char not in hexValues):
+                            appendChar = True
+                        # make sure char to be appended won't be interpreted as octal; ie $'\10' + 3 = $'\103'
+                        elif ansiCOctal and (len(ansiCQuotedChar) >= 7 or not (char.isdigit() and int(char) < 8)):
+                            appendChar = True
+                        elif not ansiCHex and not ansiCOctal:
+                            appendChar = True
+
+                    if appendChar and self.randGen.probibility(self.binaryManglePercent):
                         mangledBinary = mangledBinary[:-1] + char + "'"
                         lastCharNotMangled = False
                         lastCharAnsiCQuoted = True
@@ -532,33 +584,41 @@ class Mangler(object):
 
         elif choice > 2 and choice <= 8:
             randParameterExpansionOperator = self.randGen.randSelect(["^", "^^", ",", ",,", "~", "~~"])
-            randChars += f"${{{varSymbol}{randParameterExpansionOperator}{self._getRandWhitespace(False)}}}"
+            randChars += f"${{{varSymbol}{randParameterExpansionOperator}}}"
 
         elif choice > 8 and choice <= 14:
             randParameterExpansionOperator = self.randGen.randSelect(["#", "##", "%", "%%", "/", "//"])
             randStr = self.randGen.randGenStr(escapeChars=charsToEscape, noBOBL=False)
-            randWhitespace = self._getRandWhitespace(False)
+            randStr = self._sanatizeExpansionString(randStr)
 
-            if randStr[-1:] == "\\" and randWhitespace == "":
-                randStr += "\\"
-
-            randChars += f"${{{varSymbol}{randParameterExpansionOperator}{randStr}{randWhitespace}}}"
+            randChars += f"${{{varSymbol}{randParameterExpansionOperator}{randStr}}}"
 
         else:
             randStr = self.randGen.randGenStr(escapeChars=charsToEscape, noBOBL=False)
+            randStr = self._sanatizeExpansionString(randStr)
             randParameterExpansionOperator = self.randGen.randSelect(["/", "//"])
             randStr2 = self.randGen.randGenStr(escapeChars=charsToEscape, noBOBL=False)
-            randWhitespace = self._getRandWhitespace(False)
+            randStr2 = self._sanatizeExpansionString(randStr2)
 
-            if randStr2[-1:] == "\\" and randWhitespace == "":
-                randStr2 += "\\"
-
-            randChars += f"${{{varSymbol}{randParameterExpansionOperator}{randStr}/{randStr2}{randWhitespace}}}"
+            randChars += f"${{{varSymbol}{randParameterExpansionOperator}{randStr}/{randStr2}}}"
 
         if self.quoted:
             randChars += '"'
 
         return randChars
+
+    def _sanatizeExpansionString(self, exStr):
+        oddSlashes = False
+        for char in exStr[::-1]:
+            if char == "\\":
+                oddSlashes = not oddSlashes
+            else:
+                break
+
+        if oddSlashes:
+            exStr += "\\"
+
+        return exStr
 
     def _mangleInteger(self, integerMatch, payloadLine, wrapExpression):
         integer = int(payloadLine[integerMatch.start() + 1:integerMatch.end() - 1])

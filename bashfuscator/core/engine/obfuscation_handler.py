@@ -169,10 +169,7 @@ class ObfuscationHandler(object):
         self.prevCmdOb = None
         self.mutatorList = []
 
-        self.mangler = Mangler()
-        self.randGen = self.mangler.randGen
-
-        self.mangler._initialize(self.sizePref, self.enableMangling, self.mangleBinaries, self.binaryManglePercent, self.randWhitespace, self.randWhitespaceRange, self.insertChars, self.insertCharsRange, self.misleadingCmds, self.misleadingCmdsRange, self.mangleIntegers, self.expandIntegers, self.randomizeIntegerBases, self.integerExpansionDepth, self.randomizeTerminators, self.debug)
+        self.randGen = RandomGen()
 
         if args and args.full_ascii_strings:
             self.randGen.setFullAsciiStrings()
@@ -224,9 +221,6 @@ class ObfuscationHandler(object):
             if self.clip and ((mutator.unreadableOutput and not nonReadableWarning) or self.full_ascii_strings):
                 printWarning("Output may consist of unreadable ASCII characters and probably won't execute from your clipboard correctly. Saving output with '-o' is recommended")
                 nonReadableWarning = True
-
-            if mutator.mutatorType == "encode" and mutator.postEncoder and i != len(self.mutatorList) - 1:
-                printWarning(f"{mutator.longName} should only be used as the final Mutator, layering on top of it will probably break your payload")
 
             if mutator.mutatorType == "command" and mutator.reversible:
                 if reverseableMutator == mutator.longName:
@@ -390,17 +384,27 @@ class ObfuscationHandler(object):
         :returns: a str containing the wrapped payload, if appropriate
         """
         if selMutator.evalWrap:
-            if self.randGen.probibility(50):
-                wrappedPayload = self.mangler._mangleLine('* *:eval:^ ^"$(? ?DATA? ?)"* *', payload)
+            evalMethodChoice = self.randGen.randChoice(3)
+
+            if evalMethodChoice == 1:
+                wrappedPayload = selMutator.mangler._mangleLine('* *:eval:^ ^"$(? ?DATA? ?)"* *', payload)
             else:
-                wrappedPayload = self.mangler._mangleLine('* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *:bash:* *', payload)
+                shellChoice = self.randGen.randChoice(3)
+                if shellChoice == 0:
+                    bashShell = ":bash:"
+                elif shellChoice == 1:
+                    bashShell = "$BASH"
+                else:
+                    bashShell = "${!#}"
+
+                if evalMethodChoice == 2:
+                    wrappedPayload = selMutator.mangler._mangleLine(f'* *:printf:^ ^%s^ ^"$(? ?DATA? ?)"* *|* *{bashShell}* *', payload)
+                else:
+                    wrappedPayload = selMutator.mangler._mangleLine(f'* *{bashShell}% %<<<^ ^"$(? ?DATA? ?)"* *', payload)
 
         # if the Mutator evals itself, wrap it in a subshell so it doesn't pollute the parent shell environment
-        elif not selMutator.evalWrap and not (selMutator.mutatorType == "encode" and selMutator.postEncoder):
-            wrappedPayload = self.mangler._mangleLine(f"? ?(? ?DATA? ?)", payload)
-
         else:
-            wrappedPayload = payload
+            wrappedPayload = selMutator.mangler._mangleLine(f"? ?(? ?DATA? ?)", payload)
 
         return wrappedPayload
 
@@ -523,10 +527,6 @@ class ObfuscationHandler(object):
                     continue
 
             elif filePref is False and mutator.mutatorType != "command" and mutator.fileWrite != filePref:
-                continue
-
-            # don't choose special encoders that produce output that Bash can't parse
-            elif mutator.mutatorType == "encode" and mutator.postEncoder:
                 continue
 
             elif binaryPref:
