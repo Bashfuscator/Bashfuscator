@@ -86,7 +86,8 @@ class SpecialCharOnly(TokenObfuscator):
         self.mangler.addPayloadLine(f"{cattrVar}=${{{procPathArrayVar}: -${self.digitVars[1]}:${self.digitVars[1]}}}${attrVar}END0")
 
         catVar = self.randGen.randUniqueStr(3, 26, "_")
-        self.mangler.addPayloadLine(rf"{catVar}=${{{cattrVar}\:{self.digitVars[0]}\:{self.digitVars[3]}}}END0")
+        self.mangler.addPayloadLine(rf"{catVar}=${{{cattrVar}\:{self.digitVars[0]}\:{self.digitVars[3]}}}END")
+        self.mangler.addPayloadLine(rf"${catVar}<<<''||{catVar}=${{{catVar}\:{self.digitVars[0]}\:-{self.digitVars[1]}}}tEND")
 
         aVar = self.randGen.randUniqueStr(3, 26, "_")
         self.mangler.addPayloadLine(rf"{aVar}=${{{attrVar}\:{self.digitVars[0]}\:{self.digitVars[1]}}}END0")

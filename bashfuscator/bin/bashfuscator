@@ -199,9 +199,11 @@ def checkRangeArgs(argName, argValue):
 
 
 def printPayload(payload, args):
-    rows, columns = check_output(["stty", "size"]).decode().split()
-    rows = int(rows)
-    columns = int(columns)
+    rows, columns = [35, 80]
+    if sys.stdout.isatty():
+        rows, columns = check_output(["stty", "size"]).decode().split()
+        rows = int(rows)
+        columns = int(columns)
 
     printInfo("Payload:\n")
 
