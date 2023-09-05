@@ -87,7 +87,7 @@ class SpecialCharOnly(TokenObfuscator):
 
         catVar = self.randGen.randUniqueStr(3, 26, "_")
         self.mangler.addPayloadLine(rf"{catVar}=${{{cattrVar}\:{self.digitVars[0]}\:{self.digitVars[3]}}}END")
-        self.mangler.addPayloadLine(rf"{catVar}<<<''||{catVar}=${{{catVar}\:{self.digitVars[0]}\:-{self.digitVars[1]}}}tEND")
+        self.mangler.addPayloadLine(rf"${catVar}<<<''||{catVar}=${{{catVar}\:{self.digitVars[0]}\:-{self.digitVars[1]}}}tEND")
 
         aVar = self.randGen.randUniqueStr(3, 26, "_")
         self.mangler.addPayloadLine(rf"{aVar}=${{{attrVar}\:{self.digitVars[0]}\:{self.digitVars[1]}}}END0")
